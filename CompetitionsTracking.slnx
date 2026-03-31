@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="CompetitionsTracking.Application/CompetitionsTracking.Application.csproj" />
+  <Project Path="CompetitionsTracking.Domain/CompetitionsTracking.Domain.csproj" />
+  <Project Path="CompetitionsTracking.Infrastructure/CompetitionsTracking.Infrastructure.csproj" />
+  <Project Path="CompetitionsTracking.Repositories/CompetitionsTracking.Repositories.csproj" />
+  <Project Path="CompetitionsTracking.Services/CompetitionsTracking.Services.csproj" />
+  <Project Path="CompetitionsTracking/CompetitionsTracking.csproj" />
+</Solution>

@@ -1,0 +1,6 @@
+@CompetitionsTracking_HostAddress = http://localhost:5257
+
+GET {{CompetitionsTracking_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
