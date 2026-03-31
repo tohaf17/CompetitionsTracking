@@ -15,7 +15,6 @@ namespace CompetitionsTracking.Domain.Entities
         public string Surname { get; set; }= string.Empty;
         public string Country { get; set; }= string.Empty;
         public DateTime DateOfBirth { get; set; }
-        [Required]
         public int? MentorId { get; set; }
         public Gender Gender { get; set; }
 

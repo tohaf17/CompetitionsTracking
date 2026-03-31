@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\CompetitionsTracking.Application\CompetitionsTracking.Application.csproj" />
+    <ProjectReference Include="..\CompetitionsTracking.Repositories\CompetitionsTracking.Repositories.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CompetitionsTracking.Infrastructure\CompetitionsTracking.Infrastructure.csproj" />
+    <ProjectReference Include="..\CompetitionsTracking.Application\CompetitionsTracking.Application.csproj" />
+    <ProjectReference Include="..\CompetitionsTracking.Services\CompetitionsTracking.Services.csproj" />
   </ItemGroup>
 
 </Project>

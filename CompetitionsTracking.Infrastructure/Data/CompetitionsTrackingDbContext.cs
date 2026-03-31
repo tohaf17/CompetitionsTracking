@@ -47,7 +47,7 @@ namespace CompetitionsTracking.Infrastructure.Data
 
             modelBuilder.Entity<Team>()
                 .HasOne(t => t.Coach)
-                .WithMany()
+                .WithMany(p => p.Teams)
                 .HasForeignKey(t => t.CoachId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -98,27 +98,27 @@ namespace CompetitionsTracking.Infrastructure.Data
 
             modelBuilder.Entity<Discipline>()
                 .HasOne(d => d.Apparatus)
-                .WithMany()
+                .WithMany(a => a.Disciplines)
                 .HasForeignKey(d => d.ApparatusId);
 
             modelBuilder.Entity<Appeal>()
                 .HasOne(a => a.Result)
-                .WithMany()
+                .WithMany(r => r.Appeals)
                 .HasForeignKey(a => a.ResultId);
 
             modelBuilder.Entity<Entry>()
                 .HasOne(e => e.Competition)
-                .WithMany()
+                .WithMany(c => c.Entries)
                 .HasForeignKey(e => e.CompetitionId);
 
             modelBuilder.Entity<Entry>()
                 .HasOne(e => e.Discipline)
-                .WithMany()
+                .WithMany(d => d.Entries)
                 .HasForeignKey(e => e.DisciplineId);
 
             modelBuilder.Entity<Entry>()
                 .HasOne(e => e.Category)
-                .WithMany()
+                .WithMany(c => c.Entries)
                 .HasForeignKey(e => e.CategoryId);
 
             modelBuilder.Entity<Entry>()
