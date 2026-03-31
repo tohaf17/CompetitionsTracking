@@ -22,10 +22,13 @@ namespace CompetitionsTracking.Domain.Entities
 
         [ForeignKey(nameof(CompetitionId))]
         public virtual Competition Competition { get; set; }
+        
         [ForeignKey(nameof(ParticipantId))]
         public virtual Participant Participant { get; set; }
+        
         [ForeignKey(nameof(DisciplineId))]
         public virtual Discipline Discipline { get; set; }
+        
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }
 

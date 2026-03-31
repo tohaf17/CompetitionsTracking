@@ -17,6 +17,7 @@ namespace CompetitionsTracking.Domain.Entities
         public float ScoreValue { get; set; }
         [ForeignKey(nameof(EntryId))]
         public virtual Entry Entry { get; set; }
+        
         [ForeignKey(nameof(JudgeId))]
         public virtual Judge Judge { get; set; }
     }

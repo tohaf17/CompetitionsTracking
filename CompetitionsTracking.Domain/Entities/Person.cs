@@ -18,6 +18,7 @@ namespace CompetitionsTracking.Domain.Entities
         [Required]
         public int? MentorId { get; set; }
         public Gender Gender { get; set; }
+
         [ForeignKey(nameof(MentorId))]
         public virtual Person Mentor { get; set; }
         public virtual ICollection<Person> Mentees { get; set; } = new List<Person>();

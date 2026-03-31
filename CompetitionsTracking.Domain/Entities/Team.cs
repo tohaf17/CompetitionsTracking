@@ -12,6 +12,7 @@ namespace CompetitionsTracking.Domain.Entities
         [Required]
         public string Name { get; set; }= string.Empty;
         public int CoachId { get; set; }
+
         [ForeignKey(nameof(CoachId))]
         public virtual Person Coach { get; set; }
         
