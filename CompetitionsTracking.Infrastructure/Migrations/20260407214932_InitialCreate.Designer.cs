@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompetitionsTracking.Infrastructure.Migrations
 {
     [DbContext(typeof(CompetitionsTrackingDbContext))]
-    [Migration("20260331162435_InitialDatabase")]
-    partial class InitialDatabase
+    [Migration("20260407214932_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,9 +63,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.Property<int>("ResultId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ResultId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -73,8 +70,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ResultId");
-
-                    b.HasIndex("ResultId1");
 
                     b.ToTable("appeals");
                 });
@@ -144,9 +139,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.Property<int>("ApparatusId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ApparatusId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -154,8 +146,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApparatusId");
-
-                    b.HasIndex("ApparatusId1");
 
                     b.ToTable("disciplines");
                 });
@@ -175,19 +165,10 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CategoryId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("CompetitionId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CompetitionId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("DisciplineId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DisciplineId1")
                         .HasColumnType("int");
 
                     b.Property<string>("EntryStatus")
@@ -207,18 +188,11 @@ namespace CompetitionsTracking.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("CategoryId1");
-
-                    b.HasIndex("CompetitionId1");
+                    b.HasIndex("CompetitionId");
 
                     b.HasIndex("DisciplineId");
 
-                    b.HasIndex("DisciplineId1");
-
                     b.HasIndex("ParticipantId");
-
-                    b.HasIndex("CompetitionId", "ParticipantId", "DisciplineId")
-                        .IsUnique();
 
                     b.ToTable("entries");
                 });
@@ -240,8 +214,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId")
-                        .IsUnique();
+                    b.HasIndex("PersonId");
 
                     b.ToTable("judges");
                 });
@@ -336,9 +309,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
 
                     b.HasIndex("person_id");
 
-                    b.HasIndex("team_id", "person_id")
-                        .IsUnique();
-
                     b.ToTable("team_members");
                 });
 
@@ -353,10 +323,11 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Gender")
-                        .HasColumnType("int");
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MentorId")
+                    b.Property<int?>("MentorId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -369,7 +340,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
 
                     b.HasIndex("MentorId");
 
-                    b.ToTable("persons", (string)null);
+                    b.ToTable("persons");
                 });
 
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Team", b =>
@@ -385,20 +356,16 @@ namespace CompetitionsTracking.Infrastructure.Migrations
 
                     b.HasIndex("CoachId");
 
-                    b.ToTable("teams", (string)null);
+                    b.ToTable("teams");
                 });
 
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Appeal", b =>
                 {
                     b.HasOne("CompetitionsTracking.Domain.Entities.Result", "Result")
-                        .WithMany()
+                        .WithMany("Appeals")
                         .HasForeignKey("ResultId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CompetitionsTracking.Domain.Entities.Result", null)
-                        .WithMany("Appeals")
-                        .HasForeignKey("ResultId1");
 
                     b.Navigation("Result");
                 });
@@ -406,14 +373,10 @@ namespace CompetitionsTracking.Infrastructure.Migrations
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Discipline", b =>
                 {
                     b.HasOne("CompetitionsTracking.Domain.Entities.Apparatus", "Apparatus")
-                        .WithMany()
+                        .WithMany("Disciplines")
                         .HasForeignKey("ApparatusId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CompetitionsTracking.Domain.Entities.Apparatus", null)
-                        .WithMany("Disciplines")
-                        .HasForeignKey("ApparatusId1");
 
                     b.Navigation("Apparatus");
                 });
@@ -421,34 +384,22 @@ namespace CompetitionsTracking.Infrastructure.Migrations
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Entry", b =>
                 {
                     b.HasOne("CompetitionsTracking.Domain.Entities.Category", "Category")
-                        .WithMany()
+                        .WithMany("Entries")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompetitionsTracking.Domain.Entities.Category", null)
-                        .WithMany("Entries")
-                        .HasForeignKey("CategoryId1");
-
                     b.HasOne("CompetitionsTracking.Domain.Entities.Competition", "Competition")
-                        .WithMany()
+                        .WithMany("Entries")
                         .HasForeignKey("CompetitionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompetitionsTracking.Domain.Entities.Competition", null)
-                        .WithMany("Entries")
-                        .HasForeignKey("CompetitionId1");
-
                     b.HasOne("CompetitionsTracking.Domain.Entities.Discipline", "Discipline")
-                        .WithMany()
+                        .WithMany("Entries")
                         .HasForeignKey("DisciplineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CompetitionsTracking.Domain.Entities.Discipline", null)
-                        .WithMany("Entries")
-                        .HasForeignKey("DisciplineId1");
 
                     b.HasOne("CompetitionsTracking.Domain.Entities.Participant", "Participant")
                         .WithMany("Entries")
@@ -468,8 +419,8 @@ namespace CompetitionsTracking.Infrastructure.Migrations
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Judge", b =>
                 {
                     b.HasOne("CompetitionsTracking.Domain.Entities.Person", "Person")
-                        .WithOne()
-                        .HasForeignKey("CompetitionsTracking.Domain.Entities.Judge", "PersonId")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -498,7 +449,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.HasOne("CompetitionsTracking.Domain.Entities.Judge", "Judge")
                         .WithMany("Scores")
                         .HasForeignKey("JudgeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Entry");
@@ -511,16 +462,14 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.HasOne("CompetitionsTracking.Domain.Entities.Person", null)
                         .WithMany()
                         .HasForeignKey("person_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_team_members_persons_person_id");
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("CompetitionsTracking.Domain.Entities.Team", null)
                         .WithMany()
                         .HasForeignKey("team_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_team_members_teams_team_id");
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Person", b =>
@@ -542,7 +491,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Team", b =>
                 {
                     b.HasOne("CompetitionsTracking.Domain.Entities.Person", "Coach")
-                        .WithMany()
+                        .WithMany("TeamsCoached")
                         .HasForeignKey("CoachId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -602,6 +551,8 @@ namespace CompetitionsTracking.Infrastructure.Migrations
             modelBuilder.Entity("CompetitionsTracking.Domain.Entities.Person", b =>
                 {
                     b.Navigation("Mentees");
+
+                    b.Navigation("TeamsCoached");
                 });
 #pragma warning restore 612, 618
         }

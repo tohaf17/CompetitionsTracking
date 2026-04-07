@@ -18,8 +18,8 @@ namespace CompetitionsTracking.Infrastructure.Data.Configurations
                    .WithMany(p => p.TeamsAsMember)
                    .UsingEntity<Dictionary<string, object>>(
                        "team_members",
-                       j => j.HasOne<Person>().WithMany().HasForeignKey("person_id").OnDelete(DeleteBehavior.Cascade),
-                       j => j.HasOne<Team>().WithMany().HasForeignKey("team_id").OnDelete(DeleteBehavior.Cascade),
+                       j => j.HasOne<Person>().WithMany().HasForeignKey("person_id").OnDelete(DeleteBehavior.Restrict),
+                       j => j.HasOne<Team>().WithMany().HasForeignKey("team_id").OnDelete(DeleteBehavior.Restrict),
                        j => j.HasKey("team_id", "person_id")
                    );
         }

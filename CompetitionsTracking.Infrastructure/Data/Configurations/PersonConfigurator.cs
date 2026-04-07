@@ -16,6 +16,8 @@ namespace CompetitionsTracking.Infrastructure.Data.Configurations
 
             builder.Property(p => p.Gender)
                    .HasConversion<string>();
+
+            builder.Ignore(p => p.Teams);
         }
     }
 }

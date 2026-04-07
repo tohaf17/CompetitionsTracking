@@ -9,10 +9,10 @@ namespace CompetitionsTracking.Infrastructure.Data
     {
         public static void Seed(CompetitionsTrackingDbContext context)
         {
-            //if (context.Persons.Any())
-            //{
-            //    return;   // Database already has been seeded
-            //}
+            if (context.Persons.Any())
+            {
+                return;   
+            }
 
             var mentor = new Person 
             {

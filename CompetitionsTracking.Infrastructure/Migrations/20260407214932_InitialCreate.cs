@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CompetitionsTracking.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialDatabase : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -76,8 +76,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ApparatusId = table.Column<int>(type: "int", nullable: false),
-                    ApparatusId1 = table.Column<int>(type: "int", nullable: true)
+                    ApparatusId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -88,11 +87,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                         principalTable: "apparatus",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_disciplines_apparatus_ApparatusId1",
-                        column: x => x.ApparatusId1,
-                        principalTable: "apparatus",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -104,8 +98,8 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     Surname = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    MentorId = table.Column<int>(type: "int", nullable: false),
-                    Gender = table.Column<int>(type: "int", nullable: false)
+                    MentorId = table.Column<int>(type: "int", nullable: true),
+                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -137,10 +131,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     ApplicationStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EntryStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CategoryId1 = table.Column<int>(type: "int", nullable: true),
-                    CompetitionId1 = table.Column<int>(type: "int", nullable: true),
-                    DisciplineId1 = table.Column<int>(type: "int", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -152,32 +143,17 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_entries_categories_CategoryId1",
-                        column: x => x.CategoryId1,
-                        principalTable: "categories",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_entries_competitions_CompetitionId",
                         column: x => x.CompetitionId,
                         principalTable: "competitions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_entries_competitions_CompetitionId1",
-                        column: x => x.CompetitionId1,
-                        principalTable: "competitions",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_entries_disciplines_DisciplineId",
                         column: x => x.DisciplineId,
                         principalTable: "disciplines",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_entries_disciplines_DisciplineId1",
-                        column: x => x.DisciplineId1,
-                        principalTable: "disciplines",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_entries_participants_ParticipantId",
                         column: x => x.ParticipantId,
@@ -278,7 +254,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                         column: x => x.JudgeId,
                         principalTable: "judges",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -296,13 +272,13 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                         column: x => x.person_id,
                         principalTable: "persons",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_team_members_teams_team_id",
                         column: x => x.team_id,
                         principalTable: "teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -315,8 +291,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ResultId1 = table.Column<int>(type: "int", nullable: true)
+                    ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -327,11 +302,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                         principalTable: "results",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_appeals_results_ResultId1",
-                        column: x => x.ResultId1,
-                        principalTable: "results",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -340,19 +310,9 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                 column: "ResultId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_appeals_ResultId1",
-                table: "appeals",
-                column: "ResultId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_disciplines_ApparatusId",
                 table: "disciplines",
                 column: "ApparatusId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_disciplines_ApparatusId1",
-                table: "disciplines",
-                column: "ApparatusId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_entries_CategoryId",
@@ -360,30 +320,14 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_entries_CategoryId1",
+                name: "IX_entries_CompetitionId",
                 table: "entries",
-                column: "CategoryId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_entries_CompetitionId_ParticipantId_DisciplineId",
-                table: "entries",
-                columns: new[] { "CompetitionId", "ParticipantId", "DisciplineId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_entries_CompetitionId1",
-                table: "entries",
-                column: "CompetitionId1");
+                column: "CompetitionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_entries_DisciplineId",
                 table: "entries",
                 column: "DisciplineId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_entries_DisciplineId1",
-                table: "entries",
-                column: "DisciplineId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_entries_ParticipantId",
@@ -393,8 +337,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_judges_PersonId",
                 table: "judges",
-                column: "PersonId",
-                unique: true);
+                column: "PersonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_persons_MentorId",
@@ -421,12 +364,6 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                 name: "IX_team_members_person_id",
                 table: "team_members",
                 column: "person_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_team_members_team_id_person_id",
-                table: "team_members",
-                columns: new[] { "team_id", "person_id" },
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_teams_CoachId",

@@ -12,6 +12,11 @@ namespace CompetitionsTracking.Infrastructure.Data.Configurations
                    .WithMany(e => e.Scores)
                    .HasForeignKey(s => s.EntryId);
 
+            builder.HasOne(s => s.Judge)
+                   .WithMany(j => j.Scores)
+                   .HasForeignKey(s => s.JudgeId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
             builder.Property(s => s.Type)
                    .HasConversion<string>();
         }
