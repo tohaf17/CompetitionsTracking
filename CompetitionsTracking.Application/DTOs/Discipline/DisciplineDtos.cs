@@ -2,12 +2,14 @@ namespace CompetitionsTracking.Application.DTOs.Discipline
 {
     public class DisciplineRequestDto
     {
-        // Add properties here
+        public string Type { get; set; } = string.Empty;
+        public int ApparatusId { get; set; }
     }
 
     public class DisciplineResponseDto
     {
         public int Id { get; set; }
-        // Add properties here
+        public string Type { get; set; } = string.Empty;
+        public int ApparatusId { get; set; }
     }
 }

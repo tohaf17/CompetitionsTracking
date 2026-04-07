@@ -2,12 +2,12 @@ namespace CompetitionsTracking.Application.DTOs.Apparatus
 {
     public class ApparatusRequestDto
     {
-        // Add properties here
+        public string Type { get; set; } = string.Empty;
     }
 
     public class ApparatusResponseDto
     {
         public int Id { get; set; }
-        // Add properties here
+        public string Type { get; set; } = string.Empty;
     }
 }
