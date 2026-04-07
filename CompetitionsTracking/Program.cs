@@ -4,7 +4,8 @@ using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Repositories.Implementations;
 using CompetitionsTracking.Services.Implementations;
 using FluentValidation;
-
+using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerUI;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -42,10 +44,21 @@ builder.Services.AddValidatorsFromAssemblyContaining<CompetitionsTracking.Applic
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
+    // Optionally apply migrations before seeding: context.Database.Migrate();
+    DatabaseSeeder.Seed(context);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwaggerUI();
+    app.UseSwagger();
 }
 
 app.UseHttpsRedirection();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CompetitionsTracking.Domain.Entities
@@ -18,6 +19,7 @@ namespace CompetitionsTracking.Domain.Entities
         [Required]
         public string City { get; set; } = string.Empty;
         [Required]
+        
         public DateTime StartDate { get; set; }
         [Required]
         public DateTime EndDate { get; set; }

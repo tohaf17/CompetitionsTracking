@@ -22,6 +22,9 @@ namespace CompetitionsTracking.Domain.Entities
         public virtual Person Mentor { get; set; }
         public virtual ICollection<Person> Mentees { get; set; } = new List<Person>();
         public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
+        public ICollection<Team> TeamsCoached { get; set; } // Команди, де я тренер
+        public ICollection<Team> TeamsAsMember { get; set; } // Команди, де я учасник
+
     }
     public enum Gender
     {

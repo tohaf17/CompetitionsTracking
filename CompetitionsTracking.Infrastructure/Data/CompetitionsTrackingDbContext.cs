@@ -7,7 +7,8 @@ namespace CompetitionsTracking.Infrastructure.Data
 {
     public class CompetitionsTrackingDbContext : DbContext
     {
-        public CompetitionsTrackingDbContext(DbContextOptions<CompetitionsTrackingDbContext> options) : base(options)
+        public CompetitionsTrackingDbContext(DbContextOptions<CompetitionsTrackingDbContext> options)
+            : base(options)
         {
         }
 
@@ -28,114 +29,7 @@ namespace CompetitionsTracking.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Participant>()
-                .UseTptMappingStrategy()
-                .ToTable("participants");
-
-            modelBuilder.Entity<Person>()
-                .ToTable("persons");
-
-            modelBuilder.Entity<Team>()
-                .ToTable("teams");
-
-            modelBuilder.Entity<Person>()
-                .HasOne(p => p.Mentor)
-                .WithMany(p => p.Mentees)
-                .HasForeignKey(p => p.MentorId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Team>()
-                .HasOne(t => t.Coach)
-                .WithMany(p => p.Teams)
-                .HasForeignKey(t => t.CoachId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Team>()
-                .HasMany(t => t.Members)
-                .WithMany(p => p.Teams)
-                .UsingEntity<Dictionary<string, object>>(
-                    "team_members",
-                    j => j
-                        .HasOne<Person>()
-                        .WithMany()
-                        .HasForeignKey("person_id")
-                        .HasConstraintName("FK_team_members_persons_person_id")
-                        .OnDelete(DeleteBehavior.Cascade),
-                    j => j
-                        .HasOne<Team>()
-                        .WithMany()
-                        .HasForeignKey("team_id")
-                        .HasConstraintName("FK_team_members_teams_team_id")
-                        .OnDelete(DeleteBehavior.Cascade),
-                    j =>
-                    {
-                        j.HasKey("team_id", "person_id");
-                        j.HasIndex("team_id", "person_id").IsUnique();
-                    });
-
-            modelBuilder.Entity<Entry>()
-                .HasIndex(e => new { e.CompetitionId, e.ParticipantId, e.DisciplineId })
-                .IsUnique();
-
-            modelBuilder.Entity<Result>()
-                .HasOne(r => r.Entry)
-                .WithOne(e => e.Result)
-                .HasForeignKey<Result>(r => r.EntryId);
-
-            modelBuilder.Entity<Result>()
-                .HasIndex(r => r.EntryId)
-                .IsUnique();
-
-            modelBuilder.Entity<Judge>()
-                .HasOne(j => j.Person)
-                .WithOne()
-                .HasForeignKey<Judge>(j => j.PersonId);
-
-            modelBuilder.Entity<Competition>()
-                .Property(c => c.Status)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<Discipline>()
-                .HasOne(d => d.Apparatus)
-                .WithMany(a => a.Disciplines)
-                .HasForeignKey(d => d.ApparatusId);
-
-            modelBuilder.Entity<Appeal>()
-                .HasOne(a => a.Result)
-                .WithMany(r => r.Appeals)
-                .HasForeignKey(a => a.ResultId);
-
-            modelBuilder.Entity<Entry>()
-                .HasOne(e => e.Competition)
-                .WithMany(c => c.Entries)
-                .HasForeignKey(e => e.CompetitionId);
-
-            modelBuilder.Entity<Entry>()
-                .HasOne(e => e.Discipline)
-                .WithMany(d => d.Entries)
-                .HasForeignKey(e => e.DisciplineId);
-
-            modelBuilder.Entity<Entry>()
-                .HasOne(e => e.Category)
-                .WithMany(c => c.Entries)
-                .HasForeignKey(e => e.CategoryId);
-
-            modelBuilder.Entity<Entry>()
-                .Property(e => e.ApplicationStatus)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<Entry>()
-                .Property(e => e.EntryStatus)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<Appeal>()
-                .Property(a => a.Status)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<Score>()
-                .Property(s => s.Type)
-                .HasConversion<string>();
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(CompetitionsTrackingDbContext).Assembly);
         }
     }
 }
