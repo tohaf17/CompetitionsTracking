@@ -33,8 +33,30 @@ namespace CompetitionsTracking.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] AppealRequestDto request)
         {
-            var result = await _service.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            try
+            {
+                var result = await _service.CreateAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("pending")]
+        public async Task<IActionResult> GetPending([FromQuery] int? competitionId)
+        {
+            var result = await _service.GetPendingAppealsAsync(competitionId);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/dossier")]
+        public async Task<IActionResult> GetDossier(int id)
+        {
+            var result = await _service.GetAppealDossierAsync(id);
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
@@ -48,6 +70,13 @@ namespace CompetitionsTracking.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);
+            return NoContent();
+        }
+
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> Approve(int id, [FromBody] ApproveAppealRequestDto request)
+        {
+            await _service.ApproveAppealAsync(id, request);
             return NoContent();
         }
     }

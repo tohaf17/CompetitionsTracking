@@ -31,10 +31,63 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<AppealResponseDto> CreateAsync(AppealRequestDto request)
         {
+            bool hasDuplicate = await _repository.HasAppealForResultAsync(request.ResultId);
+            if (hasDuplicate)
+            {
+                throw new InvalidOperationException("An appeal already exists for this result.");
+            }
+
+            bool isOngoing = await _repository.IsCompetitionOngoingForResultAsync(request.ResultId);
+            if (!isOngoing)
+            {
+                throw new InvalidOperationException("Appeals can only be submitted while the competition is ongoing.");
+            }
+
             var entity = request.Adapt<Appeal>();
+            entity.Status = AppealStatus.Pending; // Force pending initially
+            entity.CreatedAt = DateTime.UtcNow;
+
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
             return entity.Adapt<AppealResponseDto>();
+        }
+
+        public async Task<IEnumerable<PendingAppealDto>> GetPendingAppealsAsync(int? competitionId)
+        {
+            var appeals = await _repository.GetPendingAppealsAsync(competitionId);
+            return appeals.Select(a => new PendingAppealDto
+            {
+                Id = a.Id,
+                ResultId = a.ResultId,
+                Reason = a.Reason,
+                Status = a.Status,
+                CreatedAt = a.CreatedAt,
+                CompetitionId = a.Result.Entry.CompetitionId,
+                ParticipantName = a.Result.Entry.Participant is Person p 
+                    ? $"{p.Name} {p.Surname}" 
+                    : (a.Result.Entry.Participant is Team t ? t.Name : "Unknown Participant")
+            });
+        }
+
+        public async Task<AppealDossierDto?> GetAppealDossierAsync(int id)
+        {
+            var appeal = await _repository.GetAppealDossierAsync(id);
+            if (appeal == null) return null;
+
+            return new AppealDossierDto
+            {
+                AppealId = appeal.Id,
+                Reason = appeal.Reason,
+                Status = appeal.Status,
+                FinalScore = appeal.Result.FinalScore,
+                Scores = appeal.Result.Entry.Scores.Select(s => new DossierScoreDto
+                {
+                    ScoreId = s.Id,
+                    Value = s.ScoreValue,
+                    ScoreType = s.Type.ToString(),
+                    JudgeName = s.Judge?.Person != null ? $"{s.Judge.Person.Name} {s.Judge.Person.Surname}" : "Unknown Judge"
+                }).ToList()
+            };
         }
 
         public async Task UpdateAsync(int id, AppealRequestDto request)
@@ -56,6 +109,11 @@ namespace CompetitionsTracking.Services.Implementations
                 _repository.Remove(entity);
                 await _unitOfWork.CompleteAsync();
             }
+        }
+
+        public async Task ApproveAppealAsync(int id, ApproveAppealRequestDto request)
+        {
+            await _repository.ApproveAppealWithRecalculationAsync(id, request.ScoreIdToEdit, request.NewScoreValue);
         }
     }
 }

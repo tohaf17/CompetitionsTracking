@@ -9,5 +9,8 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<AppealResponseDto> CreateAsync(AppealRequestDto request);
         Task UpdateAsync(int id, AppealRequestDto request);
         Task DeleteAsync(int id);
+        Task ApproveAppealAsync(int id, ApproveAppealRequestDto request);
+        Task<IEnumerable<PendingAppealDto>> GetPendingAppealsAsync(int? competitionId);
+        Task<AppealDossierDto?> GetAppealDossierAsync(int id);
     }
 }
