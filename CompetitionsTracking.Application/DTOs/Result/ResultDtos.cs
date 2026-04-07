@@ -2,12 +2,18 @@ namespace CompetitionsTracking.Application.DTOs.Result
 {
     public class ResultRequestDto
     {
-        // Add properties here
+        public int EntryId { get; set; }
+        public int Place { get; set; }
+        public float FinalScore { get; set; }
+        public string AwardedMedal { get; set; }
     }
 
     public class ResultResponseDto
     {
         public int Id { get; set; }
-        // Add properties here
+        public int EntryId { get; set; }
+        public int Place { get; set; }
+        public float FinalScore { get; set; }
+        public string AwardedMedal { get; set; }
     }
 }
