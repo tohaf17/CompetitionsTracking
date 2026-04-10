@@ -4,8 +4,11 @@ using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Repositories.Repositories;
 using CompetitionsTracking.Services.Implementations;
 using FluentValidation;
+using FluentValidation.AspNetCore;
+using CompetitionsTracking.Middleware;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerUI;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -41,11 +44,16 @@ foreach (var type in serviceTypes)
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CompetitionsTracking.Application.Validators.Person.PersonRequestDtoValidator>();
+builder.Services.AddFluentValidationAutoValidation();
 
 var app = builder.Build();
 
+// Use Middleware
+app.UseMiddleware<ValidationExceptionMiddleware>();
+
 using (var scope = app.Services.CreateScope())
 {
+
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
     // Optionally apply migrations before seeding: context.Database.Migrate();

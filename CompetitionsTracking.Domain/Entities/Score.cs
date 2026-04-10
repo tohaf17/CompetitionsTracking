@@ -15,6 +15,14 @@ namespace CompetitionsTracking.Domain.Entities
         public int JudgeId { get; set; }
         public ScoreType Type { get; set; }
         public float ScoreValue { get; set; }
+
+        // Breakdown fields for DB (Difficulty Body) validation
+        public int? JumpCount { get; set; }
+        public int? BalanceCount { get; set; }
+        public int? RotationCount { get; set; }
+        public int? DynamicRotationCount { get; set; } // "R" elements
+        public int? ElementCount { get; set; } // Total counted elements (max 8)
+
         [ForeignKey(nameof(EntryId))]
         public virtual Entry Entry { get; set; }
         
@@ -23,9 +31,12 @@ namespace CompetitionsTracking.Domain.Entities
     }
     public enum ScoreType
     {
-        D,
-        E,
-        A,
+        D,  // General Difficulty
+        DA, // Apparatus Difficulty
+        DB, // Body Difficulty
+        E,  // Execution
+        A,  // Artistry
         Penalty
     }
 }
+

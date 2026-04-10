@@ -7,6 +7,13 @@ namespace CompetitionsTracking.Application.DTOs.Score
         public int JudgeId { get; init; }
         public ScoreType Type { get; init; }
         public float ScoreValue { get; init; }
+
+        // Breakdown fields for DB (Difficulty Body) validation
+        public int? JumpCount { get; set; }
+        public int? BalanceCount { get; set; }
+        public int? RotationCount { get; set; }
+        public int? DynamicRotationCount { get; set; } // "R" elements
+        public int? ElementCount { get; set; } // Total counted elements (max 8)
     }
 
     public record ScoreResponseDto
@@ -16,6 +23,13 @@ namespace CompetitionsTracking.Application.DTOs.Score
         public int JudgeId { get; init; }
         public ScoreType Type { get; init; }
         public float ScoreValue { get; init; }
+
+        // Breakdown fields for DB
+        public int? JumpCount { get; set; }
+        public int? BalanceCount { get; set; }
+        public int? RotationCount { get; set; }
+        public int? DynamicRotationCount { get; set; }
+        public int? ElementCount { get; set; }
     }
     public record EntryScoreDetailDto
     {
@@ -30,7 +44,9 @@ namespace CompetitionsTracking.Application.DTOs.Score
         public int EntryId { get; init; }
         public float TotalDifficulty { get; init; } 
         public float AverageExecution { get; init; } 
+        public float AverageArtistry { get; init; } // Added Artistry
         public float TotalPenalties { get; init; }
         public float CalculatedTotalScore { get; init; }
     }
+
 }

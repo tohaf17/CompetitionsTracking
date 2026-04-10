@@ -83,25 +83,37 @@ namespace CompetitionsTracking.Services.Implementations
             var scores = await _repository.GetScoresByEntryAsync(entryId);
             if (!scores.Any()) return null;
 
-            // Логіка підрахунку: D-оцінки сумуються, E та A - усереднюються, Штрафи - віднімаються
-            // (За потреби адаптуй під реальні правила твого виду спорту)
-            var difficulty = scores.Where(s => s.Type == Domain.Entities.ScoreType.D).Sum(s => s.ScoreValue);
+            // Difficulty: Sum of D, DA, and DB scores
+            var difficulty = scores
+                .Where(s => s.Type == Domain.Entities.ScoreType.D || 
+                            s.Type == Domain.Entities.ScoreType.DA || 
+                            s.Type == Domain.Entities.ScoreType.DB)
+                .Sum(s => s.ScoreValue);
 
-            var executionScores = scores.Where(s => s.Type == Domain.Entities.ScoreType.E || s.Type == Domain.Entities.ScoreType.A).ToList();
+            // Execution: Average of E scores
+            var executionScores = scores.Where(s => s.Type == Domain.Entities.ScoreType.E).ToList();
             var avgExecution = executionScores.Any() ? executionScores.Average(s => s.ScoreValue) : 0f;
 
+            // Artistry: Average of A scores
+            var artistryScores = scores.Where(s => s.Type == Domain.Entities.ScoreType.A).ToList();
+            var avgArtistry = artistryScores.Any() ? artistryScores.Average(s => s.ScoreValue) : 0f;
+
+            // Penalties: Sum of Penalty scores
             var penalties = scores.Where(s => s.Type == Domain.Entities.ScoreType.Penalty).Sum(s => s.ScoreValue);
 
-            var total = difficulty + avgExecution - penalties;
+            // Total Score Calculation: D + E + A - Penalties
+            var total = difficulty + avgExecution + avgArtistry - penalties;
 
             return new EntryScoreBreakdownDto
             {
                 EntryId = entryId,
                 TotalDifficulty = difficulty,
                 AverageExecution = avgExecution,
+                AverageArtistry = avgArtistry,
                 TotalPenalties = penalties,
                 CalculatedTotalScore = total
             };
         }
+
     }
 }

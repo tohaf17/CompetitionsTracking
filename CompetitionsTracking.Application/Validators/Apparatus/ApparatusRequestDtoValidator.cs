@@ -7,7 +7,10 @@ namespace CompetitionsTracking.Application.Validators.Apparatus
     {
         public ApparatusRequestDtoValidator()
         {
-            // Add validation rules here
+            RuleFor(x => x.Type)
+                .NotEmpty().WithMessage("Apparatus type name is required.")
+                .MaximumLength(50).WithMessage("Apparatus type name must not exceed 50 characters.");
         }
     }
+
 }
