@@ -1,23 +1,23 @@
 namespace CompetitionsTracking.Application.DTOs.Discipline
 {
-    public class DisciplineRequestDto
+    public record DisciplineRequestDto
     {
-        public string Type { get; set; } = string.Empty;
-        public int ApparatusId { get; set; }
+        public string Type { get; init; } = string.Empty;
+        public int ApparatusId { get; init; }
     }
 
-    public class DisciplineResponseDto
+    public record DisciplineResponseDto
     {
-        public int Id { get; set; }
-        public string Type { get; set; } = string.Empty;
-        public int ApparatusId { get; set; }
+        public int Id { get; init; }
+        public string Type { get; init; } = string.Empty;
+        public int ApparatusId { get; init; }
     }
-    public class DisciplineStatsDto
+    public record DisciplineStatsDto
     {
-        public int DisciplineId { get; set; }
-        public string DisciplineName { get; set; } = string.Empty;
-        public int TotalEntries { get; set; }
-        public int CompetitionsFeaturedIn { get; set; }
-        public float AverageScore { get; set; }
+        public int DisciplineId { get; init; }
+        public string DisciplineName { get; init; } = string.Empty;
+        public int TotalEntries { get; init; }
+        public int CompetitionsFeaturedIn { get; init; }
+        public float AverageScore { get; init; }
     }
 }

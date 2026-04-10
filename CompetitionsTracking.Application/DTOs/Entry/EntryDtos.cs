@@ -2,52 +2,52 @@ using CompetitionsTracking.Domain.Entities;
 
 namespace CompetitionsTracking.Application.DTOs.Entry
 {
-    public class EntryRequestDto
+    public record EntryRequestDto
     {
-        public int CompetitionId { get; set; }
-        public int ParticipantId { get; set; }
-        public int DisciplineId { get; set; }
-        public int CategoryId { get; set; }
-        public CompetitionsTracking.Domain.Entities.ApplicationStatus ApplicationStatus { get; set; }
-        public CompetitionsTracking.Domain.Entities.EntryStatus EntryStatus { get; set; }
-        public System.DateTime SubmittedAt { get; set; }
-        public System.DateTime? UpdatedAt { get; set; }
+        public int CompetitionId { get; init; }
+        public int ParticipantId { get; init; }
+        public int DisciplineId { get; init; }
+        public int CategoryId { get; init; }
+        public ApplicationStatus ApplicationStatus { get; init; }
+        public EntryStatus EntryStatus { get; init; }
+        public DateTime SubmittedAt { get; init; }
+        public DateTime? UpdatedAt { get; init; }
     }
 
-    public class EntryResponseDto
+    public record EntryResponseDto
     {
-        public int Id { get; set; }
-        public int CompetitionId { get; set; }
-        public int ParticipantId { get; set; }
-        public int DisciplineId { get; set; }
-        public int CategoryId { get; set; }
-        public CompetitionsTracking.Domain.Entities.ApplicationStatus ApplicationStatus { get; set; }
-        public CompetitionsTracking.Domain.Entities.EntryStatus EntryStatus { get; set; }
-        public System.DateTime SubmittedAt { get; set; }
-        public System.DateTime? UpdatedAt { get; set; }
+        public int Id { get; init; }
+        public int CompetitionId { get; init; }
+        public int ParticipantId { get; init; }
+        public int DisciplineId { get; init; }
+        public int CategoryId { get; init; }
+        public ApplicationStatus ApplicationStatus { get; init; }
+        public EntryStatus EntryStatus { get; init; }
+        public DateTime SubmittedAt { get; init; }
+        public DateTime? UpdatedAt { get; init; }
     }
-    public class BulkUpdateAppStatusDto
+    public record BulkUpdateAppStatusDto
     {
-        public int CompetitionId { get; set; }
-        public int CategoryId { get; set; }
-        public ApplicationStatus NewStatus { get; set; }
-    }
-
-    public class ChangeEntryStatusDto
-    {
-        public EntryStatus NewStatus { get; set; }
+        public int CompetitionId { get; init; }
+        public int CategoryId { get; init; }
+        public ApplicationStatus NewStatus { get; init; }
     }
 
-    public class TransferEntryDto
+    public record ChangeEntryStatusDto
     {
-        public int NewCategoryId { get; set; }
-        public int NewDisciplineId { get; set; }
+        public EntryStatus NewStatus { get; init; }
     }
 
-    public class EntryAnalyticsDto
+    public record TransferEntryDto
     {
-        public int TotalEntries { get; set; }
-        public Dictionary<string, int> EntriesByStatus { get; set; } = new();
-        public Dictionary<string, int> EntriesByCategory { get; set; } = new();
+        public int NewCategoryId { get; init; }
+        public int NewDisciplineId { get; init; }
+    }
+
+    public record EntryAnalyticsDto
+    {
+        public int TotalEntries { get; init; }
+        public Dictionary<string, int> EntriesByStatus { get; init; } = new();
+        public Dictionary<string, int> EntriesByCategory { get; init; } = new();
     }
 }

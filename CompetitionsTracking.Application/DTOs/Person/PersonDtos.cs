@@ -1,38 +1,39 @@
+using CompetitionsTracking.Domain.Entities;
 namespace CompetitionsTracking.Application.DTOs.Person
 {
-    public class PersonRequestDto
+    public record PersonRequestDto
     {
-        public string Type { get; set; } = "Person";
-        public string Name { get; set; } = string.Empty;
-        public string Surname { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public System.DateTime DateOfBirth { get; set; }
-        public int? MentorId { get; set; }
-        public CompetitionsTracking.Domain.Entities.Gender Gender { get; set; }
+        public string Type { get; init; } = "Person";
+        public string Name { get; init; } = string.Empty;
+        public string Surname { get; init; } = string.Empty;
+        public string Country { get; init; } = string.Empty;
+        public DateTime DateOfBirth { get; init; }
+        public int? MentorId { get; init; }
+        public Gender Gender { get; init; }
     }
 
-    public class PersonResponseDto
+    public record PersonResponseDto
     {
-        public int Id { get; set; }
-        public string Type { get; set; } = "Person";
-        public string Name { get; set; } = string.Empty;
-        public string Surname { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public System.DateTime DateOfBirth { get; set; }
-        public int? MentorId { get; set; }
-        public CompetitionsTracking.Domain.Entities.Gender Gender { get; set; }
+        public int Id { get; init; }
+        public string Type { get; init; } = "Person";
+        public string Name { get; init; } = string.Empty;
+        public string Surname { get; init; } = string.Empty;
+        public string Country { get; init; } = string.Empty;
+        public DateTime DateOfBirth { get; init; }
+        public int? MentorId { get; init; }
+        public Gender Gender { get; init; }
     }
-    public class MenteeSummaryDto
+    public record MenteeSummaryDto
     {
-        public int PersonId { get; set; }
-        public string FullName { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
+        public int PersonId { get; init; }
+        public string FullName { get; init; } = string.Empty;
+        public string Country { get; init; } = string.Empty;
     }
 
-    public class TeamAffiliationDto
+    public record TeamAffiliationDto
     {
-        public int TeamId { get; set; }
-        public string TeamName { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty; // "Coach" або "Member"
+        public int TeamId { get; init; }
+        public string TeamName { get; init; } = string.Empty;
+        public string Role { get; init; } = string.Empty; 
     }
 }

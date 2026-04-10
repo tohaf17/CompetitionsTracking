@@ -1,48 +1,48 @@
 namespace CompetitionsTracking.Application.DTOs.Judge
 {
-    public class JudgeRequestDto
+    public record JudgeRequestDto
     {
-        public int PersonId { get; set; }
-        public string QualificationLevel { get; set; } = string.Empty;
+        public int PersonId { get; init; }
+        public string QualificationLevel { get; init; } = string.Empty;
     }
 
-    public class JudgeResponseDto
+    public record JudgeResponseDto
     {
-        public int Id { get; set; }
-        public int PersonId { get; set; }
-        public string QualificationLevel { get; set; } = string.Empty;
+        public int Id { get; init; }
+        public int PersonId { get; init; }
+        public string QualificationLevel { get; init; } = string.Empty;
     }
-    public class PendingEvaluationDto
+    public record PendingEvaluationDto
     {
-        public int EntryId { get; set; }
-        public string ParticipantName { get; set; } = string.Empty;
-        public string DisciplineName { get; set; } = string.Empty;
-        public string CategoryName { get; set; } = string.Empty;
-    }
-
-    public class JudgeWorkloadDto
-    {
-        public string DisciplineName { get; set; } = string.Empty;
-        public int ScoresGiven { get; set; }
+        public int EntryId { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public string DisciplineName { get; init; } = string.Empty;
+        public string CategoryName { get; init; } = string.Empty;
     }
 
-    public class ConflictOfInterestDto
+    public record JudgeWorkloadDto
     {
-        public int ScoreId { get; set; }
-        public int EntryId { get; set; }
-        public string ParticipantName { get; set; } = string.Empty;
-        public string SharedAttribute { get; set; } = string.Empty;
-        public float GivenScore { get; set; } // Змінено на float
-        public string ScoreType { get; set; } = string.Empty; // Додано тип оцінки
+        public string DisciplineName { get; init; } = string.Empty;
+        public int ScoresGiven { get; init; }
     }
 
-    public class JudgeScoreHistoryDto
+    public record ConflictOfInterestDto
     {
-        public int ScoreId { get; set; }
-        public int EntryId { get; set; }
-        public string ParticipantName { get; set; } = string.Empty;
-        public float ScoreValue { get; set; } // Змінено на float
-        public string ScoreType { get; set; } = string.Empty; // Додано тип оцінки
-        // Поле CreatedAt видалено
+        public int ScoreId { get; init; }
+        public int EntryId { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public string SharedAttribute { get; init; } = string.Empty;
+        public float GivenScore { get; init; }
+        public string ScoreType { get; init; } = string.Empty;
+    }
+
+    public record JudgeScoreHistoryDto
+    {
+        public int ScoreId { get; init; }
+        public int EntryId { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public float ScoreValue { get; init; } 
+        public string ScoreType { get; init; } = string.Empty;
+        
     }
 }

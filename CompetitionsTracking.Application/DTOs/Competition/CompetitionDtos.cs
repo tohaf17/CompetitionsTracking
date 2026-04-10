@@ -1,42 +1,43 @@
 using CompetitionsTracking.Domain.Entities;
 
+
 namespace CompetitionsTracking.Application.DTOs.Competition
 {
-    public class CompetitionRequestDto
+    public record CompetitionRequestDto
     {
-        public string Title { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public System.DateTime StartDate { get; set; }
-        public System.DateTime EndDate { get; set; }
-        public CompetitionsTracking.Domain.Entities.CompetitionStatus Status { get; set; }
+        public string Title { get; init; } = string.Empty;
+        public string City { get; init; } = string.Empty;
+        public DateTime StartDate { get; init; }
+        public DateTime EndDate { get; init; }
+        public CompetitionStatus Status { get; init; }
     }
 
-    public class CompetitionResponseDto
+    public record CompetitionResponseDto
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public System.DateTime StartDate { get; set; }
-        public System.DateTime EndDate { get; set; }
-        public CompetitionsTracking.Domain.Entities.CompetitionStatus Status { get; set; }
+        public int Id { get; init; }
+        public string Title { get; init; } = string.Empty;
+        public string City { get; init; } = string.Empty;
+        public DateTime StartDate { get; init; }
+        public DateTime EndDate { get; init; }
+        public CompetitionStatus Status { get; init; }
     }
-    public class ChangeCompetitionStatusDto
+    public record ChangeCompetitionStatusDto
     {
-        public CompetitionStatus NewStatus { get; set; }
-    }
-
-    public class CompetitionFilterDto
-    {
-        public CompetitionStatus? Status { get; set; }
-        public string? City { get; set; }
+        public CompetitionStatus NewStatus { get; init; }
     }
 
-    public class CompetitionSummaryDto
+    public record CompetitionFilterDto
     {
-        public int CompetitionId { get; set; }
-        public int TotalEntries { get; set; }
-        public int PendingEntries { get; set; }
-        public int AcceptedEntries { get; set; }
-        public int UniqueDisciplinesCount { get; set; }
+        public CompetitionStatus? Status { get; init; }
+        public string? City { get; init; }
+    }
+
+    public record CompetitionSummaryDto
+    {
+        public int CompetitionId { get; init; }
+        public int TotalEntries { get; init; }
+        public int PendingEntries { get; init; }
+        public int AcceptedEntries { get; init; }
+        public int UniqueDisciplinesCount { get; init; }
     }
 }

@@ -1,35 +1,36 @@
+using CompetitionsTracking.Domain.Entities;
 namespace CompetitionsTracking.Application.DTOs.Score
 {
-    public class ScoreRequestDto
+    public record ScoreRequestDto
     {
-        public int EntryId { get; set; }
-        public int JudgeId { get; set; }
-        public CompetitionsTracking.Domain.Entities.ScoreType Type { get; set; }
-        public float ScoreValue { get; set; }
+        public int EntryId { get; init; }
+        public int JudgeId { get; init; }
+        public ScoreType Type { get; init; }
+        public float ScoreValue { get; init; }
     }
 
-    public class ScoreResponseDto
+    public record ScoreResponseDto
     {
-        public int Id { get; set; }
-        public int EntryId { get; set; }
-        public int JudgeId { get; set; }
-        public CompetitionsTracking.Domain.Entities.ScoreType Type { get; set; }
-        public float ScoreValue { get; set; }
+        public int Id { get; init; }
+        public int EntryId { get; init; }
+        public int JudgeId { get; init; }
+        public ScoreType Type { get; init; }
+        public float ScoreValue { get; init; }
     }
-    public class EntryScoreDetailDto
+    public record EntryScoreDetailDto
     {
-        public int ScoreId { get; set; }
-        public string JudgeName { get; set; } = string.Empty;
-        public string ScoreType { get; set; } = string.Empty;
-        public float ScoreValue { get; set; }
+        public int ScoreId { get; init; }
+        public string JudgeName { get; init; } = string.Empty;
+        public string ScoreType { get; init; } = string.Empty;
+        public float ScoreValue { get; init; }
     }
 
-    public class EntryScoreBreakdownDto
+    public record EntryScoreBreakdownDto
     {
-        public int EntryId { get; set; }
-        public float TotalDifficulty { get; set; } // Сума оцінок D
-        public float AverageExecution { get; set; } // Середня оцінка E (чи A)
-        public float TotalPenalties { get; set; } // Сума штрафів
-        public float CalculatedTotalScore { get; set; } // Орієнтовний фінальний бал
+        public int EntryId { get; init; }
+        public float TotalDifficulty { get; init; } 
+        public float AverageExecution { get; init; } 
+        public float TotalPenalties { get; init; }
+        public float CalculatedTotalScore { get; init; }
     }
 }

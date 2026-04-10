@@ -113,7 +113,7 @@ namespace CompetitionsTracking.Services.Implementations
             return records.Select(r => new DisciplineRecordDto
             {
                 ParticipantName = GetParticipantName(r.Entry.Participant),
-                CompetitionName = r.Entry.Competition?.Name ?? "Unknown",
+                CompetitionName = r.Entry.Competition?.Title?? "Unknown",
                 FinalScore = r.FinalScore,
                 CompetitionDate = r.Entry.Competition?.StartDate ?? System.DateTime.MinValue
             });

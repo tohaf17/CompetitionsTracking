@@ -1,43 +1,43 @@
 namespace CompetitionsTracking.Application.DTOs.Result
 {
-    public class ResultRequestDto
+    public record ResultRequestDto
     {
-        public int EntryId { get; set; }
-        public int Place { get; set; }
-        public float FinalScore { get; set; }
-        public string AwardedMedal { get; set; }
+        public int EntryId { get; init; }
+        public int Place { get; init; }
+        public float FinalScore { get; init; }
+        public string AwardedMedal { get; init; } = string.Empty;
     }
 
-    public class ResultResponseDto
+    public record ResultResponseDto
     {
-        public int Id { get; set; }
-        public int EntryId { get; set; }
-        public int Place { get; set; }
-        public float FinalScore { get; set; }
-        public string AwardedMedal { get; set; }
+        public int Id { get; init; }
+        public int EntryId { get; init; }
+        public int Place { get; init; }
+        public float FinalScore { get; init; }
+        public string AwardedMedal { get; init; } = string.Empty;
     }
-    public class LeaderboardEntryDto
+    public record LeaderboardEntryDto
     {
-        public int Place { get; set; }
-        public string ParticipantName { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public float FinalScore { get; set; }
+        public int Place { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public string Country { get; init; } = string.Empty;
+        public float FinalScore { get; init; }
     }
 
-    public class CountryMedalTallyDto
+    public record CountryMedalTallyDto
     {
-        public string Country { get; set; } = string.Empty;
-        public int Gold { get; set; }
-        public int Silver { get; set; }
-        public int Bronze { get; set; }
+        public string Country { get; init; } = string.Empty;
+        public int Gold { get; init; }
+        public int Silver { get; init; }
+        public int Bronze { get; init; }
         public int TotalMedals => Gold + Silver + Bronze;
     }
 
-    public class DisciplineRecordDto
+    public record DisciplineRecordDto
     {
-        public string ParticipantName { get; set; } = string.Empty;
-        public string CompetitionName { get; set; } = string.Empty;
-        public float FinalScore { get; set; }
-        public System.DateTime CompetitionDate { get; set; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public string CompetitionName { get; init; } = string.Empty;
+        public float FinalScore { get; init; }
+        public DateTime CompetitionDate { get; init; }
     }
 }
