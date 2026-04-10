@@ -1,5 +1,6 @@
 using FluentValidation;
 using CompetitionsTracking.Application.DTOs.Score;
+using CompetitionsTracking.Domain.Entities;
 
 namespace CompetitionsTracking.Application.Validators.Score
 {

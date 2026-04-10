@@ -49,7 +49,7 @@ builder.Services.AddFluentValidationAutoValidation();
 var app = builder.Build();
 
 // Use Middleware
-app.UseMiddleware<ValidationExceptionMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {
