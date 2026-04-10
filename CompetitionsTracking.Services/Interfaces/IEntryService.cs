@@ -1,3 +1,4 @@
+using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Entry;
 using CompetitionsTracking.Domain.Models;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ namespace CompetitionsTracking.Services.Interfaces
 {
     public interface IEntryService
     {
-        Task<IEnumerable<EntryResponseDto>> GetAllAsync();
+        Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null);
         Task<EntryResponseDto?> GetByIdAsync(int id);
         Task<EntryResponseDto> CreateAsync(EntryRequestDto request);
         Task UpdateAsync(int id, EntryRequestDto request);

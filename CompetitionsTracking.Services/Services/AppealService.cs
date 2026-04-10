@@ -1,5 +1,6 @@
 using CompetitionsTracking.Application.DTOs.Appeal;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
@@ -26,7 +27,8 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<AppealResponseDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity?.Adapt<AppealResponseDto>();
+            if (entity == null) throw new NotFoundException(nameof(Appeal), id);
+            return entity.Adapt<AppealResponseDto>();
         }
 
         public async Task<AppealResponseDto> CreateAsync(AppealRequestDto request)
@@ -34,13 +36,13 @@ namespace CompetitionsTracking.Services.Implementations
             bool hasDuplicate = await _repository.HasAppealForResultAsync(request.ResultId);
             if (hasDuplicate)
             {
-                throw new InvalidOperationException("An appeal already exists for this result.");
+                throw new ConflictException("An appeal already exists for this result.");
             }
 
             bool isOngoing = await _repository.IsCompetitionOngoingForResultAsync(request.ResultId);
             if (!isOngoing)
             {
-                throw new InvalidOperationException("Appeals can only be submitted while the competition is ongoing.");
+                throw new BadRequestException("Appeals can only be submitted while the competition is ongoing.");
             }
 
             var entity = request.Adapt<Appeal>();
@@ -73,7 +75,7 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<AppealDossierDto?> GetAppealDossierAsync(int id)
         {
             var appeal = await _repository.GetAppealDossierAsync(id);
-            if (appeal == null) return null;
+            if (appeal == null) throw new NotFoundException(nameof(Appeal), id);
 
             return new AppealDossierDto
             {
@@ -94,22 +96,20 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task UpdateAsync(int id, AppealRequestDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                request.Adapt(entity);
-                _repository.Update(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Appeal), id);
+            
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                _repository.Remove(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Appeal), id);
+            
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task ApproveAppealAsync(int id, ApproveAppealRequestDto request)

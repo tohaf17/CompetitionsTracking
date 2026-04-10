@@ -21,6 +21,22 @@ namespace CompetitionsTracking.Repositories.Repositories
             return await _dbSet.ToListAsync();
         }
 
+        public async Task<(IEnumerable<TEntity> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, Expression<Func<TEntity, bool>>? predicate = null)
+        {
+            var query = _dbSet.AsQueryable();
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((pageNumber - 1) * pageSize)
+                                   .Take(pageSize)
+                                   .ToListAsync();
+
+            return (items, totalCount);
+        }
+
         public async Task<TEntity?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
@@ -29,6 +45,13 @@ namespace CompetitionsTracking.Repositories.Repositories
         public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
         {
             return await _dbSet.Where(predicate).ToListAsync();
+        }
+
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null)
+        {
+            return predicate == null 
+                ? await _dbSet.CountAsync() 
+                : await _dbSet.CountAsync(predicate);
         }
 
         public async Task AddAsync(TEntity entity)

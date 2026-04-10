@@ -1,5 +1,7 @@
+using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Entry;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
@@ -20,16 +22,20 @@ namespace CompetitionsTracking.Services.Implementations
             _repository = repository;
         }
 
-        public async Task<IEnumerable<EntryResponseDto>> GetAllAsync()
+        public async Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null)
         {
-            var entities = await _repository.GetAllAsync();
-            return entities.Adapt<IEnumerable<EntryResponseDto>>();
+            pagination ??= new PaginationParams();
+            var (entities, totalCount) = await _repository.GetPagedAsync(pagination.PageNumber, pagination.PageSize);
+            
+            var dtos = entities.Adapt<IEnumerable<EntryResponseDto>>();
+            return new PagedResponse<EntryResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }
 
         public async Task<EntryResponseDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity?.Adapt<EntryResponseDto>();
+            if (entity == null) throw new NotFoundException(nameof(Entry), id);
+            return entity.Adapt<EntryResponseDto>();
         }
 
         public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request)
@@ -43,37 +49,38 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task UpdateAsync(int id, EntryRequestDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                request.Adapt(entity);
-                _repository.Update(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Entry), id);
+
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                _repository.Remove(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Entry), id);
+
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task<IEnumerable<ControversialEntryDto>> GetControversialEntriesAsync(int competitionId)
         {
             return await _repository.GetControversialEntriesAsync(competitionId);
         }
+
         public async Task<int> BulkUpdateAppStatusAsync(BulkUpdateAppStatusDto request)
         {
-            return await _repository.BulkUpdateAppStatusAsync(request.CompetitionId, request.CategoryId, request.NewStatus);
+            int updatedCount = await _repository.BulkUpdateAppStatusAsync(request.CompetitionId, request.CategoryId, request.NewStatus);
+            // Assuming Direct SQL doesn't need CompleteAsync but let's be safe if it's integrated.
+            return updatedCount;
         }
 
         public async Task ChangeEntryStatusAsync(int id, ChangeEntryStatusDto request)
         {
             var entry = await _repository.GetByIdAsync(id);
-            if (entry == null) throw new KeyNotFoundException("Заявку не знайдено");
+            if (entry == null) throw new NotFoundException(nameof(Entry), id);
 
             entry.EntryStatus = request.NewStatus;
             _repository.Update(entry);
@@ -83,9 +90,8 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task DisqualifyAsync(int entryId)
         {
             var entry = await _repository.GetEntryWithResultAsync(entryId);
-            if (entry == null) throw new KeyNotFoundException("Заявку не знайдено");
+            if (entry == null) throw new NotFoundException(nameof(Entry) , entryId);
 
-            // Використовуємо існуючий статус DNS або можеш додати DSQ у свій enum EntryStatus
             entry.EntryStatus = EntryStatus.DNS;
 
             if (entry.Result != null)
@@ -100,10 +106,10 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task TransferEntryAsync(int entryId, TransferEntryDto request)
         {
             var entry = await _repository.GetByIdAsync(entryId);
-            if (entry == null) throw new KeyNotFoundException("Заявку не знайдено");
+            if (entry == null) throw new NotFoundException(nameof(Entry), entryId);
 
             var isDuplicate = await _repository.IsDuplicateEntryAsync(entry.CompetitionId, entry.ParticipantId, request.NewDisciplineId);
-            if (isDuplicate) throw new System.InvalidOperationException("Учасник вже зареєстрований на цю дисципліну.");
+            if (isDuplicate) throw new BadRequestException("Учасник вже зареєстрований на цю дисципліну.");
 
             entry.CategoryId = request.NewCategoryId;
             entry.DisciplineId = request.NewDisciplineId;

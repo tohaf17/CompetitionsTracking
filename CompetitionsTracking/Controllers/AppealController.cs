@@ -33,15 +33,8 @@ namespace CompetitionsTracking.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] AppealRequestDto request)
         {
-            try
-            {
-                var result = await _service.CreateAsync(request);
-                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _service.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpGet("pending")]

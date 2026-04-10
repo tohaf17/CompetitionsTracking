@@ -1,3 +1,4 @@
+using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Entry;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +17,9 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] PaginationParams pagination)
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(pagination);
             return Ok(result);
         }
 
@@ -26,7 +27,6 @@ namespace CompetitionsTracking.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (result == null) return NotFound();
             return Ok(result);
         }
 
@@ -57,6 +57,7 @@ namespace CompetitionsTracking.Controllers
             var result = await _service.GetControversialEntriesAsync(competitionId);
             return Ok(result);
         }
+
         [HttpPatch("bulk-status")]
         public async Task<IActionResult> BulkUpdateStatus([FromBody] BulkUpdateAppStatusDto request)
         {
@@ -67,43 +68,22 @@ namespace CompetitionsTracking.Controllers
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeEntryStatusDto request)
         {
-            try
-            {
-                await _service.ChangeEntryStatusAsync(id, request);
-                return NoContent();
-            }
-            catch (System.Collections.Generic.KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+            await _service.ChangeEntryStatusAsync(id, request);
+            return NoContent();
         }
 
         [HttpPatch("{id}/disqualify")]
         public async Task<IActionResult> Disqualify(int id)
         {
-            try
-            {
-                await _service.DisqualifyAsync(id);
-                return Ok(new { message = "Учасника дискваліфіковано (DNS), результати анульовано." });
-            }
-            catch (System.Collections.Generic.KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+            await _service.DisqualifyAsync(id);
+            return Ok(new { message = "Учасника дискваліфіковано (DNS), результати анульовано." });
         }
 
         [HttpPost("{id}/transfer")]
         public async Task<IActionResult> TransferEntry(int id, [FromBody] TransferEntryDto request)
         {
-            try
-            {
-                await _service.TransferEntryAsync(id, request);
-                return Ok(new { message = "Заявку успішно перенесено у нову категорію/дисципліну." });
-            }
-            catch (System.Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            await _service.TransferEntryAsync(id, request);
+            return Ok(new { message = "Заявку успішно перенесено у нову категорію/дисципліну." });
         }
 
         [HttpGet("competition/{competitionId}/start-list")]

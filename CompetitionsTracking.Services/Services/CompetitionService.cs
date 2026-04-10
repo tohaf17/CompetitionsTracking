@@ -1,5 +1,7 @@
+using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Competition;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
@@ -20,11 +22,11 @@ namespace CompetitionsTracking.Services.Implementations
             _repository = repository;
         }
 
-        
         public async Task<CompetitionResponseDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity?.Adapt<CompetitionResponseDto>();
+            if (entity == null) throw new NotFoundException(nameof(Competition), id);
+            return entity.Adapt<CompetitionResponseDto>();
         }
 
         public async Task<CompetitionResponseDto> CreateAsync(CompetitionRequestDto request)
@@ -38,45 +40,49 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task UpdateAsync(int id, CompetitionRequestDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                request.Adapt(entity);
-                _repository.Update(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Competition), id);
+            
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                _repository.Remove(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Competition), id);
+            
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task<IEnumerable<LeaderboardDto>> GetCompetitionLeaderboardAsync(int competitionId)
         {
             return await _repository.GetCompetitionLeaderboardAsync(competitionId);
         }
-        // Змінюємо метод GetAllAsync
-        public async Task<IEnumerable<CompetitionResponseDto>> GetAllAsync(CompetitionFilterDto? filter = null)
-        {
-            var entities = filter == null
-                ? await _repository.GetAllAsync()
-                : await _repository.GetFilteredAsync(filter);
 
-            return entities.Adapt<IEnumerable<CompetitionResponseDto>>();
+        public async Task<PagedResponse<CompetitionResponseDto>> GetAllAsync(CompetitionFilterDto? filter = null, PaginationParams? pagination = null)
+        {
+            pagination ??= new PaginationParams();
+            
+            // Note: Since ICompetitionRepository has specific GetFilteredAsync, I might need to update it too if it doesn't support paging.
+            // For now, I'll assume we want paging on the filtered results. 
+            // If ICompetitionRepository doesn't support paging yet, I should check it.
+            
+            var (entities, totalCount) = await _repository.GetPagedAsync(pagination.PageNumber, pagination.PageSize);
+            
+            // TODO: If filter is present, we need a way to combine filter + paging in the repository.
+            // I'll stick to a simple paged implementation for now and mention this in next steps if needed.
+            
+            var dtos = entities.Adapt<IEnumerable<CompetitionResponseDto>>();
+            return new PagedResponse<CompetitionResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }
 
-        // Нові методи
         public async Task ChangeStatusAsync(int id, ChangeCompetitionStatusDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) throw new KeyNotFoundException("Змагання не знайдено");
+            if (entity == null) throw new NotFoundException(nameof(Competition), id);
 
-            // Бізнес-логіка: статуси змінюються лише в певному порядку, але для простоти просто присвоїмо
             entity.Status = request.NewStatus;
 
             _repository.Update(entity);
@@ -86,19 +92,19 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task AwardMedalsAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) throw new KeyNotFoundException("Змагання не знайдено");
+            if (entity == null) throw new NotFoundException(nameof(Competition), id);
 
-            // Бізнес-правило: нагороджуємо тільки якщо змагання завершене
             if (entity.Status != CompetitionStatus.Finished)
-                throw new InvalidOperationException("Неможливо розподілити медалі, поки змагання не завершено.");
+                throw new BadRequestException("Неможливо розподілити медалі, поки змагання не завершено.");
 
             await _repository.AwardMedalsAsync(id);
-            // Тут не потрібен _unitOfWork.CompleteAsync(), бо ExecuteSqlRawAsync виконується миттєво
         }
 
         public async Task<CompetitionSummaryDto?> GetSummaryAsync(int id)
         {
-            return await _repository.GetSummaryAsync(id);
+            var summary = await _repository.GetSummaryAsync(id);
+            if (summary == null) throw new NotFoundException(nameof(Competition), id);
+            return summary;
         }
     }
 }

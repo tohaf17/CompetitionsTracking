@@ -1,3 +1,4 @@
+using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Competition;
 using CompetitionsTracking.Domain.Models;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace CompetitionsTracking.Services.Interfaces
         Task UpdateAsync(int id, CompetitionRequestDto request);
         Task DeleteAsync(int id);
         Task<IEnumerable<LeaderboardDto>> GetCompetitionLeaderboardAsync(int competitionId);
-        Task<IEnumerable<CompetitionResponseDto>> GetAllAsync(CompetitionFilterDto? filter = null);
+        Task<PagedResponse<CompetitionResponseDto>> GetAllAsync(CompetitionFilterDto? filter = null, PaginationParams? pagination = null);
 
         Task ChangeStatusAsync(int id, ChangeCompetitionStatusDto request);
         Task AwardMedalsAsync(int id);

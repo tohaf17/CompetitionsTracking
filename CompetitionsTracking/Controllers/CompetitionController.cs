@@ -1,3 +1,4 @@
+using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Competition;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -15,49 +16,31 @@ namespace CompetitionsTracking.Controllers
             _service = service;
         }
 
-        // Онови існуючий [HttpGet]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] CompetitionFilterDto filter)
+        public async Task<IActionResult> GetAll([FromQuery] CompetitionFilterDto filter, [FromQuery] PaginationParams pagination)
         {
-            // Якщо фільтри не передані, об'єкт filter матиме всі властивості як null
-            var result = await _service.GetAllAsync(filter);
+            var result = await _service.GetAllAsync(filter, pagination);
             return Ok(result);
         }
 
-        // Додай нові ендпоінти
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeCompetitionStatusDto request)
         {
-            try
-            {
-                await _service.ChangeStatusAsync(id, request);
-                return NoContent(); 
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            await _service.ChangeStatusAsync(id, request);
+            return NoContent();
         }
 
         [HttpPost("{id}/award-medals")]
         public async Task<IActionResult> AwardMedals(int id)
         {
-            try
-            {
-                await _service.AwardMedalsAsync(id);
-                return Ok(new { message = "Медалі успішно розподілені між учасниками." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            await _service.AwardMedalsAsync(id);
+            return Ok(new { message = "Медалі успішно розподілені між учасниками." });
         }
 
         [HttpGet("{id}/summary")]
         public async Task<IActionResult> GetSummary(int id)
         {
             var result = await _service.GetSummaryAsync(id);
-            if (result == null) return NotFound();
             return Ok(result);
         }
         [HttpGet("{id}")]
