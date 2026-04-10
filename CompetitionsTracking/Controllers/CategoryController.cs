@@ -50,5 +50,12 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+        [HttpGet("{id}/stats")]
+        public async Task<IActionResult> GetStats(int id)
+        {
+            var result = await _service.GetCategoryStatsAsync(id);
+            if (result == null) return NotFound(new { message = "Категорію не знайдено." });
+            return Ok(result);
+        }
     }
 }

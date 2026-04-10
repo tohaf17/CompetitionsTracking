@@ -4,7 +4,7 @@ using CompetitionsTracking.Repositories.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace CompetitionsTracking.Repositories.Implementations
+namespace CompetitionsTracking.Repositories.Repositories
 {
     public class AppealRepository : Repository<Appeal>, IAppealRepository
     {

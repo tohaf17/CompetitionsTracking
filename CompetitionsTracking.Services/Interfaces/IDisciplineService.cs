@@ -9,5 +9,6 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<DisciplineResponseDto> CreateAsync(DisciplineRequestDto request);
         Task UpdateAsync(int id, DisciplineRequestDto request);
         Task DeleteAsync(int id);
+        Task<DisciplineStatsDto?> GetDisciplineStatsAsync(int disciplineId);
     }
 }

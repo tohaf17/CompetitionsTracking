@@ -1,8 +1,11 @@
 using CompetitionsTracking.Application.DTOs.Person;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Services.Implementations
 {
@@ -56,6 +59,54 @@ namespace CompetitionsTracking.Services.Implementations
                 _repository.Remove(entity);
                 await _unitOfWork.CompleteAsync();
             }
+        }
+
+        public async Task<IEnumerable<ParticipantPerformanceDto>> GetParticipantPerformanceHistoryAsync(int participantId)
+        {
+            return await _repository.GetParticipantPerformanceHistoryAsync(participantId);
+        }
+        public async Task<IEnumerable<MenteeSummaryDto>> GetMenteesAsync(int mentorId)
+        {
+            var mentees = await _repository.GetMenteesAsync(mentorId);
+
+            return mentees.Select(m => new MenteeSummaryDto
+            {
+                PersonId = m.Id,
+                FullName = $"{m.Name} {m.Surname}",
+                Country = m.Country
+            });
+        }
+
+        public async Task<IEnumerable<TeamAffiliationDto>> GetTeamAffiliationsAsync(int personId)
+        {
+            var person = await _repository.GetPersonWithTeamsAsync(personId);
+            var affiliations = new List<TeamAffiliationDto>();
+
+            if (person == null) return affiliations;
+
+            // Додаємо команди, де людина є тренером
+            if (person.TeamsCoached != null && person.TeamsCoached.Any())
+            {
+                affiliations.AddRange(person.TeamsCoached.Select(t => new TeamAffiliationDto
+                {
+                    TeamId = t.Id,
+                    TeamName = t.Name,
+                    Role = "Coach"
+                }));
+            }
+
+            // Додаємо команди, де людина є учасником
+            if (person.TeamsAsMember != null && person.TeamsAsMember.Any())
+            {
+                affiliations.AddRange(person.TeamsAsMember.Select(t => new TeamAffiliationDto
+                {
+                    TeamId = t.Id,
+                    TeamName = t.Name,
+                    Role = "Member"
+                }));
+            }
+
+            return affiliations;
         }
     }
 }

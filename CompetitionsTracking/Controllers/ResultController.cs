@@ -50,5 +50,34 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("competition/{competitionId}/team-tally")]
+        public async Task<IActionResult> GetTeamMedalTally(int competitionId)
+        {
+            var result = await _service.GetTeamMedalTallyAsync(competitionId);
+            return Ok(result);
+        }
+        [HttpGet("competition/{competitionId}/leaderboard")]
+        public async Task<IActionResult> GetLeaderboard(int competitionId, [FromQuery] int disciplineId, [FromQuery] int categoryId)
+        {
+            var result = await _service.GetLeaderboardAsync(competitionId, disciplineId, categoryId);
+            return Ok(result);
+        }
+
+        [HttpGet("competition/{competitionId}/country-tally")]
+        public async Task<IActionResult> GetCountryMedalTally(int competitionId)
+        {
+            var result = await _service.GetCountryMedalTallyAsync(competitionId);
+            return Ok(result);
+        }
+
+        [HttpGet("discipline/{disciplineId}/records")]
+        public async Task<IActionResult> GetDisciplineRecords(int disciplineId, [FromQuery] int topN = 10)
+        {
+            if (topN > 100) topN = 100;
+
+            var result = await _service.GetTopRecordsByDisciplineAsync(disciplineId, topN);
+            return Ok(result);
+        }
     }
 }

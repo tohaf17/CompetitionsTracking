@@ -50,5 +50,45 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("{id}/analytics")]
+        public async Task<IActionResult> GetJudgeAnalytics(int id)
+        {
+            var result = await _service.GetJudgeAnalyticsAsync(id);
+            return Ok(result);
+        }
+        // ... твої існуючі методи ...
+
+        [HttpGet("{id}/competitions/{competitionId}/pending")]
+        public async Task<IActionResult> GetPendingEvaluations(int id, int competitionId)
+        {
+            var result = await _service.GetPendingEvaluationsAsync(id, competitionId);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/conflicts")]
+        public async Task<IActionResult> GetConflictsOfInterest(int id)
+        {
+            var result = await _service.GetConflictsOfInterestAsync(id);
+            if (!result.Any())
+            {
+                return Ok(new { message = "Конфліктів інтересів не виявлено. Суддя може продовжувати роботу." });
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/competitions/{competitionId}/workload")]
+        public async Task<IActionResult> GetWorkloadSummary(int id, int competitionId)
+        {
+            var result = await _service.GetWorkloadSummaryAsync(id, competitionId);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/competitions/{competitionId}/scores")]
+        public async Task<IActionResult> GetJudgeScores(int id, int competitionId)
+        {
+            var result = await _service.GetJudgeScoresInCompetitionAsync(id, competitionId);
+            return Ok(result);
+        }
     }
 }

@@ -50,5 +50,33 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("{id}/metrics")]
+        public async Task<IActionResult> GetTeamDominanceMetrics(int id)
+        {
+            var result = await _service.GetTeamDominanceMetricsAsync(id);
+            return Ok(result);
+        }
+        [HttpGet("{id}/roster")]
+        public async Task<IActionResult> GetTeamRoster(int id)
+        {
+            var result = await _service.GetTeamRosterAsync(id);
+            if (result == null) return NotFound(new { message = "Команду не знайдено." });
+            return Ok(result);
+        }
+
+        [HttpPost("{teamId}/members/{personId}")]
+        public async Task<IActionResult> AddMemberToTeam(int teamId, int personId)
+        {
+            await _service.AddMemberToTeamAsync(teamId, personId);
+            return Ok(new { message = "Спортсмена успішно додано до команди." });
+        }
+
+        [HttpDelete("{teamId}/members/{personId}")]
+        public async Task<IActionResult> RemoveMemberFromTeam(int teamId, int personId)
+        {
+            await _service.RemoveMemberFromTeamAsync(teamId, personId);
+            return Ok(new { message = "Спортсмена успішно видалено з команди." });
+        }
     }
 }

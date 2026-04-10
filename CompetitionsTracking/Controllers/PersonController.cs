@@ -50,5 +50,33 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("{id}/performance")]
+        public async Task<IActionResult> GetParticipantPerformanceHistory(int id)
+        {
+            var result = await _service.GetParticipantPerformanceHistoryAsync(id);
+            return Ok(result);
+        }
+        [HttpGet("{id}/mentees")]
+        public async Task<IActionResult> GetMentees(int id)
+        {
+            var result = await _service.GetMenteesAsync(id);
+            if (!result.Any())
+            {
+                return Ok(new { message = "У цього учасника немає підопічних." });
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/teams")]
+        public async Task<IActionResult> GetTeamAffiliations(int id)
+        {
+            var result = await _service.GetTeamAffiliationsAsync(id);
+            if (!result.Any())
+            {
+                return Ok(new { message = "Цей учасник не входить до жодної команди і не тренує їх." });
+            }
+            return Ok(result);
+        }
     }
 }

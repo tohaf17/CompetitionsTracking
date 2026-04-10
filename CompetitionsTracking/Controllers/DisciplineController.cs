@@ -50,5 +50,12 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+        [HttpGet("{id}/stats")]
+        public async Task<IActionResult> GetStats(int id)
+        {
+            var result = await _service.GetDisciplineStatsAsync(id);
+            if (result == null) return NotFound(new { message = "Дисципліну не знайдено." });
+            return Ok(result);
+        }
     }
 }

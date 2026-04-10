@@ -1,8 +1,11 @@
 using CompetitionsTracking.Application.DTOs.Result;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Services.Implementations
 {
@@ -56,6 +59,84 @@ namespace CompetitionsTracking.Services.Implementations
                 _repository.Remove(entity);
                 await _unitOfWork.CompleteAsync();
             }
+        }
+
+        public async Task<IEnumerable<TeamMedalTallyDto>> GetTeamMedalTallyAsync(int competitionId)
+        {
+            return await _repository.GetTeamMedalTallyAsync(competitionId);
+        }
+        public async Task<IEnumerable<LeaderboardEntryDto>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId)
+        {
+            var results = await _repository.GetLeaderboardAsync(competitionId, disciplineId, categoryId);
+
+            return results.Select(r => new LeaderboardEntryDto
+            {
+                Place = r.Place,
+                ParticipantName = GetParticipantName(r.Entry.Participant),
+                Country = GetParticipantCountry(r.Entry.Participant),
+                FinalScore = r.FinalScore // Або float, залежно від твоєї сутності
+            });
+        }
+
+        public async Task<IEnumerable<CountryMedalTallyDto>> GetCountryMedalTallyAsync(int competitionId)
+        {
+            var medalists = await _repository.GetMedalistsByCompetitionAsync(competitionId);
+
+            // Групуємо медалістів за їхньою країною
+            var tally = medalists
+                .Select(m => new
+                {
+                    Country = GetParticipantCountry(m.Entry.Participant),
+                    Place = m.Place
+                })
+                .Where(x => !string.IsNullOrEmpty(x.Country)) // Відкидаємо, якщо країна невідома
+                .GroupBy(x => x.Country)
+                .Select(g => new CountryMedalTallyDto
+                {
+                    Country = g.Key,
+                    Gold = g.Count(x => x.Place == 1),
+                    Silver = g.Count(x => x.Place == 2),
+                    Bronze = g.Count(x => x.Place == 3)
+                })
+                .OrderByDescending(t => t.Gold)
+                .ThenByDescending(t => t.Silver)
+                .ThenByDescending(t => t.Bronze)
+                .ToList();
+
+            return tally;
+        }
+
+        public async Task<IEnumerable<DisciplineRecordDto>> GetTopRecordsByDisciplineAsync(int disciplineId, int topN = 10)
+        {
+            var records = await _repository.GetTopRecordsByDisciplineAsync(disciplineId, topN);
+
+            return records.Select(r => new DisciplineRecordDto
+            {
+                ParticipantName = GetParticipantName(r.Entry.Participant),
+                CompetitionName = r.Entry.Competition?.Name ?? "Unknown",
+                FinalScore = r.FinalScore,
+                CompetitionDate = r.Entry.Competition?.StartDate ?? System.DateTime.MinValue
+            });
+        }
+
+        // ХЕЛПЕРИ ДЛЯ РОБОТИ З АБСТРАКТНИМ УЧАСНИКОМ (Person vs Team)
+        private string GetParticipantName(Domain.Entities.Participant participant)
+        {
+            return participant switch
+            {
+                Domain.Entities.Person p => $"{p.Name} {p.Surname}",
+                Domain.Entities.Team t => t.Name,
+                _ => "Unknown"
+            };
+        }
+
+        private string GetParticipantCountry(Domain.Entities.Participant participant)
+        {
+            return participant switch
+            {
+                Domain.Entities.Person p => p.Country,
+                _ => string.Empty
+            };
         }
     }
 }

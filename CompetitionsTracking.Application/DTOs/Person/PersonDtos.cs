@@ -22,4 +22,17 @@ namespace CompetitionsTracking.Application.DTOs.Person
         public int? MentorId { get; set; }
         public CompetitionsTracking.Domain.Entities.Gender Gender { get; set; }
     }
+    public class MenteeSummaryDto
+    {
+        public int PersonId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+    }
+
+    public class TeamAffiliationDto
+    {
+        public int TeamId { get; set; }
+        public string TeamName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty; // "Coach" або "Member"
+    }
 }

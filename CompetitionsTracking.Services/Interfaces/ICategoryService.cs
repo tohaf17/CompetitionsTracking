@@ -9,5 +9,6 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<CategoryResponseDto> CreateAsync(CategoryRequestDto request);
         Task UpdateAsync(int id, CategoryRequestDto request);
         Task DeleteAsync(int id);
+        Task<CategoryStatsDto?> GetCategoryStatsAsync(int categoryId);
     }
 }

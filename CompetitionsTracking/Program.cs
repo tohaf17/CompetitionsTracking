@@ -1,7 +1,7 @@
 using CompetitionsTracking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using CompetitionsTracking.Repositories.Interfaces;
-using CompetitionsTracking.Repositories.Implementations;
+using CompetitionsTracking.Repositories.Repositories;
 using CompetitionsTracking.Services.Implementations;
 using FluentValidation;
 using Swashbuckle.AspNetCore.Swagger;

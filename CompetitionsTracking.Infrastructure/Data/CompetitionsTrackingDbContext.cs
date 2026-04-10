@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Models;
 
 namespace CompetitionsTracking.Infrastructure.Data
 {
@@ -25,9 +26,25 @@ namespace CompetitionsTracking.Infrastructure.Data
         public DbSet<Judge> Judges { get; set; }
         public DbSet<Score> Scores { get; set; }
 
+        public DbSet<LeaderboardDto> Leaderboards { get; set; }
+        public DbSet<JudgeAnalyticsDto> JudgeAnalytics { get; set; }
+        public DbSet<ParticipantPerformanceDto> ParticipantPerformances { get; set; }
+        public DbSet<ControversialEntryDto> ControversialEntries { get; set; }
+        public DbSet<TeamMedalTallyDto> TeamMedalTallies { get; set; }
+        public DbSet<TeamDominanceMetricDto> TeamDominanceMetrics { get; set; }
+        public DbSet<ScoreAnomalyDto> ScoreAnomalies { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<LeaderboardDto>().HasNoKey();
+            modelBuilder.Entity<JudgeAnalyticsDto>().HasNoKey();
+            modelBuilder.Entity<ParticipantPerformanceDto>().HasNoKey();
+            modelBuilder.Entity<ControversialEntryDto>().HasNoKey();
+            modelBuilder.Entity<TeamMedalTallyDto>().HasNoKey();
+            modelBuilder.Entity<TeamDominanceMetricDto>().HasNoKey();
+            modelBuilder.Entity<ScoreAnomalyDto>().HasNoKey();
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CompetitionsTrackingDbContext).Assembly);
         }

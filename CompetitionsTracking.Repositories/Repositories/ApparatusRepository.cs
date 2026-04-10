@@ -2,7 +2,7 @@ using CompetitionsTracking.Domain.Entities;
 using CompetitionsTracking.Infrastructure.Data;
 using CompetitionsTracking.Repositories.Interfaces;
 
-namespace CompetitionsTracking.Repositories.Implementations
+namespace CompetitionsTracking.Repositories.Repositories
 {
     public class ApparatusRepository : Repository<Apparatus>, IApparatusRepository
     {

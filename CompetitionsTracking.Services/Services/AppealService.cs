@@ -44,12 +44,13 @@ namespace CompetitionsTracking.Services.Implementations
             }
 
             var entity = request.Adapt<Appeal>();
-            entity.Status = AppealStatus.Pending; // Force pending initially
+            entity.Status = AppealStatus.Pending; 
             entity.CreatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
             return entity.Adapt<AppealResponseDto>();
+            
         }
 
         public async Task<IEnumerable<PendingAppealDto>> GetPendingAppealsAsync(int? competitionId)

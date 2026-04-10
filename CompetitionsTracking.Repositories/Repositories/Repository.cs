@@ -3,7 +3,7 @@ using CompetitionsTracking.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace CompetitionsTracking.Repositories.Implementations
+namespace CompetitionsTracking.Repositories.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {

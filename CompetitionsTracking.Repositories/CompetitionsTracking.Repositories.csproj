@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\CompetitionsTracking.Application\CompetitionsTracking.Application.csproj" />
     <ProjectReference Include="..\CompetitionsTracking.Domain\CompetitionsTracking.Domain.csproj" />
     <ProjectReference Include="..\CompetitionsTracking.Infrastructure\CompetitionsTracking.Infrastructure.csproj" />
   </ItemGroup>

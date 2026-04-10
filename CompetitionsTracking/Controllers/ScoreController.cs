@@ -50,5 +50,27 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("competition/{competitionId}/anomalies")]
+        public async Task<IActionResult> GetScoreAnomalies(int competitionId)
+        {
+            var result = await _service.GetScoreAnomaliesAsync(competitionId);
+            return Ok(result);
+        }
+        [HttpGet("entry/{entryId}")]
+        public async Task<IActionResult> GetScoresByEntry(int entryId)
+        {
+            var result = await _service.GetScoresByEntryAsync(entryId);
+            if (!result.Any()) return NotFound(new { message = "Оцінок для цього виступу не знайдено." });
+            return Ok(result);
+        }
+
+        [HttpGet("entry/{entryId}/breakdown")]
+        public async Task<IActionResult> GetEntryScoreBreakdown(int entryId)
+        {
+            var result = await _service.GetEntryScoreBreakdownAsync(entryId);
+            if (result == null) return NotFound(new { message = "Неможливо сформувати розрахунок, оцінки відсутні." });
+            return Ok(result);
+        }
     }
 }

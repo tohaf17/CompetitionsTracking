@@ -57,5 +57,9 @@ namespace CompetitionsTracking.Services.Implementations
                 await _unitOfWork.CompleteAsync();
             }
         }
+        public async Task<CategoryStatsDto?> GetCategoryStatsAsync(int categoryId)
+        {
+            return await _repository.GetCategoryStatsAsync(categoryId);
+        }
     }
 }
