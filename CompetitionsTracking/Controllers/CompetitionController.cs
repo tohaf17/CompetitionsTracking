@@ -1,12 +1,14 @@
 using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Competition;
 using CompetitionsTracking.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompetitionsTracking.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // All endpoints require authentication
     public class CompetitionController : ControllerBase
     {
         private readonly ICompetitionService _service;
@@ -24,6 +26,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("{id}/status")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeCompetitionStatusDto request)
         {
             await _service.ChangeStatusAsync(id, request);
@@ -31,6 +34,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost("{id}/award-medals")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AwardMedals(int id)
         {
             await _service.AwardMedalsAsync(id);
@@ -52,6 +56,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CompetitionRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -59,6 +64,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] CompetitionRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -66,6 +72,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);

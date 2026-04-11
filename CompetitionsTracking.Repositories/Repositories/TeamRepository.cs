@@ -21,12 +21,19 @@ namespace CompetitionsTracking.Repositories.Repositories
                     t.Id AS TeamId,
                     t.Name AS TeamName,
                     COUNT(DISTINCT p.Id) AS TotalParticipants,
-                    SUM(r.FinalScore) AS CumulativePoints,
-                    SUM(r.FinalScore) / NULLIF(COUNT(DISTINCT p.Id), 0) AS AveragePointsPerParticipant
-                FROM Teams t
-                INNER JOIN Participants p ON t.Id = p.TeamId
-                INNER JOIN Entries e ON p.Id = e.ParticipantId
-                INNER JOIN Results r ON e.Id = r.EntryId
+                    CAST(SUM(r.FinalScore) AS FLOAT) AS CumulativePoints,
+                    CAST(SUM(r.FinalScore) / NULLIF(COUNT(DISTINCT p.Id), 0) AS FLOAT) AS AveragePointsPerParticipant
+                FROM teams t
+                INNER JOIN (
+                    -- Individual members
+                    SELECT team_id, person_id AS ParticipantId FROM team_members
+                    UNION ALL
+                    -- The team itself (for group entries)
+                    SELECT Id, Id FROM teams
+                ) m ON t.Id = m.team_id
+                INNER JOIN participants p ON m.ParticipantId = p.Id
+                INNER JOIN entries e ON p.Id = e.ParticipantId
+                INNER JOIN results r ON e.Id = r.EntryId
                 WHERE t.Id = {0}
                 GROUP BY t.Id, t.Name
             ";

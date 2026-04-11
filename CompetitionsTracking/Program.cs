@@ -1,22 +1,79 @@
 using CompetitionsTracking.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using CompetitionsTracking.Middleware;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Repositories.Repositories;
 using CompetitionsTracking.Services.Implementations;
+using CompetitionsTracking.Services.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using CompetitionsTracking.Middleware;
-using Swashbuckle.AspNetCore.Swagger;
-using Swashbuckle.AspNetCore.SwaggerUI;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
+
+// Swagger Configuration
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "CompetitionsTracking API",
+        Version = "v1",
+        Description = "Rhythmic Gymnastics Competitions Tracking API"
+    });
+
+    // Define the Bearer scheme
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token: Bearer {token}"
+    });
+
+    // Add security requirement globally
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -42,37 +99,46 @@ foreach (var type in serviceTypes)
     if (iType != null) builder.Services.AddScoped(iType, type);
 }
 
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CompetitionsTracking.Application.Validators.Person.PersonRequestDtoValidator>();
 builder.Services.AddFluentValidationAutoValidation();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 var app = builder.Build();
 
-// Use Middleware
+// Scalar API Reference UI — must come BEFORE exception handling middleware
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "CompetitionsTracking API v1");
+    });
+}
+
+// Global exception handling — after API docs so it doesn't intercept JSON generation
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {
-
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
-    // Optionally apply migrations before seeding: context.Database.Migrate();
     DatabaseSeeder.Seed(context);
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-
-    app.UseSwaggerUI();
-    app.UseSwagger();
-}
-
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

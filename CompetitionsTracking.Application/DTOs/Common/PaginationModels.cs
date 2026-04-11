@@ -16,12 +16,12 @@ namespace CompetitionsTracking.Application.DTOs.Common
         }
     }
 
-    public class PagedResponse<T>
+    public record PagedResponse<T>
     {
-        public IEnumerable<T> Data { get; set; }
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
-        public int TotalCount { get; set; }
+        public IEnumerable<T> Data { get; init; }
+        public int PageNumber { get; init; }
+        public int PageSize { get; init; }
+        public int TotalCount { get; init; }
         public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
 
         public PagedResponse(IEnumerable<T> data, int count, int pageNumber, int pageSize)

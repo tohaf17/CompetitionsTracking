@@ -1,12 +1,14 @@
 using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Entry;
 using CompetitionsTracking.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompetitionsTracking.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class EntryController : ControllerBase
     {
         private readonly IEntryService _service;
@@ -31,6 +33,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] EntryRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -38,6 +41,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Update(int id, [FromBody] EntryRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -45,6 +49,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);
@@ -59,6 +64,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("bulk-status")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> BulkUpdateStatus([FromBody] BulkUpdateAppStatusDto request)
         {
             var updatedCount = await _service.BulkUpdateAppStatusAsync(request);
@@ -66,6 +72,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("{id}/status")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeEntryStatusDto request)
         {
             await _service.ChangeEntryStatusAsync(id, request);
@@ -73,6 +80,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("{id}/disqualify")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Disqualify(int id)
         {
             await _service.DisqualifyAsync(id);
@@ -80,6 +88,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost("{id}/transfer")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> TransferEntry(int id, [FromBody] TransferEntryDto request)
         {
             await _service.TransferEntryAsync(id, request);

@@ -1,11 +1,11 @@
 namespace CompetitionsTracking.Domain.Models
 {
-    public class JudgeAnalyticsDto
+    public record JudgeAnalyticsDto
     {
-        public int JudgeId { get; set; }
-        public string JudgeName { get; set; } = string.Empty;
-        public int TotalPerformancesJudged { get; set; }
-        public float AverageScoreGiven { get; set; }
-        public float AverageScoreDeviation { get; set; }
+        public int JudgeId { get; init; }
+        public string JudgeName { get; init; } = string.Empty;
+        public int TotalPerformancesJudged { get; init; }
+        public float AverageScoreGiven { get; init; }
+        public float AverageScoreDeviation { get; init; }
     }
 }

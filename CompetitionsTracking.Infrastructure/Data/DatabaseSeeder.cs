@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CompetitionsTracking.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace CompetitionsTracking.Infrastructure.Data
 {
@@ -9,8 +10,40 @@ namespace CompetitionsTracking.Infrastructure.Data
     {
         public static void Seed(CompetitionsTrackingDbContext context)
         {
+            if (!context.Users.Any())
+            {
+                var hasher = new PasswordHasher<User>();
+                
+                var admin = new User
+                {
+                    Username = "admin",
+                    Role = UserRole.Admin,
+                    CreatedAt = DateTime.UtcNow
+                };
+                admin.PasswordHash = hasher.HashPassword(admin, "admin123");
+
+                var trainee = new User
+                {
+                    Username = "trainee",
+                    Role = UserRole.Trainee,
+                    CreatedAt = DateTime.UtcNow
+                };
+                trainee.PasswordHash = hasher.HashPassword(trainee, "trainee123");
+
+                var guest = new User
+                {
+                    Username = "guest",
+                    Role = UserRole.Guest,
+                    CreatedAt = DateTime.UtcNow
+                };
+                guest.PasswordHash = hasher.HashPassword(guest, "guest123");
+
+                context.Users.AddRange(admin, trainee, guest);
+            }
+
             if (context.Persons.Any())
             {
+                context.SaveChanges(); // Save users if any were added
                 return;   
             }
 

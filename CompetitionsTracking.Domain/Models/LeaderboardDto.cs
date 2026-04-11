@@ -1,12 +1,12 @@
 namespace CompetitionsTracking.Domain.Models
 {
-    public class LeaderboardDto
+    public record LeaderboardDto
     {
-        public int ParticipantId { get; set; }
-        public string ParticipantName { get; set; } = string.Empty;
-        public string CategoryName { get; set; } = string.Empty;
-        public string DisciplineName { get; set; } = string.Empty;
-        public float TotalScore { get; set; }
-        public int CalculatedRank { get; set; }
+        public int ParticipantId { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public string CategoryName { get; init; } = string.Empty;
+        public string DisciplineName { get; init; } = string.Empty;
+        public float TotalScore { get; init; }
+        public int CalculatedRank { get; init; }
     }
 }

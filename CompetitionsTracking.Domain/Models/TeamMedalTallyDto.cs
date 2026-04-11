@@ -1,12 +1,12 @@
 namespace CompetitionsTracking.Domain.Models
 {
-    public class TeamMedalTallyDto
+    public record TeamMedalTallyDto
     {
-        public int TeamId { get; set; }
-        public string TeamName { get; set; } = string.Empty;
-        public int GoldMedals { get; set; }
-        public int SilverMedals { get; set; }
-        public int BronzeMedals { get; set; }
-        public int TotalMedals { get; set; }
+        public int TeamId { get; init; }
+        public string TeamName { get; init; } = string.Empty;
+        public int GoldMedals { get; init; }
+        public int SilverMedals { get; init; }
+        public int BronzeMedals { get; init; }
+        public int TotalMedals { get; init; }
     }
 }

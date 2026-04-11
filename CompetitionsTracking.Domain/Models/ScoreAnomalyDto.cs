@@ -1,12 +1,12 @@
 namespace CompetitionsTracking.Domain.Models
 {
-    public class ScoreAnomalyDto
+    public record ScoreAnomalyDto
     {
-        public int ScoreId { get; set; }
-        public string JudgeName { get; set; } = string.Empty;
-        public int EntryId { get; set; }
-        public float ScoreValue { get; set; }
-        public float AverageEntryScore { get; set; }
-        public float Deviation { get; set; }
+        public int ScoreId { get; init; }
+        public string JudgeName { get; init; } = string.Empty;
+        public int EntryId { get; init; }
+        public float ScoreValue { get; init; }
+        public float AverageEntryScore { get; init; }
+        public float Deviation { get; init; }
     }
 }

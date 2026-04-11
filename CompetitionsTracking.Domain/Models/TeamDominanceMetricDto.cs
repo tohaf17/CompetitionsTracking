@@ -1,11 +1,11 @@
 namespace CompetitionsTracking.Domain.Models
 {
-    public class TeamDominanceMetricDto
+    public record TeamDominanceMetricDto
     {
-        public int TeamId { get; set; }
-        public string TeamName { get; set; } = string.Empty;
-        public int TotalParticipants { get; set; }
-        public float CumulativePoints { get; set; }
-        public float AveragePointsPerParticipant { get; set; }
+        public int TeamId { get; init; }
+        public string TeamName { get; init; } = string.Empty;
+        public int TotalParticipants { get; init; }
+        public double CumulativePoints { get; init; }
+        public double AveragePointsPerParticipant { get; init; }
     }
 }

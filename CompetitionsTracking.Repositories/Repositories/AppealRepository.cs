@@ -19,20 +19,16 @@ namespace CompetitionsTracking.Repositories.Repositories
             var parameterNewScore = new SqlParameter("@NewScore", newScoreValue);
 
             string query = @"
-                -- 1. Update Appeal
                 UPDATE appeals SET Status = 'Approved', ResolvedAt = GETUTCDATE() WHERE Id = @AppealId;
 
-                -- 2. Update specific score
                 UPDATE scores SET ScoreValue = @NewScore WHERE Id = @ScoreId;
 
-                -- 3. Recalculate FinalScore for the entry of this score
                 DECLARE @EntryId INT = (SELECT TOP 1 EntryId FROM scores WHERE Id = @ScoreId);
 
                 UPDATE results 
                 SET FinalScore = (SELECT SUM(ScoreValue) FROM scores WHERE EntryId = @EntryId)
                 WHERE EntryId = @EntryId;
 
-                -- 4. Recalculate Places for all entries in the same Category + Discipline
                 DECLARE @CategoryId INT;
                 DECLARE @DisciplineId INT;
                 SELECT TOP 1 @CategoryId = CategoryId, @DisciplineId = DisciplineId FROM entries WHERE Id = @EntryId;

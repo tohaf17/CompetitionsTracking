@@ -1,12 +1,12 @@
 namespace CompetitionsTracking.Domain.Models
 {
-    public class ParticipantPerformanceDto
+    public record ParticipantPerformanceDto
     {
-        public int CompetitionId { get; set; }
-        public string CompetitionName { get; set; } = string.Empty;
-        public string ApparatusName { get; set; } = string.Empty;
-        public float FinalScore { get; set; }
-        public int Placement { get; set; }
-        public DateTime CompetitionDate { get; set; }
+        public int CompetitionId { get; init; }
+        public string CompetitionName { get; init; } = string.Empty;
+        public string ApparatusName { get; init; } = string.Empty;
+        public float FinalScore { get; init; }
+        public int Placement { get; init; }
+        public DateTime CompetitionDate { get; init; }
     }
 }

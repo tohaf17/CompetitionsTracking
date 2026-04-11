@@ -25,6 +25,7 @@ namespace CompetitionsTracking.Infrastructure.Data
         public DbSet<Appeal> Appeals { get; set; }
         public DbSet<Judge> Judges { get; set; }
         public DbSet<Score> Scores { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public DbSet<LeaderboardDto> Leaderboards { get; set; }
         public DbSet<JudgeAnalyticsDto> JudgeAnalytics { get; set; }
