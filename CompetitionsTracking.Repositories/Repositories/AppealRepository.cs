@@ -55,14 +55,12 @@ namespace CompetitionsTracking.Repositories.Repositories
 
         public async Task<bool> IsCompetitionOngoingForResultAsync(int resultId)
         {
-            var result = await _context.Set<Result>()
-                .Include(r => r.Entry)
-                    .ThenInclude(e => e.Competition)
-                .FirstOrDefaultAsync(r => r.Id == resultId);
+            var status = await _context.Set<Result>()
+                .Where(r => r.Id == resultId)
+                .Select(r => (CompetitionStatus?)r.Entry.Competition.Status)
+                .FirstOrDefaultAsync();
 
-            if (result == null || result.Entry == null || result.Entry.Competition == null) return false;
-
-            return result.Entry.Competition.Status == CompetitionStatus.Ongoing;
+            return status == CompetitionStatus.Ongoing;
         }
 
         public async Task<IEnumerable<Appeal>> GetPendingAppealsAsync(int? competitionId)
@@ -88,6 +86,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
             return await _context.Set<Appeal>()
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.Result)
                     .ThenInclude(r => r.Entry)
                         .ThenInclude(e => e.Scores)

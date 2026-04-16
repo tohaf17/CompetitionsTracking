@@ -37,11 +37,10 @@ namespace CompetitionsTracking.Repositories.Repositories
 
             return await _context.Leaderboards.FromSqlRaw(sql, competitionId).ToListAsync();
         }
-        // ... існуючий код
 
         public async Task<IEnumerable<Competition>> GetFilteredAsync(CompetitionFilterDto filter)
         {
-            var query = _context.Set<Competition>().AsQueryable();
+            var query = _context.Set<Competition>().AsQueryable().AsNoTracking();
 
             if (filter.Status.HasValue)
                 query = query.Where(c => c.Status == filter.Status.Value);
@@ -54,26 +53,27 @@ namespace CompetitionsTracking.Repositories.Repositories
 
         public async Task<CompetitionSummaryDto?> GetSummaryAsync(int competitionId)
         {
-            // Агрегація даних на стороні БД (швидко та економно для пам'яті)
-            return await _context.Entries // Припускаю, що ти маєш доступ до Entries через DbSet
-                .Where(e => e.CompetitionId == competitionId)
-                .GroupBy(e => e.CompetitionId)
-                .Select(g => new CompetitionSummaryDto
-                {
-                    CompetitionId = g.Key,
-                    TotalEntries = g.Count(),
-                    PendingEntries = g.Count(e => e.ApplicationStatus == ApplicationStatus.Pending), // Твій enum app_status
-                    AcceptedEntries = g.Count(e => e.ApplicationStatus == ApplicationStatus.Accepted),
-                    UniqueDisciplinesCount = g.Select(e => e.DisciplineId).Distinct().Count()
-                })
-                .FirstOrDefaultAsync();
+            int pendingStatus = (int)ApplicationStatus.Pending;
+            int acceptedStatus = (int)ApplicationStatus.Accepted;
+
+            var summary = await _context.Database.SqlQuery<CompetitionSummaryDto>($@"
+        SELECT 
+            c.Id AS CompetitionId,
+            CAST(COUNT(e.Id) AS INT) AS TotalEntries,
+            CAST(SUM(CASE WHEN e.ApplicationStatus = {pendingStatus} THEN 1 ELSE 0 END) AS INT) AS PendingEntries,
+            CAST(SUM(CASE WHEN e.ApplicationStatus = {acceptedStatus} THEN 1 ELSE 0 END) AS INT) AS AcceptedEntries,
+            CAST(COUNT(DISTINCT e.DisciplineId) AS INT) AS UniqueDisciplinesCount
+        FROM Competitions c
+        LEFT JOIN Entries e ON c.Id = e.CompetitionId
+        WHERE c.Id = {competitionId}
+        GROUP BY c.Id"
+            ).FirstOrDefaultAsync();
+
+            return summary;
         }
 
         public async Task AwardMedalsAsync(int competitionId)
         {
-            // Складний SQL-запит для курсової роботи! 
-            // Використовує CTE (Common Table Expression) та віконну функцію для визначення ТОП-3
-            // і одразу оновлює таблицю Results без витягування даних в пам'ять.
             string sql = @"
         WITH RankedResults AS (
             SELECT r.Id, 

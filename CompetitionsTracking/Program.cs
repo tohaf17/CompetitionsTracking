@@ -75,7 +75,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging());
 
 // Data Access
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

@@ -64,16 +64,7 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<PagedResponse<CompetitionResponseDto>> GetAllAsync(CompetitionFilterDto? filter = null, PaginationParams? pagination = null)
         {
             pagination ??= new PaginationParams();
-            
-            // Note: Since ICompetitionRepository has specific GetFilteredAsync, I might need to update it too if it doesn't support paging.
-            // For now, I'll assume we want paging on the filtered results. 
-            // If ICompetitionRepository doesn't support paging yet, I should check it.
-            
             var (entities, totalCount) = await _repository.GetPagedAsync(pagination.PageNumber, pagination.PageSize);
-            
-            // TODO: If filter is present, we need a way to combine filter + paging in the repository.
-            // I'll stick to a simple paged implementation for now and mention this in next steps if needed.
-            
             var dtos = entities.Adapt<IEnumerable<CompetitionResponseDto>>();
             return new PagedResponse<CompetitionResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }

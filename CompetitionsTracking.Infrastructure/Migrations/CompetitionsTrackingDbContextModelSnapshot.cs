@@ -17,7 +17,7 @@ namespace CompetitionsTracking.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -320,6 +320,11 @@ namespace CompetitionsTracking.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -460,11 +465,11 @@ namespace CompetitionsTracking.Infrastructure.Migrations
 
             modelBuilder.Entity("CompetitionsTracking.Domain.Models.TeamDominanceMetricDto", b =>
                 {
-                    b.Property<float>("AveragePointsPerParticipant")
-                        .HasColumnType("real");
+                    b.Property<double>("AveragePointsPerParticipant")
+                        .HasColumnType("float");
 
-                    b.Property<float>("CumulativePoints")
-                        .HasColumnType("real");
+                    b.Property<double>("CumulativePoints")
+                        .HasColumnType("float");
 
                     b.Property<int>("TeamId")
                         .HasColumnType("int");

@@ -1,0 +1,19 @@
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+}
+
+.main-wrapper {
+    flex: 1;
+    margin-left: 250px; /* Width of sidebar */
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+    margin-top: 70px; /* Height of topbar */
+    padding: 2rem;
+    overflow-y: auto;
+}

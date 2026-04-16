@@ -29,7 +29,7 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Identifier || u.Email == request.Identifier);
             
             if (user == null)
             {
@@ -57,10 +57,15 @@ namespace CompetitionsTracking.Services.Implementations
             {
                 throw new ConflictException("Username is already taken.");
             }
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Email != ""))
+            {
+                throw new ConflictException("Email is already taken.");
+            }
 
             var user = new User
             {
                 Username = request.Username,
+                Email = request.Email,
                 Role = request.Role,
                 CreatedAt = DateTime.UtcNow
             };
@@ -100,6 +105,31 @@ namespace CompetitionsTracking.Services.Implementations
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        {
+            var users = await _context.Users.ToListAsync();
+            return users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email,
+                Role = u.Role,
+                CreatedAt = u.CreatedAt
+            });
+        }
+
+        public async Task DeleteUserAsync(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                throw new NotFoundException($"User with ID {id} not found.");
+            }
+            
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
         }
     }
 }

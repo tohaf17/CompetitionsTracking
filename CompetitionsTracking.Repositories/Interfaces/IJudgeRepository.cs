@@ -8,9 +8,9 @@ namespace CompetitionsTracking.Repositories.Interfaces
     public interface IJudgeRepository : IRepository<Judge>
     {
         Task<IEnumerable<JudgeAnalyticsDto>> GetJudgeAnalyticsAsync(int judgeId);
-        Task<IEnumerable<Domain.Entities.Entry>> GetPendingEvaluationsAsync(int judgeId, int competitionId);
-        Task<IEnumerable<Domain.Entities.Score>> GetConflictsOfInterestAsync(int judgeId);
-        Task<IEnumerable<dynamic>> GetWorkloadSummaryAsync(int judgeId, int competitionId);
-        Task<IEnumerable<Domain.Entities.Score>> GetJudgeScoresInCompetitionAsync(int judgeId, int competitionId);
+        Task<IEnumerable<Entry>> GetPendingEvaluationsAsync(int judgeId, int competitionId);
+        Task<IEnumerable<Score>> GetConflictsOfInterestAsync(int judgeId);
+        Task<IEnumerable<WorkloadSummaryDto>> GetWorkloadSummaryAsync(int judgeId, int competitionId);
+        Task<IEnumerable<Score>> GetJudgeScoresInCompetitionAsync(int judgeId, int competitionId);
     }
 }

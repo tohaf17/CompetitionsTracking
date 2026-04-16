@@ -87,10 +87,9 @@ namespace CompetitionsTracking.Services.Implementations
                 ScoreId = c.Id,
                 EntryId = c.EntryId,
                 ParticipantName = GetParticipantName(c.Entry.Participant),
-                // Безпечно витягуємо країну, оскільки конфлікт можливий тільки якщо учасник - Person
                 SharedAttribute = c.Entry.Participant is Person p ? $"Спільна країна: {p.Country}" : "Невідомо",
                 GivenScore = c.ScoreValue,
-                ScoreType = c.Type.ToString() // Мапимо Enum (D, E, A, Penalty) у рядок
+                ScoreType = c.Type.ToString()
             });
         }
 
@@ -120,11 +119,10 @@ namespace CompetitionsTracking.Services.Implementations
                 EntryId = s.EntryId,
                 ParticipantName = GetParticipantName(s.Entry.Participant),
                 ScoreValue = s.ScoreValue,
-                ScoreType = s.Type.ToString() // Відображаємо, за що саме була поставлена ця оцінка
+                ScoreType = s.Type.ToString()
             });
         }
 
-        // ПОМІЧНИК ДЛЯ ВИЗНАЧЕННЯ ТИПУ УЧАСНИКА
         private string GetParticipantName(Participant participant)
         {
             return participant switch

@@ -89,8 +89,6 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task AddMemberToTeamAsync(int teamId, int personId)
         {
             var team = await _repository.GetTeamWithMembersAsync(teamId);
-            // Тут ідеально було б ще інжектити IPersonRepository, щоб перевірити, чи існує Person, 
-            // але для спрощення припустимо, що ми знаходимо людину через загальний контекст
             var person = await _personRepository.GetByIdAsync(personId);
 
             if (team != null && person != null && !team.Members.Any(m => m.Id == personId))

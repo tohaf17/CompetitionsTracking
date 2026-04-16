@@ -43,7 +43,7 @@ namespace CompetitionsTracking.Repositories.Repositories
             ";
             return await _context.ScoreAnomalies.FromSqlRaw(sql, competitionId).ToListAsync();
         }
-        public async Task<IEnumerable<Domain.Entities.Score>> GetScoresByEntryAsync(int entryId)
+        public async Task<IEnumerable<Score>> GetScoresByEntryAsync(int entryId)
         {
             return await _context.Scores
                 .Include(s => s.Judge).ThenInclude(j => j.Person)

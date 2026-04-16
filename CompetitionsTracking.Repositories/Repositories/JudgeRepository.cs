@@ -41,7 +41,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         public async Task<IEnumerable<Entry>> GetPendingEvaluationsAsync(int judgeId, int competitionId)
         {
             return await _context.Entries
-                .Include(e => e.Participant) // EF Core автоматично завантажить Person або Team
+                .Include(e => e.Participant) 
                 .Include(e => e.Discipline)
                 .Include(e => e.Category)
                 .Where(e => e.CompetitionId == competitionId
@@ -58,20 +58,19 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .Include(s => s.Judge).ThenInclude(j => j.Person)
                 .Include(s => s.Entry).ThenInclude(e => e.Participant)
                 .Where(s => s.JudgeId == judgeId
-                         // Перевіряємо, чи учасник є людиною (Person), і чи збігаються країни
                          && s.Entry.Participant is Person
                          && ((Person)s.Entry.Participant).Country == s.Judge.Person.Country)
                 .AsNoTracking()
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<dynamic>> GetWorkloadSummaryAsync(int judgeId, int competitionId)
+        public async Task<IEnumerable<WorkloadSummaryDto>> GetWorkloadSummaryAsync(int judgeId, int competitionId)
         {
             return await _context.Scores
                 .Include(s => s.Entry).ThenInclude(e => e.Discipline)
                 .Where(s => s.JudgeId == judgeId && s.Entry.CompetitionId == competitionId)
                 .GroupBy(s => s.Entry.Discipline.Type)
-                .Select(g => new { DisciplineName = g.Key, ScoresGiven = g.Count() })
+                .Select(g => new WorkloadSummaryDto(g.Key, g.Count()))
                 .ToListAsync();
         }
 

@@ -34,21 +34,20 @@ namespace CompetitionsTracking.Repositories.Repositories
             ";
             return await _context.TeamMedalTallies.FromSqlRaw(sql, competitionId).ToListAsync();
         }
-        public async Task<IEnumerable<Domain.Entities.Result>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId)
+        public async Task<IEnumerable<Result>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId)
         {
             return await _context.Results
-                .Include(r => r.Entry).ThenInclude(e => e.Participant) // Завантажить Person або Team
+                .Include(r => r.Entry).ThenInclude(e => e.Participant) 
                 .Where(r => r.Entry.CompetitionId == competitionId
                          && r.Entry.DisciplineId == disciplineId
                          && r.Entry.CategoryId == categoryId)
-                .OrderBy(r => r.Place) // Сортуємо від 1-го місця і нижче
+                .OrderBy(r => r.Place) 
                 .AsNoTracking()
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Domain.Entities.Result>> GetMedalistsByCompetitionAsync(int competitionId)
+        public async Task<IEnumerable<Result>> GetMedalistsByCompetitionAsync(int competitionId)
         {
-            // Беремо тільки 1, 2 та 3 місця для заліку
             return await _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)
                 .Where(r => r.Entry.CompetitionId == competitionId && r.Place >= 1 && r.Place <= 3)
@@ -56,13 +55,13 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Domain.Entities.Result>> GetTopRecordsByDisciplineAsync(int disciplineId, int topN)
+        public async Task<IEnumerable<Result>> GetTopRecordsByDisciplineAsync(int disciplineId, int topN)
         {
             return await _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)
                 .Include(r => r.Entry).ThenInclude(e => e.Competition)
                 .Where(r => r.Entry.DisciplineId == disciplineId)
-                .OrderByDescending(r => r.FinalScore) // Сортуємо за найвищим балом
+                .OrderByDescending(r => r.FinalScore) 
                 .Take(topN)
                 .AsNoTracking()
                 .ToListAsync();

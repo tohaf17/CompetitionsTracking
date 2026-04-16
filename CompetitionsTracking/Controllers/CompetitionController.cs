@@ -8,7 +8,7 @@ namespace CompetitionsTracking.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // All endpoints require authentication
+    [Authorize]
     public class CompetitionController : ControllerBase
     {
         private readonly ICompetitionService _service;

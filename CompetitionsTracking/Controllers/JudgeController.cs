@@ -57,7 +57,6 @@ namespace CompetitionsTracking.Controllers
             var result = await _service.GetJudgeAnalyticsAsync(id);
             return Ok(result);
         }
-        // ... твої існуючі методи ...
 
         [HttpGet("{id}/competitions/{competitionId}/pending")]
         public async Task<IActionResult> GetPendingEvaluations(int id, int competitionId)

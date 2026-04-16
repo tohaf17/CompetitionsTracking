@@ -8,6 +8,6 @@ namespace CompetitionsTracking.Repositories.Interfaces
     public interface ITeamRepository : IRepository<Team>
     {
         Task<IEnumerable<TeamDominanceMetricDto>> GetTeamDominanceMetricsAsync(int teamId);
-        Task<Domain.Entities.Team?> GetTeamWithMembersAsync(int teamId);
+        Task<Team?> GetTeamWithMembersAsync(int teamId);
     }
 }

@@ -74,7 +74,7 @@ namespace CompetitionsTracking.Services.Implementations
                 Place = r.Place,
                 ParticipantName = GetParticipantName(r.Entry.Participant),
                 Country = GetParticipantCountry(r.Entry.Participant),
-                FinalScore = r.FinalScore // Або float, залежно від твоєї сутності
+                FinalScore = r.FinalScore
             });
         }
 
@@ -82,14 +82,13 @@ namespace CompetitionsTracking.Services.Implementations
         {
             var medalists = await _repository.GetMedalistsByCompetitionAsync(competitionId);
 
-            // Групуємо медалістів за їхньою країною
             var tally = medalists
                 .Select(m => new
                 {
                     Country = GetParticipantCountry(m.Entry.Participant),
                     Place = m.Place
                 })
-                .Where(x => !string.IsNullOrEmpty(x.Country)) // Відкидаємо, якщо країна невідома
+                .Where(x => !string.IsNullOrEmpty(x.Country)) 
                 .GroupBy(x => x.Country)
                 .Select(g => new CountryMedalTallyDto
                 {
@@ -119,22 +118,21 @@ namespace CompetitionsTracking.Services.Implementations
             });
         }
 
-        // ХЕЛПЕРИ ДЛЯ РОБОТИ З АБСТРАКТНИМ УЧАСНИКОМ (Person vs Team)
-        private string GetParticipantName(Domain.Entities.Participant participant)
+        private string GetParticipantName(Participant participant)
         {
             return participant switch
             {
-                Domain.Entities.Person p => $"{p.Name} {p.Surname}",
-                Domain.Entities.Team t => t.Name,
+                Person p => $"{p.Name} {p.Surname}",
+                Team t => t.Name,
                 _ => "Unknown"
             };
         }
 
-        private string GetParticipantCountry(Domain.Entities.Participant participant)
+        private string GetParticipantCountry(Participant participant)
         {
             return participant switch
             {
-                Domain.Entities.Person p => p.Country,
+                Person p => p.Country,
                 _ => string.Empty
             };
         }

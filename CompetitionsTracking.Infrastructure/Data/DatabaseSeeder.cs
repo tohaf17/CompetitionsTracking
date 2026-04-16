@@ -17,6 +17,7 @@ namespace CompetitionsTracking.Infrastructure.Data
                 var admin = new User
                 {
                     Username = "admin",
+                    Email = "admin@example.com",
                     Role = UserRole.Admin,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -25,6 +26,7 @@ namespace CompetitionsTracking.Infrastructure.Data
                 var trainee = new User
                 {
                     Username = "trainee",
+                    Email = "trainee@example.com",
                     Role = UserRole.Trainee,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -33,6 +35,7 @@ namespace CompetitionsTracking.Infrastructure.Data
                 var guest = new User
                 {
                     Username = "guest",
+                    Email = "guest@example.com",
                     Role = UserRole.Guest,
                     CreatedAt = DateTime.UtcNow
                 };

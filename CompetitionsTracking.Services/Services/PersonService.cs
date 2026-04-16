@@ -84,7 +84,6 @@ namespace CompetitionsTracking.Services.Implementations
 
             if (person == null) return affiliations;
 
-            // Додаємо команди, де людина є тренером
             if (person.TeamsCoached != null && person.TeamsCoached.Any())
             {
                 affiliations.AddRange(person.TeamsCoached.Select(t => new TeamAffiliationDto
@@ -94,8 +93,6 @@ namespace CompetitionsTracking.Services.Implementations
                     Role = "Coach"
                 }));
             }
-
-            // Додаємо команди, де людина є учасником
             if (person.TeamsAsMember != null && person.TeamsAsMember.Any())
             {
                 affiliations.AddRange(person.TeamsAsMember.Select(t => new TeamAffiliationDto

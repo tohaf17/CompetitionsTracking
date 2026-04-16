@@ -10,8 +10,8 @@ namespace CompetitionsTracking.Repositories.Interfaces
     {
         Task<IEnumerable<ControversialEntryDto>> GetControversialEntriesAsync(int competitionId);
         Task<int> BulkUpdateAppStatusAsync(int competitionId, int categoryId, ApplicationStatus newStatus);
-        Task<IEnumerable<Domain.Entities.Entry>> GetStartListAsync(int competitionId);
-        Task<IEnumerable<Domain.Entities.Entry>> GetEntriesWithMissingScoresAsync(int competitionId, int expectedScoresCount);
+        Task<IEnumerable<Entry>> GetStartListAsync(int competitionId);
+        Task<IEnumerable<Entry>> GetEntriesWithMissingScoresAsync(int competitionId, int expectedScoresCount);
         Task<EntryAnalyticsDto> GetEntryAnalyticsAsync(int competitionId);
         Task<bool> IsDuplicateEntryAsync(int competitionId, int participantId, int disciplineId);
         Task<Entry?> GetEntryWithResultAsync(int id);

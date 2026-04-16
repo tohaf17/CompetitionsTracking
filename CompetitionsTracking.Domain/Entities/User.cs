@@ -13,6 +13,10 @@ namespace CompetitionsTracking.Domain.Entities
         [MaxLength(50)]
         public string Username { get; set; } = string.Empty;
 
+        [EmailAddress]
+        [MaxLength(255)]
+        public string Email { get; set; } = string.Empty;
+
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
 

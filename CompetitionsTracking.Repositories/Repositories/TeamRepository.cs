@@ -39,7 +39,7 @@ namespace CompetitionsTracking.Repositories.Repositories
             ";
             return await _context.TeamDominanceMetrics.FromSqlRaw(sql, teamId).ToListAsync();
         }
-        public async Task<Domain.Entities.Team?> GetTeamWithMembersAsync(int teamId)
+        public async Task<Team?> GetTeamWithMembersAsync(int teamId)
         {
             return await _context.Teams
                 .Include(t => t.Coach)

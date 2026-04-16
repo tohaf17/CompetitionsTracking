@@ -4,8 +4,6 @@ using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Services.Implementations
 {
@@ -84,20 +82,19 @@ namespace CompetitionsTracking.Services.Implementations
             if (!scores.Any()) return null;
 
             var difficulty = scores
-                .Where(s => s.Type == Domain.Entities.ScoreType.D || 
-                            s.Type == Domain.Entities.ScoreType.DA || 
-                            s.Type == Domain.Entities.ScoreType.DB)
+                .Where(s => s.Type == ScoreType.D || 
+                            s.Type == ScoreType.DA || 
+                            s.Type == ScoreType.DB)
                 .Sum(s => s.ScoreValue);
             
-            var executionScores = scores.Where(s => s.Type == Domain.Entities.ScoreType.E).ToList();
+            var executionScores = scores.Where(s => s.Type == ScoreType.E).ToList();
             var avgExecution = executionScores.Any() ? executionScores.Average(s => s.ScoreValue) : 0f;
 
-            var artistryScores = scores.Where(s => s.Type == Domain.Entities.ScoreType.A).ToList();
+            var artistryScores = scores.Where(s => s.Type ==ScoreType.A).ToList();
             var avgArtistry = artistryScores.Any() ? artistryScores.Average(s => s.ScoreValue) : 0f;
 
-            var penalties = scores.Where(s => s.Type == Domain.Entities.ScoreType.Penalty).Sum(s => s.ScoreValue);
+            var penalties = scores.Where(s => s.Type == ScoreType.Penalty).Sum(s => s.ScoreValue);
 
-            // Total Score Calculation: D + E + A - Penalties
             var total = difficulty + avgExecution + avgArtistry - penalties;
 
             return new EntryScoreBreakdownDto

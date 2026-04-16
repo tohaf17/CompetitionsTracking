@@ -73,7 +73,6 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<int> BulkUpdateAppStatusAsync(BulkUpdateAppStatusDto request)
         {
             int updatedCount = await _repository.BulkUpdateAppStatusAsync(request.CompetitionId, request.CategoryId, request.NewStatus);
-            // Assuming Direct SQL doesn't need CompleteAsync but let's be safe if it's integrated.
             return updatedCount;
         }
 

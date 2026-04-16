@@ -1,6 +1,7 @@
 using CompetitionsTracking.Application.DTOs.Auth;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -27,6 +28,22 @@ namespace CompetitionsTracking.Controllers
         {
             var response = await _service.RegisterAsync(request);
             return Ok(response);
+        }
+
+        [HttpGet("users")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _service.GetAllUsersAsync();
+            return Ok(users);
+        }
+
+        [HttpDelete("users/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            await _service.DeleteUserAsync(id);
+            return NoContent();
         }
     }
 }

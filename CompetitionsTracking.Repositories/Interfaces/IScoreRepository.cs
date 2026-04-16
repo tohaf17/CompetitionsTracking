@@ -8,6 +8,6 @@ namespace CompetitionsTracking.Repositories.Interfaces
     public interface IScoreRepository : IRepository<Score>
     {
         Task<IEnumerable<ScoreAnomalyDto>> GetScoreAnomaliesAsync(int competitionId);
-        Task<IEnumerable<Domain.Entities.Score>> GetScoresByEntryAsync(int entryId);
+        Task<IEnumerable<Score>> GetScoresByEntryAsync(int entryId);
     }
 }
