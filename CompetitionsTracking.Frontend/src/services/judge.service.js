@@ -26,13 +26,28 @@ const JudgeService = {
     return response.data;
   },
 
-  getSchedule: async (id) => {
-    const response = await api.get(`/Judge/${id}/schedule`);
+  getAnalytics: async (id) => {
+    const response = await api.get(`/Judge/${id}/analytics`);
     return response.data;
   },
 
-  getWorkload: async (id) => {
-    const response = await api.get(`/Judge/${id}/workload`);
+  getPendingEvaluations: async (id, competitionId) => {
+    const response = await api.get(`/Judge/${id}/competitions/${competitionId}/pending`);
+    return response.data;
+  },
+
+  getConflicts: async (id) => {
+    const response = await api.get(`/Judge/${id}/conflicts`);
+    return response.data;
+  },
+
+  getWorkload: async (id, competitionId) => {
+    const response = await api.get(`/Judge/${id}/competitions/${competitionId}/workload`);
+    return response.data;
+  },
+
+  getScores: async (id, competitionId) => {
+    const response = await api.get(`/Judge/${id}/competitions/${competitionId}/scores`);
     return response.data;
   }
 };

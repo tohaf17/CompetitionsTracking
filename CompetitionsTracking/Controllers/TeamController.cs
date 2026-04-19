@@ -1,11 +1,13 @@
 using CompetitionsTracking.Application.DTOs.Team;
 using CompetitionsTracking.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompetitionsTracking.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TeamController : ControllerBase
     {
         private readonly ITeamService _service;
@@ -31,6 +33,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] TeamRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -38,6 +41,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Update(int id, [FromBody] TeamRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -45,6 +49,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);
@@ -66,6 +71,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost("{teamId}/members/{personId}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> AddMemberToTeam(int teamId, int personId)
         {
             await _service.AddMemberToTeamAsync(teamId, personId);
@@ -73,6 +79,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{teamId}/members/{personId}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> RemoveMemberFromTeam(int teamId, int personId)
         {
             await _service.RemoveMemberFromTeamAsync(teamId, personId);

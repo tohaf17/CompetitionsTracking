@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TeamService from '../../services/team.service';
 import PersonService from '../../services/person.service';
-import { NavLink } from 'react-router-dom';
+import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -25,7 +25,7 @@ const TeamsList = () => {
         try {
             setLoading(true);
             const data = await TeamService.getAll();
-            setTeams(data.items || data); 
+            setTeams(unwrapCollection(data)); 
         } catch (error) {
             toastError(error, 'Не вдалося завантажити команди');
         } finally {
@@ -36,8 +36,10 @@ const TeamsList = () => {
     const loadCoaches = async () => {
         try {
             const data = await PersonService.getAll();
-            setCoaches(data.items || data);
-        } catch (error) {}
+            setCoaches(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити список тренерів');
+        }
     };
 
     const handleDelete = async (id, name) => {
@@ -47,7 +49,7 @@ const TeamsList = () => {
             toast.success("Команду видалено");
             setTeams(teams.filter(p => p.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити команду");
+            toastError(error, 'Не вдалося видалити команду');
         }
     };
 
@@ -64,7 +66,7 @@ const TeamsList = () => {
             setIsModalOpen(false);
             setFormData({ name: '', coachId: '', type: 'Team' });
         } catch (error) {
-            toast.error("Не вдалося створити команду");
+            toastError(error, 'Не вдалося створити команду');
         }
     };
 
@@ -105,12 +107,10 @@ const TeamsList = () => {
                                     <td><strong>{team.name}</strong></td>
                                     <td>{team.coachId ? `Особа ID: ${team.coachId}` : 'Без тренера'}</td>
                                     <td>
-                                        <NavLink to={`/teams/${team.id}`} className="btn btn-outline" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}>
-                                            Деталі
-                                        </NavLink>
                                         {canEdit && (
                                             <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(team.id, team.name)}>Видалити</button>
                                         )}
+                                        {!canEdit && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
                                     </td>
                                 </tr>
                             ))
@@ -147,3 +147,7 @@ const TeamsList = () => {
 };
 
 export default TeamsList;
+
+
+
+

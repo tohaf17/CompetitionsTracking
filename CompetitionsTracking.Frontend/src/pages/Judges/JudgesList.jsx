@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import JudgeService from '../../services/judge.service';
 import PersonService from '../../services/person.service';
-import { NavLink } from 'react-router-dom';
+import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -25,7 +25,7 @@ const JudgesList = () => {
         try {
             setLoading(true);
             const data = await JudgeService.getAll();
-            setJudges(data.items || data); 
+            setJudges(unwrapCollection(data)); 
         } catch (error) {
             toastError(error, 'Не вдалося завантажити суддів');
         } finally {
@@ -36,8 +36,10 @@ const JudgesList = () => {
     const loadPersons = async () => {
         try {
             const data = await PersonService.getAll();
-            setPersons(data.items || data);
-        } catch (error) {}
+            setPersons(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити список осіб');
+        }
     };
 
     const handleDelete = async (id) => {
@@ -47,7 +49,7 @@ const JudgesList = () => {
             toast.success("Суддю видалено");
             setJudges(judges.filter(j => j.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити суддю");
+            toastError(error, 'Не вдалося видалити суддю');
         }
     };
 
@@ -64,7 +66,7 @@ const JudgesList = () => {
             setIsModalOpen(false);
             setFormData({ personId: '', qualificationLevel: '' });
         } catch (error) {
-            toast.error("Не вдалося створити суддю");
+            toastError(error, 'Не вдалося створити суддю');
         }
     };
 
@@ -109,12 +111,10 @@ const JudgesList = () => {
                                         </span>
                                     </td>
                                     <td>
-                                        <NavLink to={`/judges/${judge.id}`} className="btn btn-outline" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}>
-                                            Розклад
-                                        </NavLink>
                                         {canEdit && (
                                             <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(judge.id)}>Видалити</button>
                                         )}
+                                        {!canEdit && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
                                     </td>
                                 </tr>
                             ))
@@ -151,3 +151,7 @@ const JudgesList = () => {
 };
 
 export default JudgesList;
+
+
+
+

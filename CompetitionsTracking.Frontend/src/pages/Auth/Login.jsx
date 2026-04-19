@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import './Login.css';
 
 const Login = () => {
-    const { login } = useAuth();
+    const { login, loginAsGuest } = useAuth();
     const navigate = useNavigate();
     const [credentials, setCredentials] = useState({ identifier: '', password: '' });
     const [loading, setLoading] = useState(false);
@@ -28,8 +28,17 @@ const Login = () => {
         }
     };
 
-    const handleGuestAccess = () => {
-        navigate('/competitions');
+    const handleGuestAccess = async () => {
+        setLoading(true);
+        const result = await loginAsGuest();
+        setLoading(false);
+
+        if (result.success) {
+            toast.success('Вхід як гість виконано');
+            navigate('/competitions');
+        } else {
+            toast.error(result.message || 'Не вдалося увійти як гість');
+        }
     };
 
     return (
@@ -89,3 +98,5 @@ const Login = () => {
 };
 
 export default Login;
+
+

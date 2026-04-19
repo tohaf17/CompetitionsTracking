@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import CompetitionService from '../../services/competition.service';
 import ResultService from '../../services/result.service';
-import EntryService from '../../services/entry.service';
 import ScoreService from '../../services/score.service';
 import DisciplineService from '../../services/discipline.service';
 import CategoryService from '../../services/category.service';
 import { useAuth } from '../../context/AuthContext';
+import { unwrapCollection } from '../../utils/unwrapCollection';
+import { toastError } from '../../utils/toastError';
 import toast from 'react-hot-toast';
 
 const CompetitionDetails = () => {
@@ -27,17 +28,7 @@ const CompetitionDetails = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('leaderboard'); // leaderboard, tally, anomalies
 
-    useEffect(() => {
-        loadData();
-    }, [id]);
-
-    useEffect(() => {
-        if (activeTab === 'leaderboard') loadLeaderboard();
-        else if (activeTab === 'tally') loadTally();
-        else if (activeTab === 'anomalies') loadAnomalies();
-    }, [activeTab, filter]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
             const [compData, discData, catData] = await Promise.all([
@@ -46,42 +37,58 @@ const CompetitionDetails = () => {
                 CategoryService.getAll()
             ]);
             setCompetition(compData);
-            setDisciplines(discData.items || discData);
-            setCategories(catData.items || catData);
+            setDisciplines(unwrapCollection(discData));
+            setCategories(unwrapCollection(catData));
         } catch (error) {
-            toast.error("Не вдалося завантажити деталі змагання");
+            toastError(error, 'Не вдалося завантажити деталі змагання');
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
-    const loadLeaderboard = async () => {
+    const loadLeaderboard = useCallback(async () => {
         try {
             const data = await ResultService.getLeaderboard(id, filter.disciplineId, filter.categoryId);
-            setLeaderboard(data);
-        } catch (error) { }
-    };
+            setLeaderboard(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити таблицю результатів');
+        }
+    }, [filter.categoryId, filter.disciplineId, id]);
 
-    const loadTally = async () => {
+    const loadTally = useCallback(async () => {
         try {
             const data = await ResultService.getTeamMedalTally(id);
-            setTeamTally(data);
-        } catch (error) { }
-    };
+            setTeamTally(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити медальний залік');
+        }
+    }, [id]);
 
-    const loadAnomalies = async () => {
+    const loadAnomalies = useCallback(async () => {
         try {
             const data = await ScoreService.getScoreAnomalies(id);
-            setAnomalies(data);
-        } catch (error) { }
-    };
+            setAnomalies(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити аномалії оцінок');
+        }
+    }, [id]);
+
+    useEffect(() => {
+        void loadData();
+    }, [loadData]);
+
+    useEffect(() => {
+        if (activeTab === 'leaderboard') void loadLeaderboard();
+        else if (activeTab === 'tally') void loadTally();
+        else if (activeTab === 'anomalies') void loadAnomalies();
+    }, [activeTab, loadAnomalies, loadLeaderboard, loadTally]);
 
     const handleAwardMedals = async () => {
         try {
             await CompetitionService.awardMedals(id);
             toast.success("Медалі успішно нараховано");
             loadLeaderboard();
-        } catch (error) {
+        } catch {
             toast.error("Не вдалося нарахувати медалі");
         }
     };
@@ -163,10 +170,10 @@ const CompetitionDetails = () => {
                             {teamTally.map((t, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                                     <td style={{ padding: '0.8rem' }}>{t.teamName}</td>
-                                    <td>{t.goldCount}</td>
-                                    <td>{t.silverCount}</td>
-                                    <td>{t.bronzeCount}</td>
-                                    <td><strong>{t.goldCount + t.silverCount + t.bronzeCount}</strong></td>
+                                    <td>{t.goldMedals}</td>
+                                    <td>{t.silverMedals}</td>
+                                    <td>{t.bronzeMedals}</td>
+                                    <td><strong>{t.totalMedals}</strong></td>
                                 </tr>
                             ))}
                             {teamTally.length === 0 && <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
@@ -177,7 +184,7 @@ const CompetitionDetails = () => {
 
             {activeTab === 'anomalies' && isAdmin && (
                 <div className="glass-panel">
-                    <h3 style={{ color: '#ff4d4f' }}>Підозрілі оцінки (відхилення &gt; 2 СКВ)</h3>
+                    <h3 style={{ color: '#ff4d4f' }}>Підозрілі оцінки (відхилення &gt;= 1.5)</h3>
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
                         <thead style={{ borderBottom: '1px solid var(--surface-border)' }}>
                             <tr>
@@ -194,7 +201,7 @@ const CompetitionDetails = () => {
                                     <td style={{ padding: '0.8rem' }}>{a.participantName}</td>
                                     <td>{a.judgeName}</td>
                                     <td>{a.scoreType}</td>
-                                    <td><strong>{a.givenScore.toFixed(2)}</strong></td>
+                                    <td><strong>{a.scoreValue.toFixed(2)}</strong></td>
                                     <td style={{ color: '#ff4d4f' }}>{a.deviation > 0 ? '+' : ''}{a.deviation.toFixed(2)}</td>
                                 </tr>
                             ))}
@@ -208,3 +215,5 @@ const CompetitionDetails = () => {
 };
 
 export default CompetitionDetails;
+
+

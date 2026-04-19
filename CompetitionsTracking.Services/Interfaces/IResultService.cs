@@ -13,7 +13,7 @@ namespace CompetitionsTracking.Services.Interfaces
         Task UpdateAsync(int id, ResultRequestDto request);
         Task DeleteAsync(int id);
         Task<IEnumerable<TeamMedalTallyDto>> GetTeamMedalTallyAsync(int competitionId);
-        Task<IEnumerable<LeaderboardEntryDto>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId);
+        Task<IEnumerable<LeaderboardEntryDto>> GetLeaderboardAsync(int competitionId, int? disciplineId, int? categoryId);
         Task<IEnumerable<CountryMedalTallyDto>> GetCountryMedalTallyAsync(int competitionId);
         Task<IEnumerable<DisciplineRecordDto>> GetTopRecordsByDisciplineAsync(int disciplineId, int topN = 10);
     }

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import api from '../utils/axiosSetup';
@@ -9,6 +10,11 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
 
   useEffect(() => {
     const initAuth = () => {
@@ -70,9 +76,8 @@ export const AuthProvider = ({ children }) => {
       }
   }
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+  const loginAsGuest = async () => {
+    return await login({ identifier: 'guest', password: 'guest123' });
   };
 
   const isAdmin = user?.role === 'Admin';
@@ -80,6 +85,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
+    loginAsGuest,
     register,
     logout,
     loading,

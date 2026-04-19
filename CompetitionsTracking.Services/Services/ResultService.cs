@@ -1,5 +1,6 @@
 using CompetitionsTracking.Application.DTOs.Result;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
@@ -43,29 +44,27 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task UpdateAsync(int id, ResultRequestDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                request.Adapt(entity);
-                _repository.Update(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Result), id);
+
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                _repository.Remove(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Result), id);
+
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task<IEnumerable<TeamMedalTallyDto>> GetTeamMedalTallyAsync(int competitionId)
         {
             return await _repository.GetTeamMedalTallyAsync(competitionId);
         }
-        public async Task<IEnumerable<LeaderboardEntryDto>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId)
+        public async Task<IEnumerable<LeaderboardEntryDto>> GetLeaderboardAsync(int competitionId, int? disciplineId, int? categoryId)
         {
             var results = await _repository.GetLeaderboardAsync(competitionId, disciplineId, categoryId);
 
@@ -74,7 +73,10 @@ namespace CompetitionsTracking.Services.Implementations
                 Place = r.Place,
                 ParticipantName = GetParticipantName(r.Entry.Participant),
                 Country = GetParticipantCountry(r.Entry.Participant),
-                FinalScore = r.FinalScore
+                DisciplineName = r.Entry.Discipline?.Type ?? "Unknown",
+                CategoryName = r.Entry.Category?.Type ?? "Unknown",
+                FinalScore = r.FinalScore,
+                AwardedMedal = r.AwardedMedal ?? string.Empty
             });
         }
 

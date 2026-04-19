@@ -20,23 +20,30 @@ namespace CompetitionsTracking.Repositories.Repositories
                 WITH ScoreAverages AS (
                     SELECT 
                         s.Id AS ScoreId,
-                        CONCAT(p.FirstName, ' ', p.LastName) AS JudgeName,
+                        COALESCE(CONCAT(pp.Name, ' ', pp.Surname), tt.Name, 'Unknown') AS ParticipantName,
+                        CONCAT(p.Name, ' ', p.Surname) AS JudgeName,
                         s.EntryId,
-                        s.ScoreValue,
-                        AVG(s.ScoreValue) OVER(PARTITION BY s.EntryId) AS AverageEntryScore
+                        CAST(s.Type AS nvarchar(50)) AS ScoreType,
+                        CAST(s.ScoreValue AS REAL) AS ScoreValue,
+                        CAST(AVG(CAST(s.ScoreValue AS float)) OVER(PARTITION BY s.EntryId) AS REAL) AS AverageEntryScore
                     FROM Scores s
                     INNER JOIN Judges j ON s.JudgeId = j.Id
-                    INNER JOIN Persons p ON j.Id = p.Id
+                    INNER JOIN Persons p ON j.PersonId = p.Id
                     INNER JOIN Entries e ON s.EntryId = e.Id
+                    INNER JOIN Participants part ON e.ParticipantId = part.Id
+                    LEFT JOIN Persons pp ON part.Id = pp.Id
+                    LEFT JOIN Teams tt ON part.Id = tt.Id
                     WHERE e.CompetitionId = {0}
                 )
                 SELECT 
                     ScoreId,
+                    ParticipantName,
                     JudgeName,
                     EntryId,
+                    ScoreType,
                     ScoreValue,
                     AverageEntryScore,
-                    ABS(ScoreValue - AverageEntryScore) AS Deviation
+                    CAST(ABS(ScoreValue - AverageEntryScore) AS REAL) AS Deviation
                 FROM ScoreAverages
                 WHERE ABS(ScoreValue - AverageEntryScore) >= 1.5
                 ORDER BY Deviation DESC

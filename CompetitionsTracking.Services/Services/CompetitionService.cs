@@ -7,6 +7,7 @@ using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Services.Implementations
@@ -64,7 +65,22 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<PagedResponse<CompetitionResponseDto>> GetAllAsync(CompetitionFilterDto? filter = null, PaginationParams? pagination = null)
         {
             pagination ??= new PaginationParams();
-            var (entities, totalCount) = await _repository.GetPagedAsync(pagination.PageNumber, pagination.PageSize);
+            IEnumerable<Competition> entities;
+            int totalCount;
+
+            if (filter is { Status: not null } || !string.IsNullOrWhiteSpace(filter?.City))
+            {
+                var filtered = (await _repository.GetFilteredAsync(filter!)).ToList();
+                totalCount = filtered.Count;
+                entities = filtered
+                    .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                    .Take(pagination.PageSize);
+            }
+            else
+            {
+                (entities, totalCount) = await _repository.GetPagedAsync(pagination.PageNumber, pagination.PageSize);
+            }
+
             var dtos = entities.Adapt<IEnumerable<CompetitionResponseDto>>();
             return new PagedResponse<CompetitionResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }

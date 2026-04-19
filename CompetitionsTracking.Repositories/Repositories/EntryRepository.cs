@@ -20,8 +20,8 @@ namespace CompetitionsTracking.Repositories.Repositories
             string sql = @"
                 SELECT 
                     e.Id AS EntryId,
-                    CONCAT(p.FirstName, ' ', p.LastName) AS ParticipantName,
-                    c.Name AS CompetitionName,
+                    CONCAT(p.Name, ' ', p.Surname) AS ParticipantName,
+                    c.Title AS CompetitionName,
                     MAX(s.ScoreValue) AS HighestScore,
                     MIN(s.ScoreValue) AS LowestScore,
                     MAX(s.ScoreValue) - MIN(s.ScoreValue) AS ScoreGap
@@ -31,7 +31,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                 INNER JOIN Persons p ON part.Id = p.Id
                 INNER JOIN Competitions c ON e.CompetitionId = c.Id
                 WHERE e.CompetitionId = {0}
-                GROUP BY e.Id, p.FirstName, p.LastName, c.Name
+                GROUP BY e.Id, p.Name, p.Surname, c.Title
                 ORDER BY ScoreGap DESC
             ";
             return await _context.ControversialEntries.FromSqlRaw(sql, competitionId).ToListAsync();

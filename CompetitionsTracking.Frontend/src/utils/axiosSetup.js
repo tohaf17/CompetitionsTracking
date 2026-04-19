@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const apiBaseUrls = [
+  import.meta.env.VITE_API_BASE_URL,
+  'https://localhost:7286/api',
+  'http://localhost:5257/api',
+].filter((value, index, array) => value && array.indexOf(value) === index);
+
 const api = axios.create({
-  baseURL: 'https://localhost:7286/api',
+  baseURL: apiBaseUrls[0],
   headers: {
     'Content-Type': 'application/json',
   },
@@ -23,6 +29,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const currentBaseUrl = error.config?.baseURL || api.defaults.baseURL;
+    const alternateBaseUrl = apiBaseUrls.find((url) => url !== currentBaseUrl);
+
+    if (error.request && error.config && !error.config._retryWithAlternateBaseUrl && alternateBaseUrl) {
+      return api.request({
+        ...error.config,
+        _retryWithAlternateBaseUrl: true,
+        baseURL: alternateBaseUrl,
+      });
+    }
+
     let errorMessage = "An error occurred";
     let validationErrors = null;
 

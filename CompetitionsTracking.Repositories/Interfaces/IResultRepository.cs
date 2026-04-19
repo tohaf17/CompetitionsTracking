@@ -8,7 +8,7 @@ namespace CompetitionsTracking.Repositories.Interfaces
     public interface IResultRepository : IRepository<Result>
     {
         Task<IEnumerable<TeamMedalTallyDto>> GetTeamMedalTallyAsync(int competitionId);
-        Task<IEnumerable<Result>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId);
+        Task<IEnumerable<Result>> GetLeaderboardAsync(int competitionId, int? disciplineId, int? categoryId);
         Task<IEnumerable<Result>> GetMedalistsByCompetitionAsync(int competitionId);
         Task<IEnumerable<Result>> GetTopRecordsByDisciplineAsync(int disciplineId, int topN);
     }

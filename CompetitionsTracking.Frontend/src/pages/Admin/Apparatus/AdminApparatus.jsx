@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ApparatusService from '../../../services/apparatus.service';
+import { unwrapCollection } from '../../../utils/unwrapCollection';
 import Modal from '../../../components/UI/Modal';
 import toast from 'react-hot-toast';
+import { toastError } from '../../../utils/toastError';
 
 const AdminApparatus = () => {
     const [apparatus, setApparatus] = useState([]);
@@ -18,8 +20,8 @@ const AdminApparatus = () => {
         try {
             setLoading(true);
             const data = await ApparatusService.getAll();
-            setApparatus(data.items || data);
-        } catch (error) {
+            setApparatus(unwrapCollection(data));
+        } catch {
             toast.error("Не вдалося завантажити інвентар");
         } finally {
             setLoading(false);
@@ -34,7 +36,7 @@ const AdminApparatus = () => {
             toast.success("Інвентар видалено");
             setApparatus(apparatus.filter(a => a.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити інвентар");
+            toastError(error, 'Не вдалося видалити інвентар');
         }
     };
 
@@ -68,7 +70,7 @@ const AdminApparatus = () => {
             setFormData({ type: '' });
             setEditingId(null);
         } catch (error) {
-            toast.error(editingId ? "Не вдалося оновити інвентар" : "Не вдалося створити інвентар");
+            toastError(error, editingId ? 'Не вдалося оновити інвентар' : 'Не вдалося створити інвентар');
         }
     };
     const handleChange = (e) => {
@@ -81,7 +83,7 @@ const AdminApparatus = () => {
         <div className="page-container">
             <div className="page-header flex-between">
                 <h1 className="page-title">Керування інвентарем</h1>
-                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>Додати інвентар</button>
+                <button className="btn btn-primary" onClick={handleOpenCreate}>Додати інвентар</button>
             </div>
             
             <div className="glass-panel table-container">
@@ -146,3 +148,7 @@ const AdminApparatus = () => {
 };
 
 export default AdminApparatus;
+
+
+
+

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import CategoryService from '../../../services/category.service';
+import { unwrapCollection } from '../../../utils/unwrapCollection';
 import Modal from '../../../components/UI/Modal';
 import toast from 'react-hot-toast';
+import { toastError } from '../../../utils/toastError';
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
@@ -17,8 +19,8 @@ const AdminCategories = () => {
         try {
             setLoading(true);
             const data = await CategoryService.getAll();
-            setCategories(data.items || data);
-        } catch (error) {
+            setCategories(unwrapCollection(data));
+        } catch {
             toast.error("Не вдалося завантажити категорії");
         } finally {
             setLoading(false);
@@ -32,7 +34,7 @@ const AdminCategories = () => {
             toast.success("Категорію видалено");
             setCategories(categories.filter(c => c.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити категорію");
+            toastError(error, 'Не вдалося видалити категорію');
         }
     };
 
@@ -49,7 +51,7 @@ const AdminCategories = () => {
             setIsModalOpen(false);
             setFormData({ type: '', minAge: '', maxAge: '' });
         } catch (error) {
-            toast.error("Не вдалося створити категорію");
+            toastError(error, 'Не вдалося створити категорію');
         }
     };
 
@@ -112,7 +114,7 @@ const AdminCategories = () => {
                     </div>
                     <div className="form-group">
                         <label>Максимальний вік <span style={{fontSize: '0.8em', color: '#666'}}>(необов'язково)</span></label>
-                        <input type="number" name="maxAge" value={formData.maxAge} onChange={handleChange} required />
+                        <input type="number" name="maxAge" value={formData.maxAge} onChange={handleChange} />
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
@@ -125,3 +127,7 @@ const AdminCategories = () => {
 };
 
 export default AdminCategories;
+
+
+
+

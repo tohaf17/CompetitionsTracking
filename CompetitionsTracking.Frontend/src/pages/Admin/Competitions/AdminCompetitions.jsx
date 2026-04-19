@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CompetitionService from '../../../services/competition.service';
+import { unwrapCollection } from '../../../utils/unwrapCollection';
 import Modal from '../../../components/UI/Modal';
 import { NavLink } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -22,7 +23,7 @@ const AdminCompetitions = () => {
         try {
             setLoading(true);
             const data = await CompetitionService.getAll();
-            setCompetitions(data.items || data);
+            setCompetitions(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити змагання');
         } finally {
@@ -37,7 +38,7 @@ const AdminCompetitions = () => {
             toast.success("Змагання видалено");
             setCompetitions(competitions.filter(c => c.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити змагання");
+            toastError(error, 'Не вдалося видалити змагання');
         }
     };
 
@@ -57,7 +58,7 @@ const AdminCompetitions = () => {
             setIsModalOpen(false);
             setFormData({ title: '', city: '', startDate: '', endDate: '', status: 0 });
         } catch (error) {
-            toast.error("Не вдалося створити змагання");
+            toastError(error, 'Не вдалося створити змагання');
         }
     };
 
@@ -91,9 +92,9 @@ const AdminCompetitions = () => {
                             competitions.map((item) => {
                                 const statusMap = {
                                     0: { text: "Заплановано", class: "status-planned" },
-                                    1: { text: "Триває", class: "status-ongoing" },
-                                    2: { text: "Завершено", class: "status-completed" },
-                                    3: { text: "Скасовано", class: "status-cancelled" }
+                                    1: { text: "Реєстрація відкрита", class: "status-upcoming" },
+                                    2: { text: "Триває", class: "status-ongoing" },
+                                    3: { text: "Завершено", class: "status-completed" }
                                 };
                                 const compStatus = statusMap[item.status] || { text: "Невідомо", class: "" };
                                 
@@ -142,9 +143,9 @@ const AdminCompetitions = () => {
                         <label>Статус</label>
                         <select name="status" value={formData.status} onChange={handleChange}>
                             <option value={0}>Заплановано</option>
-                            <option value={1}>Триває</option>
-                            <option value={2}>Завершено</option>
-                            <option value={3}>Скасовано</option>
+                            <option value={1}>Реєстрація відкрита</option>
+                            <option value={2}>Триває</option>
+                            <option value={3}>Завершено</option>
                         </select>
                     </div>
                     <div className="modal-footer">
@@ -158,3 +159,7 @@ const AdminCompetitions = () => {
 };
 
 export default AdminCompetitions;
+
+
+
+

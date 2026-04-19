@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import CompetitionService from '../../services/competition.service';
 import { NavLink } from 'react-router-dom';
+import { unwrapCollection } from '../../utils/unwrapCollection';
 import './CompetitionsList.css';
-import toast from 'react-hot-toast';
 import { toastError } from '../../utils/toastError';
 
 const CompetitionsList = () => {
     const [competitions, setCompetitions] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const statusMap = {
+        0: { text: 'Заплановано', class: 'status-planned' },
+        1: { text: 'Реєстрація відкрита', class: 'status-upcoming' },
+        2: { text: 'Триває', class: 'status-ongoing' },
+        3: { text: 'Завершено', class: 'status-completed' }
+    };
 
     useEffect(() => {
         loadCompetitions();
@@ -17,7 +24,7 @@ const CompetitionsList = () => {
         try {
             setLoading(true);
             const data = await CompetitionService.getAll();
-            setCompetitions(data.items || data);
+            setCompetitions(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити змагання');
         } finally {
@@ -48,15 +55,18 @@ const CompetitionsList = () => {
                     </thead>
                     <tbody>
                         {competitions.length > 0 ? (
-                            competitions.map((comp) => (
+                            competitions.map((comp) => {
+                                const compStatus = statusMap[comp.status] || { text: 'Невідомо', class: '' };
+
+                                return (
                                 <tr key={comp.id}>
                                     <td>{comp.id}</td>
-                                    <td><strong>{comp.name}</strong></td>
+                                    <td><strong>{comp.title}</strong></td>
                                     <td>{new Date(comp.startDate).toLocaleDateString('uk-UA')} - {new Date(comp.endDate).toLocaleDateString('uk-UA')}</td>
-                                    <td>{comp.location}</td>
+                                    <td>{comp.city}</td>
                                     <td>
-                                        <span className={`status-badge status-${comp.status.toLowerCase()}`}>
-                                            {comp.status}
+                                        <span className={`status-badge ${compStatus.class}`}>
+                                            {compStatus.text}
                                         </span>
                                     </td>
                                     <td>
@@ -65,7 +75,8 @@ const CompetitionsList = () => {
                                         </NavLink>
                                     </td>
                                 </tr>
-                            ))
+                                );
+                            })
                         ) : (
                             <tr>
                                 <td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>Змагань не знайдено.</td>
@@ -79,3 +90,7 @@ const CompetitionsList = () => {
 };
 
 export default CompetitionsList;
+
+
+
+

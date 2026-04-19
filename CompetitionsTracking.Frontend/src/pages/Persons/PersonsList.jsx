@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PersonService from '../../services/person.service';
-import { NavLink } from 'react-router-dom';
+import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -26,7 +26,7 @@ const PersonsList = () => {
         try {
             setLoading(true);
             const data = await PersonService.getAll();
-            setPersons(data.items || data);
+            setPersons(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити учасників');
         } finally {
@@ -41,7 +41,7 @@ const PersonsList = () => {
             toast.success("Особу видалено");
             setPersons(persons.filter(p => p.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити особу");
+            toastError(error, 'Не вдалося видалити особу');
         }
     };
 
@@ -60,7 +60,7 @@ const PersonsList = () => {
             setIsModalOpen(false);
             setFormData({ name: '', surname: '', country: '', dateOfBirth: '', gender: 0, type: 'Person', mentorId: '' });
         } catch (error) {
-            toast.error("Не вдалося створити особу");
+            toastError(error, 'Не вдалося створити особу');
         }
     };
 
@@ -102,17 +102,15 @@ const PersonsList = () => {
                                     <td>{person.country}</td>
                                     <td>{age} р.</td>
                                     <td>
-                                        <span className={`status-badge ${person.type === 'Judge' ? 'status-planned' : 'status-ongoing'}`}>
-                                            {person.type === 'Judge' ? 'Суддя' : person.type}
+                                        <span className={`status-badge status-ongoing`}>
+                                            {person.type}
                                         </span>
                                     </td>
                                     <td>
-                                        <NavLink to={`/persons/${person.id}`} className="btn btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem' }}>
-                                            Профіль
-                                        </NavLink>
                                         {canEdit && (
                                             <button className="btn btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => handleDelete(person.id, person.name)}>Видалити</button>
                                         )}
+                                        {!canEdit && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
                                     </td>
                                 </tr>
                             );
@@ -155,7 +153,6 @@ const PersonsList = () => {
                     <label>Тип / Роль</label>
                     <select name="type" value={formData.type} onChange={handleChange}>
                         <option value="Person">Особа / Гімнаст</option>
-                        <option value="Judge">Суддя</option>
                     </select>
                 </div>
                 <div className="modal-footer">
@@ -169,3 +166,7 @@ const PersonsList = () => {
 };
 
 export default PersonsList;
+
+
+
+

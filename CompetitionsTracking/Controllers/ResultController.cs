@@ -1,11 +1,13 @@
 using CompetitionsTracking.Application.DTOs.Result;
 using CompetitionsTracking.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompetitionsTracking.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ResultController : ControllerBase
     {
         private readonly IResultService _service;
@@ -31,6 +33,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] ResultRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -38,6 +41,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Update(int id, [FromBody] ResultRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -45,6 +49,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);
@@ -58,7 +63,7 @@ namespace CompetitionsTracking.Controllers
             return Ok(result);
         }
         [HttpGet("competition/{competitionId}/leaderboard")]
-        public async Task<IActionResult> GetLeaderboard(int competitionId, [FromQuery] int disciplineId, [FromQuery] int categoryId)
+        public async Task<IActionResult> GetLeaderboard(int competitionId, [FromQuery] int? disciplineId, [FromQuery] int? categoryId)
         {
             var result = await _service.GetLeaderboardAsync(competitionId, disciplineId, categoryId);
             return Ok(result);

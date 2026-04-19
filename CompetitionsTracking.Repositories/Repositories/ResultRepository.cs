@@ -26,21 +26,32 @@ namespace CompetitionsTracking.Repositories.Repositories
                     SUM(CASE WHEN r.Place <= 3 THEN 1 ELSE 0 END) AS TotalMedals
                 FROM Results r
                 INNER JOIN Entries e ON r.EntryId = e.Id
-                INNER JOIN Participants p ON e.ParticipantId = p.Id
-                INNER JOIN Teams t ON p.TeamId = t.Id
+                INNER JOIN Teams t ON e.ParticipantId = t.Id
                 WHERE e.CompetitionId = {0} AND r.Place <= 3
                 GROUP BY t.Id, t.Name
                 ORDER BY TotalMedals DESC, GoldMedals DESC
             ";
             return await _context.TeamMedalTallies.FromSqlRaw(sql, competitionId).ToListAsync();
         }
-        public async Task<IEnumerable<Result>> GetLeaderboardAsync(int competitionId, int disciplineId, int categoryId)
+        public async Task<IEnumerable<Result>> GetLeaderboardAsync(int competitionId, int? disciplineId, int? categoryId)
         {
-            return await _context.Results
-                .Include(r => r.Entry).ThenInclude(e => e.Participant) 
-                .Where(r => r.Entry.CompetitionId == competitionId
-                         && r.Entry.DisciplineId == disciplineId
-                         && r.Entry.CategoryId == categoryId)
+            var query = _context.Results
+                .Include(r => r.Entry).ThenInclude(e => e.Participant)
+                .Include(r => r.Entry).ThenInclude(e => e.Discipline)
+                .Include(r => r.Entry).ThenInclude(e => e.Category)
+                .Where(r => r.Entry.CompetitionId == competitionId);
+
+            if (disciplineId.HasValue)
+            {
+                query = query.Where(r => r.Entry.DisciplineId == disciplineId.Value);
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(r => r.Entry.CategoryId == categoryId.Value);
+            }
+
+            return await query
                 .OrderBy(r => r.Place) 
                 .AsNoTracking()
                 .ToListAsync();

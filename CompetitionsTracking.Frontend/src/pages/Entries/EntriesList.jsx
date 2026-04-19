@@ -6,6 +6,7 @@ import DisciplineService from '../../services/discipline.service';
 import CategoryService from '../../services/category.service';
 import ScoreService from '../../services/score.service';
 import JudgeService from '../../services/judge.service';
+import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -43,7 +44,7 @@ const EntriesList = () => {
         try {
             setLoading(true);
             const data = await EntryService.getAll();
-            setEntries(data.items || data);
+            setEntries(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити заявки');
         } finally {
@@ -59,18 +60,22 @@ const EntriesList = () => {
                 DisciplineService.getAll(),
                 CategoryService.getAll()
             ]);
-            setCompetitions(comp.items || comp);
-            setPersons(pers.items || pers);
-            setDisciplines(disc.items || disc);
-            setCategories(cat.items || cat);
-        } catch (error) { }
+            setCompetitions(unwrapCollection(comp));
+            setPersons(unwrapCollection(pers));
+            setDisciplines(unwrapCollection(disc));
+            setCategories(unwrapCollection(cat));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити довідники для заявки');
+        }
     };
 
     const loadJudgesData = async () => {
         try {
             const res = await JudgeService.getAll();
-            setJudges(res.items || res);
-        } catch (e) { }
+            setJudges(unwrapCollection(res));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити список суддів');
+        }
     };
 
     const handleDelete = async (id) => {
@@ -80,7 +85,7 @@ const EntriesList = () => {
             toast.success("Заявку видалено");
             setEntries(entries.filter(e => e.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити заявку");
+            toastError(error, 'Не вдалося видалити заявку');
         }
     };
 
@@ -99,7 +104,7 @@ const EntriesList = () => {
             setIsModalOpen(false);
             setFormData({ competitionId: '', participantId: '', disciplineId: '', categoryId: '' });
         } catch (error) {
-            toast.error("Не вдалося створити заявку");
+            toastError(error, 'Не вдалося створити заявку');
         }
     };
 
@@ -109,16 +114,15 @@ const EntriesList = () => {
             const payload = {
                 entryId: selectedEntry,
                 judgeId: parseInt(scoreData.judgeId),
-                scoreType: scoreData.scoreType,
-                value: parseFloat(scoreData.value),
-                isValid: true
+                type: scoreData.scoreType,
+                scoreValue: parseFloat(scoreData.value)
             };
             await ScoreService.create(payload);
             toast.success("Оцінку успішно виставлено");
             setIsScoreModalOpen(false);
             setScoreData({ judgeId: '', scoreType: 'DA', value: '' });
         } catch (error) {
-            toast.error("Не вдалося виставити оцінку");
+            toastError(error, 'Не вдалося виставити оцінку');
         }
     };
 
@@ -262,3 +266,7 @@ const EntriesList = () => {
 };
 
 export default EntriesList;
+
+
+
+

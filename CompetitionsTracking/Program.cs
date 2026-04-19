@@ -113,6 +113,7 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -124,13 +125,27 @@ if (app.Environment.IsDevelopment())
 
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
-    DatabaseSeeder.Seed(context);
+    try
+    {
+        var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
+
+        context.Database.Migrate();
+
+        if (app.Environment.IsDevelopment())
+        {
+            DatabaseSeeder.SeedIfEmpty(context);
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+    }
 }
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");

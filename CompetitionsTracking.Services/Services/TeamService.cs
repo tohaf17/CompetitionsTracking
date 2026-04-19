@@ -1,5 +1,6 @@
 using CompetitionsTracking.Application.DTOs.Team;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
@@ -45,22 +46,20 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task UpdateAsync(int id, TeamRequestDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                request.Adapt(entity);
-                _repository.Update(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Team), id);
+
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                _repository.Remove(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Team), id);
+
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task<IEnumerable<TeamDominanceMetricDto>> GetTeamDominanceMetricsAsync(int teamId)

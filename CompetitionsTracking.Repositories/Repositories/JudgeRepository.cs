@@ -24,16 +24,16 @@ namespace CompetitionsTracking.Repositories.Repositories
                 )
                 SELECT 
                     j.Id AS JudgeId,
-                    CONCAT(p.FirstName, ' ', p.LastName) AS JudgeName,
+                    CONCAT(p.Name, ' ', p.Surname) AS JudgeName,
                     COUNT(s.Id) AS TotalPerformancesJudged,
                     AVG(s.ScoreValue) AS AverageScoreGiven,
                     ROUND(AVG(s.ScoreValue - ea.AvgTotalScore), 4) AS AverageScoreDeviation
                 FROM Judges j
-                INNER JOIN Persons p ON j.Id = p.Id
+                INNER JOIN Persons p ON j.PersonId = p.Id
                 INNER JOIN Scores s ON j.Id = s.JudgeId
                 INNER JOIN EntryAverages ea ON s.EntryId = ea.EntryId
                 WHERE j.Id = {0}
-                GROUP BY j.Id, p.FirstName, p.LastName
+                GROUP BY j.Id, p.Name, p.Surname
             ";
 
             return await _context.JudgeAnalytics.FromSqlRaw(sql, judgeId).ToListAsync();

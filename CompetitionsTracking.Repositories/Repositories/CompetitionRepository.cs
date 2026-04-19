@@ -21,9 +21,9 @@ namespace CompetitionsTracking.Repositories.Repositories
             string sql = @"
                 SELECT 
                     p.Id AS ParticipantId,
-                    CONCAT(p.FirstName, ' ', p.LastName) AS ParticipantName,
-                    c.Name AS CategoryName,
-                    d.Name AS DisciplineName,
+                    CONCAT(p.Name, ' ', p.Surname) AS ParticipantName,
+                    c.Type AS CategoryName,
+                    d.Type AS DisciplineName,
                     r.FinalScore AS TotalScore,
                     DENSE_RANK() OVER(PARTITION BY e.CategoryId, e.DisciplineId ORDER BY r.FinalScore DESC) AS CalculatedRank
                 FROM Results r

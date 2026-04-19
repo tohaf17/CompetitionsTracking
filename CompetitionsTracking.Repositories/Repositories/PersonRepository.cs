@@ -19,8 +19,8 @@ namespace CompetitionsTracking.Repositories.Repositories
             string sql = @"
                 SELECT 
                     c.Id AS CompetitionId,
-                    c.Name AS CompetitionName,
-                    d.Name AS ApparatusName,
+                    c.Title AS CompetitionName,
+                    d.Type AS ApparatusName,
                     r.FinalScore,
                     r.Place AS Placement,
                     c.StartDate AS CompetitionDate

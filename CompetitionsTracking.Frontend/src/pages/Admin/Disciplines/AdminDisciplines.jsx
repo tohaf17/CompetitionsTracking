@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import DisciplineService from '../../../services/discipline.service';
 import ApparatusService from '../../../services/apparatus.service';
+import { unwrapCollection } from '../../../utils/unwrapCollection';
 import Modal from '../../../components/UI/Modal';
 import toast from 'react-hot-toast';
+import { toastError } from '../../../utils/toastError';
 
 const AdminDisciplines = () => {
     const [disciplines, setDisciplines] = useState([]);
@@ -19,8 +21,8 @@ const AdminDisciplines = () => {
         try {
             setLoading(true);
             const data = await DisciplineService.getAll();
-            setDisciplines(data.items || data);
-        } catch (error) {
+            setDisciplines(unwrapCollection(data));
+        } catch {
             toast.error("Не вдалося завантажити дисципліни");
         } finally {
             setLoading(false);
@@ -34,7 +36,7 @@ const AdminDisciplines = () => {
             toast.success("Дисципліну видалено");
             setDisciplines(disciplines.filter(d => d.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити дисципліну");
+            toastError(error, 'Не вдалося видалити дисципліну');
         }
     };
 
@@ -51,7 +53,17 @@ const AdminDisciplines = () => {
             setIsModalOpen(false);
             setFormData({ type: '', isGroup: false, apparatusId: '' });
         } catch (error) {
-            toast.error("Не вдалося створити дисципліну");
+            toastError(error, 'Не вдалося створити дисципліну');
+        }
+    };
+
+    const openCreateModal = async () => {
+        setIsModalOpen(true);
+        try {
+            const data = await ApparatusService.getAll();
+            setApparatuses(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити інвентар');
         }
     };
 
@@ -66,10 +78,7 @@ const AdminDisciplines = () => {
         <div className="page-container">
             <div className="page-header flex-between">
                 <h1 className="page-title">Керування дисциплінами</h1>
-                <button className="btn btn-primary" onClick={() => {
-                        setIsModalOpen(true);
-                        ApparatusService.getAll().then(res => setApparatuses(res.items || res));
-                    }}>Додати дисципліну</button>
+                <button className="btn btn-primary" onClick={openCreateModal}>Додати дисципліну</button>
             </div>
             
             <div className="glass-panel table-container">
@@ -133,3 +142,7 @@ const AdminDisciplines = () => {
 };
 
 export default AdminDisciplines;
+
+
+
+

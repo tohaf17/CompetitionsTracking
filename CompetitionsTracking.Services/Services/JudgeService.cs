@@ -1,5 +1,6 @@
 using CompetitionsTracking.Application.DTOs.Judge;
 using CompetitionsTracking.Domain.Entities;
+using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
@@ -43,22 +44,20 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task UpdateAsync(int id, JudgeRequestDto request)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                request.Adapt(entity);
-                _repository.Update(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Judge), id);
+
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity != null)
-            {
-                _repository.Remove(entity);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (entity == null) throw new NotFoundException(nameof(Judge), id);
+
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task<IEnumerable<JudgeAnalyticsDto>> GetJudgeAnalyticsAsync(int judgeId)

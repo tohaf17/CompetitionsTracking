@@ -1,11 +1,13 @@
 using CompetitionsTracking.Application.DTOs.Category;
 using CompetitionsTracking.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompetitionsTracking.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _service;
@@ -31,6 +33,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CategoryRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -38,6 +41,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] CategoryRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -45,6 +49,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);

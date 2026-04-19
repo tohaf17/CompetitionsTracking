@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AppealService from '../../services/appeal.service';
 import ResultService from '../../services/result.service';
-import { NavLink } from 'react-router-dom';
+import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -19,30 +19,32 @@ const AppealsList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ resultId: '', reason: '' });
 
-    useEffect(() => {
-        loadAppeals();
-    }, [viewMode]);
-
-    const loadAppeals = async () => {
+    const loadAppeals = useCallback(async () => {
         try {
             setLoading(true);
             const data = viewMode === 'pending' 
                 ? await AppealService.getPending() 
                 : await AppealService.getAll();
-            setAppeals(data.items || data); 
+            setAppeals(unwrapCollection(data)); 
         } catch (error) {
             toastError(error, 'Не вдалося завантажити апеляції');
         } finally {
             setLoading(false);
         }
-    };
+    }, [viewMode]);
+
+    useEffect(() => {
+        void loadAppeals();
+    }, [loadAppeals]);
 
     const loadResults = async () => {
         try {
             const data = await ResultService.getAll();
-            setResultsData(data.items || data);
-        } catch (e) {}
-    }
+            setResultsData(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити результати');
+        }
+    };
 
     const handleDelete = async (id) => {
         if (!window.confirm(`Видалити апеляцію з ID ${id}?`)) return;
@@ -51,7 +53,7 @@ const AppealsList = () => {
             toast.success("Апеляцію видалено");
             setAppeals(appeals.filter(a => a.id !== id));
         } catch (error) {
-            toast.error("Не вдалося видалити апеляцію");
+            toastError(error, 'Не вдалося видалити апеляцію');
         }
     };
 
@@ -71,7 +73,7 @@ const AppealsList = () => {
             setIsModalOpen(false);
             setFormData({ resultId: '', reason: '' });
         } catch (error) {
-            toast.error("Не вдалося подати апеляцію");
+            toastError(error, 'Не вдалося подати апеляцію');
         }
     };
 
@@ -105,8 +107,8 @@ const AppealsList = () => {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>ID заявки</th>
-                            <th>ID команди</th>
+                            <th>ID результату</th>
+                            <th>Учасник</th>
                             <th>Статус / Рішення</th>
                             <th>Дії</th>
                         </tr>
@@ -116,20 +118,18 @@ const AppealsList = () => {
                             appeals.map((appeal) => (
                                 <tr key={appeal.id}>
                                     <td>{appeal.id}</td>
-                                    <td>{appeal.entryId || `Результат → ${appeal.resultId}`}</td>
-                                    <td>{appeal.teamId || '-'}</td>
+                                    <td>{appeal.resultId}</td>
+                                    <td>{appeal.participantName || '-'}</td>
                                     <td>
                                          <span className={`status-badge ${appeal.status === 0 ? 'status-upcoming' : (appeal.status === 1 ? 'status-active' : 'status-completed')}`}>
-                                            {appeal.status === 0 ? 'На розгляді' : 'Розглянуто'}
+                                            {appeal.status === 0 ? 'На розгляді' : (appeal.status === 1 ? 'Схвалено' : 'Відхилено')}
                                         </span>
                                     </td>
                                     <td>
-                                        <NavLink to={`/appeals/${appeal.id}`} className="btn btn-primary" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}>
-                                            Досьє
-                                        </NavLink>
                                         {isAdmin && (
                                             <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(appeal.id)}>Видалити</button>
                                         )}
+                                        {!isAdmin && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
                                     </td>
                                 </tr>
                             ))
@@ -174,3 +174,7 @@ const AppealsList = () => {
 };
 
 export default AppealsList;
+
+
+
+

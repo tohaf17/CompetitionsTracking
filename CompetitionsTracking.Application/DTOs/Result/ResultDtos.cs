@@ -21,7 +21,10 @@ namespace CompetitionsTracking.Application.DTOs.Result
         public int Place { get; init; }
         public string ParticipantName { get; init; } = string.Empty;
         public string Country { get; init; } = string.Empty;
+        public string DisciplineName { get; init; } = string.Empty;
+        public string CategoryName { get; init; } = string.Empty;
         public float FinalScore { get; init; }
+        public string AwardedMedal { get; init; } = string.Empty;
     }
 
     public record CountryMedalTallyDto
