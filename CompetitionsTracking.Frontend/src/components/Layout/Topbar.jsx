@@ -22,12 +22,12 @@ const Topbar = () => {
                             <span className="user-role">{user.role}</span>
                             <span className="user-name">{user.username}</span>
                             <button onClick={handleLogout} className="btn btn-outline ml-2">
-                                Logout
+                                Вийти
                             </button>
                         </div>
                     ) : (
                         <button onClick={() => navigate('/login')} className="btn btn-primary">
-                            Login
+                            Увійти
                         </button>
                     )}
                 </div>

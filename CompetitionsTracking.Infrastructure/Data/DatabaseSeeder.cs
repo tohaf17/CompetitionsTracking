@@ -46,7 +46,7 @@ namespace CompetitionsTracking.Infrastructure.Data
 
             if (context.Persons.Any())
             {
-                context.SaveChanges(); // Save users if any were added
+                context.SaveChanges();
                 return;   
             }
 

@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
           } else {
             const roleKey = Object.keys(decoded).find(k => k.endsWith('/claims/role')) || 'role';
             const usernameKey = Object.keys(decoded).find(k => k.endsWith('/claims/name')) || 'unique_name';
-
+            
             setUser({
               username: decoded[usernameKey],
               role: decoded[roleKey],
@@ -57,17 +57,17 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, message: "No token received" };
     } catch (error) {
-      return { success: false, message: error.message || "Login failed" };
+       return { success: false, message: error.message || "Login failed" };
     }
   };
 
   const register = async (userData) => {
-    try {
-      await api.post('/Auth/register', userData);
-      return { success: true };
-    } catch (error) {
-      return { success: false, message: error.message || "Registration failed", validationErrors: error.validationErrors };
-    }
+      try {
+          await api.post('/Auth/register', userData);
+          return { success: true };
+      } catch (error) {
+          return { success: false, message: error.message || "Registration failed", validationErrors: error.validationErrors };
+      }
   }
 
   const logout = () => {

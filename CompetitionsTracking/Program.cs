@@ -44,7 +44,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Rhythmic Gymnastics Competitions Tracking API"
     });
 
-    // Define the Bearer scheme
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -55,7 +54,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Enter your JWT token: Bearer {token}"
     });
 
-    // Add security requirement globally
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -81,7 +79,7 @@ builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// Auto-Register all specific Repositories via Reflection
+//Repositories
 var repoTypes = typeof(Repository<>).Assembly.GetTypes()
     .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Repository") && t.Name != "Repository`1");
 foreach (var type in repoTypes)
@@ -90,7 +88,7 @@ foreach (var type in repoTypes)
     if (iType != null) builder.Services.AddScoped(iType, type);
 }
 
-// Auto-Register all Services via Reflection
+// Services
 var serviceTypes = typeof(ApparatusService).Assembly.GetTypes()
     .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Service"));
 foreach (var type in serviceTypes)
@@ -115,7 +113,6 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 
-// Scalar API Reference UI — must come BEFORE exception handling middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -125,7 +122,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Global exception handling — after API docs so it doesn't intercept JSON generation
+// Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
