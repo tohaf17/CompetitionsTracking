@@ -23,6 +23,8 @@ namespace CompetitionsTracking.Domain.Entities
         [Required]
         public UserRole Role { get; set; }
 
+        public bool IsApproved { get; set; } = true;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
     public enum UserRole

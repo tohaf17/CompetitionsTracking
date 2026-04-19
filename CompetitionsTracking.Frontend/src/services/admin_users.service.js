@@ -9,6 +9,11 @@ const AdminUserService = {
   deleteUser: async (id) => {
     const response = await api.delete(`/Auth/users/${id}`);
     return response.data;
+  },
+
+  approveUser: async (id) => {
+    const response = await api.post(`/Auth/users/${id}/approve`);
+    return response.data;
   }
 };
 

@@ -3,6 +3,7 @@ import CompetitionService from '../../../services/competition.service';
 import Modal from '../../../components/UI/Modal';
 import { NavLink } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { toastError } from '../../../utils/toastError';
 
 const AdminCompetitions = () => {
     const [competitions, setCompetitions] = useState([]);
@@ -23,7 +24,7 @@ const AdminCompetitions = () => {
             const data = await CompetitionService.getAll();
             setCompetitions(data.items || data);
         } catch (error) {
-            toast.error(error.message || "Не вдалося завантажити змагання");
+            toastError(error, 'Не вдалося завантажити змагання');
         } finally {
             setLoading(false);
         }

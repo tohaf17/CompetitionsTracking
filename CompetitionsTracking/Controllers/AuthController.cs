@@ -45,5 +45,13 @@ namespace CompetitionsTracking.Controllers
             await _service.DeleteUserAsync(id);
             return NoContent();
         }
+
+        [HttpPost("users/{id}/approve")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ApproveUser(int id)
+        {
+            await _service.ApproveUserAsync(id);
+            return Ok(new { message = "User approved successfully" });
+        }
     }
 }

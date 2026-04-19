@@ -18,6 +18,14 @@ import AdminUsersList from './pages/Admin/Users/AdminUsersList';
 import AdminCompetitions from './pages/Admin/Competitions/AdminCompetitions';
 import { Toaster } from 'react-hot-toast';
 
+// Маршрут доступний будь-кому (і гостю, і авторизованому)
+const PublicLayout = () => {
+    const { loading } = useAuth();
+    if (loading) return <div>Завантаження...</div>;
+    return <MainLayout />;
+};
+
+// Маршрут лише для авторизованих (не-гостей)
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
     const { user, loading, isAdmin } = useAuth();
 
@@ -41,15 +49,10 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/" element={<Navigate to="/competitions" />} />
 
-                <Route
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout />
-                        </ProtectedRoute>
-                    }
-                >
+                {/* Публічні маршрути — доступні без логіну */}
+                <Route element={<PublicLayout />}>
                     <Route path="/competitions" element={<CompetitionsList />} />
                     <Route path="/competitions/:id" element={<CompetitionDetails />} />
                     <Route path="/teams" element={<TeamsList />} />
@@ -58,6 +61,7 @@ const App = () => {
                     <Route path="/appeals" element={<AppealsList />} />
                     <Route path="/entries" element={<EntriesList />} />
 
+                    {/* Адмін маршрути — лише для Admin */}
                     <Route
                         path="/admin/users"
                         element={

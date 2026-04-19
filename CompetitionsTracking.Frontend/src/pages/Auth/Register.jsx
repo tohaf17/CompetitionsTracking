@@ -11,7 +11,8 @@ const Register = () => {
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        role: 2 // Гість за замовчуванням
     });
     const [loading, setLoading] = useState(false);
 
@@ -38,13 +39,21 @@ const Register = () => {
             username: formData.username,
             email: formData.email,
             password: formData.password,
-            role: 0 // Гість за замовчуванням
+            role: parseInt(formData.role)
         });
         setLoading(false);
 
         if (result.success) {
-            toast.success('Обліковий запис створено! Будь ласка, увійдіть.');
-            navigate('/login');
+            if (parseInt(formData.role) === 2) {
+                toast.success('Обліковий запис створено! Будь ласка, увійдіть.');
+                navigate('/login');
+            } else {
+                toast.success('Дякуємо! Ваш акаунт очікує підтвердження адміністратором. Ви можете переглядати дані як гість.', {
+                    duration: 6000
+                });
+                // Редірект на гостьовий UI
+                navigate('/competitions');
+            }
         } else {
             if (result.validationErrors) {
                 Object.values(result.validationErrors).flat().forEach(err => toast.error(err));
@@ -58,9 +67,6 @@ const Register = () => {
         <div className="login-container">
             <div className="login-card glass-panel">
                 <center><h2 className="login-title">Створити обліковий запис</h2></center>
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                    Зареєструйтесь як гість для перегляду змагань
-                </p>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Нікнейм / Ім&apos;я користувача</label>
@@ -83,6 +89,20 @@ const Register = () => {
                             placeholder="Введіть ваш email"
                             required
                         />
+                    </div>
+                    <div className="form-group">
+                        <label>Роль у системі</label>
+                        <select 
+                            name="role" 
+                            value={formData.role} 
+                            onChange={handleChange}
+                            className="btn-outline"
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--surface-border)' }}
+                        >
+                            <option value="2" style={{ color: 'black' }}>Гість (лише перегляд)</option>
+                            <option value="1" style={{ color: 'black' }}>Тренер (Coach) - потребує підтвердження</option>
+                            <option value="0" style={{ color: 'black' }}>Адміністратор - потребує підтвердження</option>
+                        </select>
                     </div>
                     <div className="form-group">
                         <label>Пароль</label>

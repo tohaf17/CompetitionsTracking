@@ -9,6 +9,7 @@ const AdminApparatus = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ type: '' });
 
+    const [editingId, setEditingId] = useState(null);
     useEffect(() => {
         loadApparatus();
     }, []);
@@ -24,7 +25,8 @@ const AdminApparatus = () => {
             setLoading(false);
         }
     };
-
+ 
+    
     const handleDelete = async (id, name) => {
         if (!window.confirm(`Видалити інвентар "${name}"?`)) return;
         try {
@@ -36,19 +38,39 @@ const AdminApparatus = () => {
         }
     };
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
-        try {
-            const data = await ApparatusService.create({ type: formData.type });
-            toast.success("Інвентар створено");
-            setApparatus([...apparatus, data]);
-            setIsModalOpen(false);
-            setFormData({ type: '' });
-        } catch (error) {
-            toast.error("Не вдалося створити інвентар");
-        }
+    const handleOpenCreate = () => {
+        setEditingId(null);
+        setFormData({ type: '' });
+        setIsModalOpen(true);
     };
 
+    const handleOpenEdit = (item) => {
+        setEditingId(item.id);
+        setFormData({ type: item.type || item.name });
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (editingId) {
+                await ApparatusService.update(editingId, { type: formData.type });
+                toast.success("Інвентар оновлено");
+                setApparatus(apparatus.map(a => 
+                    a.id === editingId ? { ...a, type: formData.type, name: formData.type } : a
+                ));
+            } else {
+                const data = await ApparatusService.create({ type: formData.type });
+                toast.success("Інвентар створено");
+                setApparatus([...apparatus, data]);
+            }
+            setIsModalOpen(false);
+            setFormData({ type: '' });
+            setEditingId(null);
+        } catch (error) {
+            toast.error(editingId ? "Не вдалося оновити інвентар" : "Не вдалося створити інвентар");
+        }
+    };
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -78,6 +100,13 @@ const AdminApparatus = () => {
                                     <td>{index + 1}</td>
                                     <td><strong>{item.type || item.name}</strong></td>
                                     <td>
+                                        <button 
+                                            className="btn btn-warning" 
+                                            style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}} 
+                                            onClick={() => handleOpenEdit(item)}
+                                        >
+                                            Оновити
+                                        </button>
                                         <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(item.id, item.type || item.name)}>Видалити</button>
                                     </td>
                                 </tr>
@@ -91,15 +120,24 @@ const AdminApparatus = () => {
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Додати новий інвентар">
-                <form onSubmit={handleCreate}>
+            <Modal isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} title={editingId ? "Оновити інвентар" : "Додати новий інвентар"}>
+                <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Назва інвентарю (напр. Обруч, М&apos;яч)</label>
-                        <input type="text" name="type" value={formData.type} onChange={handleChange} required />
+                        <input 
+                            type="text" 
+                            name="type" 
+                            value={formData.type} 
+                            onChange={handleChange} 
+                            required 
+                        />
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
-                        <button type="submit" className="btn btn-primary">Створити</button>
+                        <button type="submit" className="btn btn-primary">
+                            {editingId ? "Зберегти зміни" : "Створити"}
+                        </button>
                     </div>
                 </form>
             </Modal>

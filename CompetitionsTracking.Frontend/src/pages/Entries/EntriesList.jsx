@@ -9,6 +9,7 @@ import JudgeService from '../../services/judge.service';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { toastError } from '../../utils/toastError';
 
 const EntriesList = () => {
     const { user } = useAuth();
@@ -22,13 +23,12 @@ const EntriesList = () => {
     const [judges, setJudges] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Модальне вікно заявки
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         competitionId: '', participantId: '', disciplineId: '', categoryId: ''
     });
 
-    // Модальне вікно оцінки
+
     const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [scoreData, setScoreData] = useState({
@@ -45,7 +45,7 @@ const EntriesList = () => {
             const data = await EntryService.getAll();
             setEntries(data.items || data);
         } catch (error) {
-            toast.error(error.message || "Не вдалося завантажити заявки");
+            toastError(error, 'Не вдалося завантажити заявки');
         } finally {
             setLoading(false);
         }

@@ -42,7 +42,7 @@ const AdminCategories = () => {
             const data = await CategoryService.create({ 
                 type: formData.type, 
                 minAge: parseInt(formData.minAge) || 0,
-                maxAge: parseInt(formData.maxAge) || 99
+                maxAge: formData.maxAge ? parseInt(formData.maxAge) : 99
             });
             toast.success("Категорію створено");
             setCategories([...categories, data]);
@@ -78,11 +78,13 @@ const AdminCategories = () => {
                     </thead>
                     <tbody>
                         {categories.length > 0 ? (
-                            categories.map((item) => (
+                            categories.map((item,index) => (
                                 <tr key={item.id}>
-                                    <td>{item.id}</td>
+                                    <td>{index + 1}</td>
                                     <td><strong>{item.type}</strong></td>
-                                    <td>{item.minAge} - {item.maxAge} р.</td>
+                                    <td>{item.maxAge >= 99 || !item.maxAge 
+                                            ? `${item.minAge}+ р.` 
+                                            : `${item.minAge} - ${item.maxAge} р.`}</td>
                                     <td>
                                         <button className="btn btn-outline" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}}>Редагувати</button>
                                         <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginLeft: '0.5rem'}} onClick={() => handleDelete(item.id, item.type)}>Видалити</button>
@@ -109,7 +111,7 @@ const AdminCategories = () => {
                         <input type="number" name="minAge" value={formData.minAge} onChange={handleChange} required />
                     </div>
                     <div className="form-group">
-                        <label>Максимальний вік</label>
+                        <label>Максимальний вік <span style={{fontSize: '0.8em', color: '#666'}}>(необов'язково)</span></label>
                         <input type="number" name="maxAge" value={formData.maxAge} onChange={handleChange} required />
                     </div>
                     <div className="modal-footer">

@@ -28,22 +28,23 @@ api.interceptors.response.use(
 
     if (error.response) {
       if (error.response.status === 401) {
-        errorMessage = "Unauthorized. Please log in.";
+        // Гість не авторизований — це нормально, мовчазний reject без toast
+        return Promise.reject({ message: null, isSilent: true, type: 'unauthorized', originalError: error });
       } else if (error.response.status === 403) {
-         errorMessage = "Access forbidden. Admin privileges required.";
+        errorMessage = "Доступ заборонено. Потрібні права адміністратора.";
       } else if (error.response.data) {
         if (error.response.data.errors) {
-            validationErrors = error.response.data.errors;
-            const firstErrorField = Object.keys(validationErrors)[0];
-            errorMessage = validationErrors[firstErrorField][0] || "Validation Error";
+          validationErrors = error.response.data.errors;
+          const firstErrorField = Object.keys(validationErrors)[0];
+          errorMessage = validationErrors[firstErrorField][0] || "Помилка валідації";
         } else if (error.response.data.message) {
-            errorMessage = error.response.data.message;
+          errorMessage = error.response.data.message;
         } else if (typeof error.response.data === 'string') {
-            errorMessage = error.response.data;
+          errorMessage = error.response.data;
         }
       }
     } else if (error.request) {
-      errorMessage = "Network error. Server might be down.";
+      errorMessage = "Помилка мережі. Сервер недоступний.";
     }
 
     return Promise.reject({ message: errorMessage, validationErrors, originalError: error });

@@ -35,12 +35,16 @@ namespace CompetitionsTracking.Services.Implementations
             {
                 throw new BadRequestException("Invalid username or password.");
             }
-
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             
             if (result == PasswordVerificationResult.Failed)
             {
                 throw new BadRequestException("Invalid username or password.");
+            }
+
+            if (!user.IsApproved)
+            {
+                throw new BadRequestException("Обліковий запис очікує підтвердження адміністратором.");
             }
 
             return new AuthResponseDto
@@ -67,6 +71,7 @@ namespace CompetitionsTracking.Services.Implementations
                 Username = request.Username,
                 Email = request.Email,
                 Role = request.Role,
+                IsApproved = request.Role == UserRole.Guest,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -116,6 +121,7 @@ namespace CompetitionsTracking.Services.Implementations
                 Username = u.Username,
                 Email = u.Email,
                 Role = u.Role,
+                IsApproved = u.IsApproved,
                 CreatedAt = u.CreatedAt
             });
         }
@@ -129,6 +135,18 @@ namespace CompetitionsTracking.Services.Implementations
             }
             
             _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ApproveUserAsync(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                throw new NotFoundException($"User with ID {id} not found.");
+            }
+
+            user.IsApproved = true;
             await _context.SaveChangesAsync();
         }
     }

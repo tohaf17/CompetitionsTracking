@@ -5,6 +5,7 @@ import { NavLink } from 'react-router-dom';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { toastError } from '../../utils/toastError';
 
 const AppealsList = () => {
     const { user } = useAuth();
@@ -30,7 +31,7 @@ const AppealsList = () => {
                 : await AppealService.getAll();
             setAppeals(data.items || data); 
         } catch (error) {
-            toast.error(error.message || `Не вдалося завантажити апеляції`);
+            toastError(error, 'Не вдалося завантажити апеляції');
         } finally {
             setLoading(false);
         }

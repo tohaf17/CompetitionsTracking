@@ -1,15 +1,18 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
+    const navigate = useNavigate();
+
     return (
         <aside className="sidebar glass-panel">
             <div className="sidebar-header">
                 <h2>Гімнастика</h2>
             </div>
             <nav className="sidebar-nav">
+
                 <NavLink to="/competitions" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Змагання
                 </NavLink>
@@ -25,7 +28,27 @@ const Sidebar = () => {
                 <NavLink to="/appeals" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Апеляції
                 </NavLink>
-                
+
+
+                {user && (
+                    <NavLink to="/entries" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                        Заявки
+                    </NavLink>
+                )}
+
+                {!user && (
+                    <>
+                        <div className="nav-divider"></div>
+                        <button
+                            className="nav-link"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', color: 'var(--accent-color)', fontWeight: 600 }}
+                            onClick={() => navigate('/login')}
+                        >
+                            🔑 Увійти до системи
+                        </button>
+                    </>
+                )}
+
                 {isAdmin && (
                     <>
                         <div className="nav-divider"></div>

@@ -5,6 +5,7 @@ import { NavLink } from 'react-router-dom';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { toastError } from '../../utils/toastError';
 
 const TeamsList = () => {
     const { user } = useAuth();
@@ -26,7 +27,7 @@ const TeamsList = () => {
             const data = await TeamService.getAll();
             setTeams(data.items || data); 
         } catch (error) {
-            toast.error(error.message || "Не вдалося завантажити команди");
+            toastError(error, 'Не вдалося завантажити команди');
         } finally {
             setLoading(false);
         }

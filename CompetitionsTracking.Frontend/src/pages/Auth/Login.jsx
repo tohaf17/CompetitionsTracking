@@ -28,6 +28,10 @@ const Login = () => {
         }
     };
 
+    const handleGuestAccess = () => {
+        navigate('/competitions');
+    };
+
     return (
         <div className="login-container">
             <div className="login-card glass-panel">
@@ -57,6 +61,22 @@ const Login = () => {
                         {loading ? 'Вхід...' : 'Увійти'}
                     </button>
                 </form>
+
+                <div style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--surface-border)' }} />
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>або</span>
+                    <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--surface-border)' }} />
+                </div>
+
+                <button
+                    type="button"
+                    className="btn btn-outline login-btn"
+                    onClick={handleGuestAccess}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                    👁 Переглянути як гість
+                </button>
+
                 <p style={{ textAlign: 'center', marginTop: '1.2rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                     Немає облікового запису?{' '}
                     <NavLink to="/register" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>

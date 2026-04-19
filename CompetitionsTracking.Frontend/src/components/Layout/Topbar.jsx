@@ -26,9 +26,12 @@ const Topbar = () => {
                             </button>
                         </div>
                     ) : (
-                        <button onClick={() => navigate('/login')} className="btn btn-primary">
-                            Увійти
-                        </button>
+                        <div className="user-profile">
+                            <span className="user-role" style={{ color: 'var(--text-muted)' }}>Гість</span>
+                            <button onClick={() => navigate('/login')} className="btn btn-primary ml-2">
+                                Увійти
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

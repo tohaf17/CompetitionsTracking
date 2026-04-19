@@ -19,6 +19,7 @@ namespace CompetitionsTracking.Infrastructure.Data
                     Username = "admin",
                     Email = "admin@example.com",
                     Role = UserRole.Admin,
+                    IsApproved = true,
                     CreatedAt = DateTime.UtcNow
                 };
                 admin.PasswordHash = hasher.HashPassword(admin, "admin123");
@@ -28,6 +29,7 @@ namespace CompetitionsTracking.Infrastructure.Data
                     Username = "trainee",
                     Email = "trainee@example.com",
                     Role = UserRole.Trainee,
+                    IsApproved = true,
                     CreatedAt = DateTime.UtcNow
                 };
                 trainee.PasswordHash = hasher.HashPassword(trainee, "trainee123");
@@ -37,6 +39,7 @@ namespace CompetitionsTracking.Infrastructure.Data
                     Username = "guest",
                     Email = "guest@example.com",
                     Role = UserRole.Guest,
+                    IsApproved = true,
                     CreatedAt = DateTime.UtcNow
                 };
                 guest.PasswordHash = hasher.HashPassword(guest, "guest123");

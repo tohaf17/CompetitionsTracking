@@ -5,6 +5,7 @@ import { NavLink } from 'react-router-dom';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { toastError } from '../../utils/toastError';
 
 const JudgesList = () => {
     const { user } = useAuth();
@@ -26,7 +27,7 @@ const JudgesList = () => {
             const data = await JudgeService.getAll();
             setJudges(data.items || data); 
         } catch (error) {
-            toast.error(error.message || "Не вдалося завантажити суддів");
+            toastError(error, 'Не вдалося завантажити суддів');
         } finally {
             setLoading(false);
         }

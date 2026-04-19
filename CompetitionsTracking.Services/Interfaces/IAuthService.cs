@@ -9,5 +9,6 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request);
         Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task DeleteUserAsync(int id);
+        Task ApproveUserAsync(int id);
     }
 }
