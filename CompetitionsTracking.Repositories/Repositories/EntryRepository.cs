@@ -108,5 +108,33 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .Include(e => e.Result)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
+
+        public async Task<(IEnumerable<Entry> Items, int TotalCount)> GetPagedWithDetailsAsync(int pageNumber, int pageSize)
+        {
+            var query = _context.Entries
+                .Include(e => e.Participant)
+                .Include(e => e.Competition)
+                .Include(e => e.Discipline)
+                .Include(e => e.Category)
+                .AsNoTracking();
+
+            int totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+        public async Task<IEnumerable<Entry>> GetByCompetitionIdAsync(int competitionId)
+        {
+            return await _context.Entries
+                .Include(e => e.Participant)
+                .Include(e => e.Discipline)
+                .Include(e => e.Category)
+                .Where(e => e.CompetitionId == competitionId)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

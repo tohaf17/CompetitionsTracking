@@ -7,7 +7,6 @@ import Register from './pages/Auth/Register';
 import CompetitionsList from './pages/Competitions/CompetitionsList';
 import CompetitionDetails from './pages/Competitions/CompetitionDetails';
 import TeamsList from './pages/Teams/TeamsList';
-import PersonsList from './pages/Persons/PersonsList';
 import JudgesList from './pages/Judges/JudgesList';
 import AppealsList from './pages/Appeals/AppealsList';
 import EntriesList from './pages/Entries/EntriesList';
@@ -55,7 +54,6 @@ const App = () => {
                     <Route path="/competitions" element={<CompetitionsList />} />
                     <Route path="/competitions/:id" element={<CompetitionDetails />} />
                     <Route path="/teams" element={<TeamsList />} />
-                    <Route path="/persons" element={<PersonsList />} />
                     <Route path="/judges" element={<JudgesList />} />
                     <Route path="/appeals" element={<AppealsList />} />
                     <Route path="/entries" element={<EntriesList />} />

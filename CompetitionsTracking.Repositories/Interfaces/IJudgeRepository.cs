@@ -12,5 +12,6 @@ namespace CompetitionsTracking.Repositories.Interfaces
         Task<IEnumerable<Score>> GetConflictsOfInterestAsync(int judgeId);
         Task<IEnumerable<WorkloadSummaryDto>> GetWorkloadSummaryAsync(int judgeId, int competitionId);
         Task<IEnumerable<Score>> GetJudgeScoresInCompetitionAsync(int judgeId, int competitionId);
+        Task<IEnumerable<Judge>> GetAllWithPersonAsync();
     }
 }

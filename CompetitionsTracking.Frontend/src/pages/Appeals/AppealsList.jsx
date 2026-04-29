@@ -115,9 +115,9 @@ const AppealsList = () => {
                     </thead>
                     <tbody>
                         {appeals.length > 0 ? (
-                            appeals.map((appeal) => (
+                            appeals.map((appeal, index) => (
                                 <tr key={appeal.id}>
-                                    <td>{appeal.id}</td>
+                                    <td>{index + 1}</td>
                                     <td>{appeal.resultId}</td>
                                     <td>{appeal.participantName || '-'}</td>
                                     <td>

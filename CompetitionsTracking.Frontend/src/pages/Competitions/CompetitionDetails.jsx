@@ -5,28 +5,37 @@ import ResultService from '../../services/result.service';
 import ScoreService from '../../services/score.service';
 import DisciplineService from '../../services/discipline.service';
 import CategoryService from '../../services/category.service';
+import EntryService from '../../services/entry.service';
+import JudgeService from '../../services/judge.service';
 import { useAuth } from '../../context/AuthContext';
 import { unwrapCollection } from '../../utils/unwrapCollection';
 import { toastError } from '../../utils/toastError';
+import Modal from '../../components/UI/Modal';
 import toast from 'react-hot-toast';
 
 const CompetitionDetails = () => {
     const { id } = useParams();
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
+    const canEdit = user?.role === 'Admin' || user?.role === 'Trainee';
 
     const [competition, setCompetition] = useState(null);
     const [leaderboard, setLeaderboard] = useState([]);
     const [teamTally, setTeamTally] = useState([]);
     const [anomalies, setAnomalies] = useState([]);
+    const [entries, setEntries] = useState([]);
 
-    // Фільтри для таблиці результатів
     const [disciplines, setDisciplines] = useState([]);
     const [categories, setCategories] = useState([]);
     const [filter, setFilter] = useState({ disciplineId: '', categoryId: '' });
 
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('leaderboard'); // leaderboard, tally, anomalies
+    const [activeTab, setActiveTab] = useState('leaderboard'); 
+
+    const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const [judges, setJudges] = useState([]);
+    const [scoreData, setScoreData] = useState({ judgeId: '', scoreType: 'DA', value: '' });
 
     const loadData = useCallback(async () => {
         try {
@@ -73,6 +82,15 @@ const CompetitionDetails = () => {
         }
     }, [id]);
 
+    const loadEntries = useCallback(async () => {
+        try {
+            const data = await EntryService.getByCompetition(id);
+            setEntries(unwrapCollection(data));
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити список заявок');
+        }
+    }, [id]);
+
     useEffect(() => {
         void loadData();
     }, [loadData]);
@@ -81,15 +99,57 @@ const CompetitionDetails = () => {
         if (activeTab === 'leaderboard') void loadLeaderboard();
         else if (activeTab === 'tally') void loadTally();
         else if (activeTab === 'anomalies') void loadAnomalies();
-    }, [activeTab, loadAnomalies, loadLeaderboard, loadTally]);
+        else if (activeTab === 'entries') void loadEntries();
+    }, [activeTab, loadAnomalies, loadLeaderboard, loadTally, loadEntries]);
 
     const handleAwardMedals = async () => {
         try {
             await CompetitionService.awardMedals(id);
             toast.success("Медалі успішно нараховано");
-            loadLeaderboard();
+            if (activeTab === 'leaderboard') loadLeaderboard();
+            if (activeTab === 'tally') loadTally();
         } catch {
             toast.error("Не вдалося нарахувати медалі");
+        }
+    };
+
+    const handleScoreSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                entryId: selectedEntry.id,
+                judgeId: parseInt(scoreData.judgeId),
+                type: scoreData.scoreType,
+                scoreValue: parseFloat(scoreData.value)
+            };
+            await ScoreService.create(payload);
+            toast.success("Оцінку успішно виставлено");
+            setIsScoreModalOpen(false);
+            setScoreData({ judgeId: '', scoreType: 'DA', value: '' });
+        } catch (error) {
+            toastError(error, 'Не вдалося виставити оцінку');
+        }
+    };
+
+    const handleDeleteEntry = async (entryId) => {
+        if (!window.confirm("Видалити цю заявку?")) return;
+        try {
+            await EntryService.delete(entryId);
+            toast.success("Заявку видалено");
+            loadEntries();
+        } catch (error) {
+            toastError(error, 'Не вдалося видалити заявку');
+        }
+    };
+
+    const openScoreModal = async (entry) => {
+        setSelectedEntry(entry);
+        try {
+            const res = await JudgeService.getAll();
+            setJudges(unwrapCollection(res));
+            setIsScoreModalOpen(true);
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити список суддів');
         }
     };
 
@@ -107,10 +167,11 @@ const CompetitionDetails = () => {
                 )}
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="flex gap-2 mb-2" style={{overflowX: 'auto', paddingBottom: '0.5rem'}}>
                 <button className={`btn ${activeTab === 'leaderboard' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('leaderboard')}>Таблиця результатів</button>
                 <button className={`btn ${activeTab === 'tally' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('tally')}>Медальний залік команд</button>
-                {isAdmin && <button className={`btn ${activeTab === 'anomalies' ? 'btn-danger' : 'btn-outline'}`} onClick={() => setActiveTab('anomalies')}>Аномалії оцінок</button>}
+                <button className={`btn ${activeTab === 'entries' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('entries')}>Список заявок</button>
+                {canEdit && <button className={`btn ${activeTab === 'anomalies' ? 'btn-danger' : 'btn-outline'}`} onClick={() => setActiveTab('anomalies')}>Аномалії оцінок</button>}
             </div>
 
             {activeTab === 'leaderboard' && (
@@ -129,7 +190,8 @@ const CompetitionDetails = () => {
                     <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                         <thead style={{ borderBottom: '1px solid var(--surface-border)' }}>
                             <tr>
-                                <th style={{ padding: '0.8rem' }}>Учасник / Команда</th>
+                                <th style={{ padding: '0.8rem' }}>№</th>
+                                <th>Учасник / Команда</th>
                                 <th>Дисципліна</th>
                                 <th>Категорія</th>
                                 <th>Фінальна оцінка</th>
@@ -139,7 +201,8 @@ const CompetitionDetails = () => {
                         <tbody>
                             {leaderboard.length > 0 ? leaderboard.map((lb, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
-                                    <td style={{ padding: '0.8rem' }}><strong>{lb.participantName}</strong></td>
+                                    <td style={{ padding: '0.8rem' }}>{i + 1}</td>
+                                    <td><strong>{lb.participantName}</strong></td>
                                     <td>{lb.disciplineName}</td>
                                     <td>{lb.categoryName}</td>
                                     <td><span className="status-badge status-active">{lb.finalScore.toFixed(2)}</span></td>
@@ -147,7 +210,7 @@ const CompetitionDetails = () => {
                                         {lb.place} {lb.awardedMedal && <span style={{ marginLeft: '0.5rem' }}>🏅 {lb.awardedMedal}</span>}
                                     </td>
                                 </tr>
-                            )) : <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center' }}>Немає результатів за вибраними фільтрами.</td></tr>}
+                            )) : <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Немає результатів за вибраними фільтрами.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -159,7 +222,8 @@ const CompetitionDetails = () => {
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
                         <thead style={{ borderBottom: '1px solid var(--surface-border)' }}>
                             <tr>
-                                <th style={{ padding: '0.8rem' }}>Назва команди</th>
+                                <th style={{ padding: '0.8rem' }}>№</th>
+                                <th>Назва команди</th>
                                 <th style={{ color: '#FFD700' }}>Золото</th>
                                 <th style={{ color: '#C0C0C0' }}>Срібло</th>
                                 <th style={{ color: '#CD7F32' }}>Бронза</th>
@@ -169,6 +233,7 @@ const CompetitionDetails = () => {
                         <tbody>
                             {teamTally.map((t, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                                    <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td style={{ padding: '0.8rem' }}>{t.teamName}</td>
                                     <td>{t.goldMedals}</td>
                                     <td>{t.silverMedals}</td>
@@ -176,19 +241,69 @@ const CompetitionDetails = () => {
                                     <td><strong>{t.totalMedals}</strong></td>
                                 </tr>
                             ))}
-                            {teamTally.length === 0 && <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
+                            {teamTally.length === 0 && <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
                         </tbody>
                     </table>
                 </div>
             )}
 
-            {activeTab === 'anomalies' && isAdmin && (
+            {activeTab === 'entries' && (
+                <div className="glass-panel">
+                    <h3>Список заявок на змагання</h3>
+                    <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
+                        <thead style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                            <tr>
+                                <th style={{ padding: '0.8rem' }}>№</th>
+                                <th>Учасник</th>
+                                <th>Дисципліна | Категорія</th>
+                                <th>Статус</th>
+                                <th>Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {entries.length > 0 ? entries.map((e, i) => (
+                                <tr key={e.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                                    <td style={{ padding: '0.8rem' }}>{i + 1}</td>
+                                    <td><strong>{e.participantName}</strong></td>
+                                    <td>{e.disciplineName} | {e.categoryName}</td>
+                                    <td>
+                                        <span className={`status-badge ${e.entryStatus === 0 ? 'status-active' : 'status-cancelled'}`}>
+                                            {e.entryStatus === 0 ? 'Активна' : 'Дискваліфікована'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button 
+                                            className="btn btn-primary" 
+                                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }} 
+                                            onClick={() => openScoreModal(e)}
+                                        >
+                                            Оцінити
+                                        </button>
+                                        {canEdit && (
+                                            <button 
+                                                className="btn btn-danger" 
+                                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} 
+                                                onClick={() => handleDeleteEntry(e.id)}
+                                            >
+                                                Видалити
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            )) : <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center' }}>Заявок не знайдено.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {activeTab === 'anomalies' && canEdit && (
                 <div className="glass-panel">
                     <h3 style={{ color: '#ff4d4f' }}>Підозрілі оцінки (відхилення &gt;= 1.5)</h3>
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
                         <thead style={{ borderBottom: '1px solid var(--surface-border)' }}>
                             <tr>
-                                <th style={{ padding: '0.8rem' }}>Ім&apos;я учасника</th>
+                                <th style={{ padding: '0.8rem' }}>№</th>
+                                <th>Ім&apos;я учасника</th>
                                 <th>Суддя</th>
                                 <th>Тип оцінки</th>
                                 <th>Виставлена оцінка</th>
@@ -198,6 +313,7 @@ const CompetitionDetails = () => {
                         <tbody>
                             {anomalies.map((a, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                                    <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td style={{ padding: '0.8rem' }}>{a.participantName}</td>
                                     <td>{a.judgeName}</td>
                                     <td>{a.scoreType}</td>
@@ -205,15 +321,58 @@ const CompetitionDetails = () => {
                                     <td style={{ color: '#ff4d4f' }}>{a.deviation > 0 ? '+' : ''}{a.deviation.toFixed(2)}</td>
                                 </tr>
                             ))}
-                            {anomalies.length === 0 && <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center' }}>Аномалій не виявлено.</td></tr>}
+                            {anomalies.length === 0 && <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Аномалій не виявлено.</td></tr>}
                         </tbody>
                     </table>
                 </div>
             )}
+
+            <Modal isOpen={isScoreModalOpen} onClose={() => setIsScoreModalOpen(false)} title={`Оцінити виступ: ${selectedEntry?.participantName}`}>
+                <form onSubmit={handleScoreSubmit}>
+                    <div className="form-group">
+                        <label>Суддя</label>
+                        <select 
+                            value={scoreData.judgeId} 
+                            onChange={(e) => setScoreData({...scoreData, judgeId: e.target.value})} 
+                            required
+                        >
+                            <option value="">-- Оберіть суддю --</option>
+                            {judges.map(j => <option key={j.id} value={j.id}>{j.fullName} (Квал: {j.qualificationLevel})</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Тип оцінки</label>
+                        <select 
+                            value={scoreData.scoreType} 
+                            onChange={(e) => setScoreData({...scoreData, scoreType: e.target.value})} 
+                            required
+                        >
+                            <option value="DA">Складність тіла (DA)</option>
+                            <option value="DB">Складність інвентарю (DB)</option>
+                            <option value="A">Артистизм (A)</option>
+                            <option value="E">Виконання (E)</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Значення оцінки</label>
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            min="0" 
+                            max="20" 
+                            value={scoreData.value} 
+                            onChange={(e) => setScoreData({...scoreData, value: e.target.value})} 
+                            required 
+                        />
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-outline" onClick={() => setIsScoreModalOpen(false)}>Скасувати</button>
+                        <button type="submit" className="btn btn-primary">Виставити оцінку</button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };
 
 export default CompetitionDetails;
-
-

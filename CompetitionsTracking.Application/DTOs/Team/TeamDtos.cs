@@ -14,6 +14,7 @@ namespace CompetitionsTracking.Application.DTOs.Team
         public string Type { get; init; } = "Team";
         public string Name { get; init; } = string.Empty;
         public int CoachId { get; init; }
+        public string CoachFullName { get; init; } = string.Empty;
     }
     public record TeamRosterDto
     {

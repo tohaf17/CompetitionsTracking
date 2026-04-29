@@ -82,5 +82,11 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .AsNoTracking()
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Judge>> GetAllWithPersonAsync()
+        {
+            return await _context.Judges
+                .Include(j => j.Person)
+                .ToListAsync();
+        }
     }
 }

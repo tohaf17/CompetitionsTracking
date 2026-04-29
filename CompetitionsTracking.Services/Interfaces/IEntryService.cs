@@ -21,5 +21,6 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<IEnumerable<EntryResponseDto>> GetStartListAsync(int competitionId);
         Task<IEnumerable<EntryResponseDto>> GetMissingScoresAsync(int competitionId, int expectedCount);
         Task<EntryAnalyticsDto> GetAnalyticsAsync(int competitionId);
+        Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdAsync(int competitionId);
     }
 }

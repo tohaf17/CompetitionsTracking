@@ -14,8 +14,19 @@ const JudgesList = () => {
     const [judges, setJudges] = useState([]);
     const [persons, setPersons] = useState([]);
     const [loading, setLoading] = useState(true);
+    
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ personId: '', qualificationLevel: '' });
+    const [isCreatePersonMode, setIsCreatePersonMode] = useState(false);
+    
+    const [formData, setFormData] = useState({ 
+        personId: '', 
+        qualificationLevel: '',
+        name: '',
+        surname: '',
+        country: '',
+        dateOfBirth: '',
+        gender: 0
+    });
 
     useEffect(() => {
         loadJudges();
@@ -42,8 +53,8 @@ const JudgesList = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm(`Видалити суддю з ID ${id}?`)) return;
+    const handleDelete = async (id, name) => {
+        if (!window.confirm(`Видалити суддю ${name}?`)) return;
         try {
             await JudgeService.delete(id);
             toast.success("Суддю видалено");
@@ -56,18 +67,45 @@ const JudgesList = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
+            let finalPersonId = formData.personId;
+            
+            if (isCreatePersonMode) {
+                const newPerson = await PersonService.create({
+                    name: formData.name,
+                    surname: formData.surname,
+                    country: formData.country,
+                    gender: parseInt(formData.gender),
+                    dateOfBirth: new Date(formData.dateOfBirth).toISOString()
+                });
+                finalPersonId = newPerson.id;
+            }
+
             const dataToSubmit = {
-                personId: parseInt(formData.personId),
+                personId: parseInt(finalPersonId),
                 qualificationLevel: formData.qualificationLevel
             };
-            const data = await JudgeService.create(dataToSubmit);
+            
+            await JudgeService.create(dataToSubmit);
             toast.success("Суддю створено");
-            setJudges([...judges, data]);
+            loadJudges(); 
             setIsModalOpen(false);
-            setFormData({ personId: '', qualificationLevel: '' });
+            resetForm();
         } catch (error) {
             toastError(error, 'Не вдалося створити суддю');
         }
+    };
+
+    const resetForm = () => {
+        setFormData({ 
+            personId: '', 
+            qualificationLevel: '', 
+            name: '', 
+            surname: '', 
+            country: '', 
+            dateOfBirth: '', 
+            gender: 0 
+        });
+        setIsCreatePersonMode(false);
     };
 
     const handleChange = (e) => {
@@ -93,18 +131,18 @@ const JudgesList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>ID особи</th>
+                            <th>№</th>
+                            <th>ПІБ Судді</th>
                             <th>Кваліфікаційний рівень</th>
                             <th>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
                         {judges.length > 0 ? (
-                            judges.map((judge) => (
+                            judges.map((judge, index) => (
                                 <tr key={judge.id}>
-                                    <td>{judge.id}</td>
-                                    <td>{judge.personId}</td>
+                                    <td>{index + 1}</td>
+                                    <td><strong>{judge.fullName}</strong></td>
                                     <td>
                                         <span className={`status-badge status-active`}>
                                             {judge.qualificationLevel}
@@ -112,7 +150,7 @@ const JudgesList = () => {
                                     </td>
                                     <td>
                                         {canEdit && (
-                                            <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(judge.id)}>Видалити</button>
+                                            <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(judge.id, judge.fullName)}>Видалити</button>
                                         )}
                                         {!canEdit && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
                                     </td>
@@ -120,7 +158,7 @@ const JudgesList = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>Суддів не знайдено.</td>
+                                <td colSpan="4" style={{textAlign: 'center', padding: '2rem'}}>Суддів не знайдено.</td>
                             </tr>
                         )}
                     </tbody>
@@ -129,20 +167,66 @@ const JudgesList = () => {
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Додати нового суддю">
                 <form onSubmit={handleCreate}>
-                    <div className="form-group">
-                        <label>Оберіть особу</label>
-                        <select name="personId" value={formData.personId} onChange={handleChange} required>
-                            <option value="">-- Оберіть особу --</option>
-                            {persons.map(p => <option key={p.id} value={p.id}>{p.name} {p.surname} (ID: {p.id})</option>)}
-                        </select>
+                    <div className="form-group" style={{marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem'}}>
+                        <label style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                            <input 
+                                type="checkbox" 
+                                checked={isCreatePersonMode} 
+                                onChange={(e) => setIsCreatePersonMode(e.target.checked)}
+                                style={{marginRight: '0.5rem'}}
+                            />
+                            Створити нову особу замість вибору з існуючих
+                        </label>
                     </div>
-                    <div className="form-group">
+
+                    {!isCreatePersonMode ? (
+                        <div className="form-group">
+                            <label>Оберіть особу</label>
+                            <select name="personId" value={formData.personId} onChange={handleChange} required={!isCreatePersonMode}>
+                                <option value="">-- Оберіть особу --</option>
+                                {persons.map(p => <option key={p.id} value={p.id}>{p.name} {p.surname} (Країна: {p.country})</option>)}
+                            </select>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-2">
+                                <div className="form-group">
+                                    <label>Ім'я</label>
+                                    <input type="text" name="name" value={formData.name} onChange={handleChange} required={isCreatePersonMode} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Прізвище</label>
+                                    <input type="text" name="surname" value={formData.surname} onChange={handleChange} required={isCreatePersonMode} />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Країна</label>
+                                <input type="text" name="country" value={formData.country} onChange={handleChange} required={isCreatePersonMode} />
+                            </div>
+                            <div className="grid grid-2">
+                                <div className="form-group">
+                                    <label>Дата народження</label>
+                                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} required={isCreatePersonMode} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Стать</label>
+                                    <select name="gender" value={formData.gender} onChange={handleChange} required={isCreatePersonMode}>
+                                        <option value={0}>Чоловіча</option>
+                                        <option value={1}>Жіноча</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    <div className="form-group" style={{marginTop: '1rem'}}>
                         <label>Кваліфікаційний рівень</label>
                         <input type="text" name="qualificationLevel" value={formData.qualificationLevel} onChange={handleChange} required placeholder="напр. Міжнародний, Національний" />
                     </div>
+
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
-                        <button type="submit" className="btn btn-primary">Створити суддю</button>
+                        <button type="submit" className="btn btn-primary">Зберегти суддю</button>
                     </div>
                 </form>
             </Modal>
@@ -151,7 +235,3 @@ const JudgesList = () => {
 };
 
 export default JudgesList;
-
-
-
-

@@ -23,14 +23,27 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<IEnumerable<JudgeResponseDto>> GetAllAsync()
         {
-            var entities = await _repository.GetAllAsync();
-            return entities.Adapt<IEnumerable<JudgeResponseDto>>();
+            var entities = await _repository.GetAllWithPersonAsync();
+            return entities.Select(e => new JudgeResponseDto
+            {
+                Id = e.Id,
+                PersonId = e.PersonId,
+                FullName = e.Person != null ? $"{e.Person.Name} {e.Person.Surname}" : "Невідомий суддя",
+                QualificationLevel = e.QualificationLevel
+            });
         }
 
         public async Task<JudgeResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            return entity?.Adapt<JudgeResponseDto>();
+            var entities = await _repository.GetAllWithPersonAsync();
+            var entity = entities.FirstOrDefault(j => j.Id == id);
+            return entity != null ? new JudgeResponseDto
+            {
+                Id = entity.Id,
+                PersonId = entity.PersonId,
+                FullName = entity.Person != null ? $"{entity.Person.Name} {entity.Person.Surname}" : "Невідомий суддя",
+                QualificationLevel = entity.QualificationLevel
+            } : null;
         }
 
         public async Task<JudgeResponseDto> CreateAsync(JudgeRequestDto request)

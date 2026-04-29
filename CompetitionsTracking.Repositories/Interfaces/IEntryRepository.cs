@@ -15,5 +15,7 @@ namespace CompetitionsTracking.Repositories.Interfaces
         Task<EntryAnalyticsDto> GetEntryAnalyticsAsync(int competitionId);
         Task<bool> IsDuplicateEntryAsync(int competitionId, int participantId, int disciplineId);
         Task<Entry?> GetEntryWithResultAsync(int id);
+        Task<(IEnumerable<Entry> Items, int TotalCount)> GetPagedWithDetailsAsync(int pageNumber, int pageSize);
+        Task<IEnumerable<Entry>> GetByCompetitionIdAsync(int competitionId);
     }
 }

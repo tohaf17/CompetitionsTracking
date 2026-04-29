@@ -20,14 +20,25 @@ namespace CompetitionsTracking.Repositories.Repositories
                 SELECT 
                     t.Id AS TeamId,
                     t.Name AS TeamName,
-                    SUM(CASE WHEN r.Place = 1 THEN 1 ELSE 0 END) AS GoldMedals,
-                    SUM(CASE WHEN r.Place = 2 THEN 1 ELSE 0 END) AS SilverMedals,
-                    SUM(CASE WHEN r.Place = 3 THEN 1 ELSE 0 END) AS BronzeMedals,
-                    SUM(CASE WHEN r.Place <= 3 THEN 1 ELSE 0 END) AS TotalMedals
-                FROM Results r
-                INNER JOIN Entries e ON r.EntryId = e.Id
-                INNER JOIN Teams t ON e.ParticipantId = t.Id
-                WHERE e.CompetitionId = {0} AND r.Place <= 3
+                    CAST(SUM(CASE WHEN m.Place = 1 THEN 1 ELSE 0 END) AS INT) AS GoldMedals,
+                    CAST(SUM(CASE WHEN m.Place = 2 THEN 1 ELSE 0 END) AS INT) AS SilverMedals,
+                    CAST(SUM(CASE WHEN m.Place = 3 THEN 1 ELSE 0 END) AS INT) AS BronzeMedals,
+                    CAST(SUM(CASE WHEN m.Place <= 3 THEN 1 ELSE 0 END) AS INT) AS TotalMedals
+                FROM teams t
+                CROSS APPLY (
+                    SELECT r.Place
+                    FROM team_members tm
+                    INNER JOIN Entries e ON tm.person_id = e.ParticipantId
+                    INNER JOIN Results r ON e.Id = r.EntryId
+                    WHERE tm.team_id = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3
+                    
+                    UNION ALL
+                    
+                    SELECT r.Place
+                    FROM Entries e
+                    INNER JOIN Results r ON e.Id = r.EntryId
+                    WHERE e.ParticipantId = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3
+                ) m
                 GROUP BY t.Id, t.Name
                 ORDER BY TotalMedals DESC, GoldMedals DESC
             ";

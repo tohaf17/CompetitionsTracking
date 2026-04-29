@@ -88,7 +88,8 @@ namespace CompetitionsTracking.Repositories.Repositories
             WHEN rr.Rnk = 2 THEN 'silver'
             WHEN rr.Rnk = 3 THEN 'bronze'
             ELSE NULL
-        END
+        END,
+        r.Place = rr.Rnk
         FROM Results r
         INNER JOIN RankedResults rr ON r.Id = rr.Id;
     ";

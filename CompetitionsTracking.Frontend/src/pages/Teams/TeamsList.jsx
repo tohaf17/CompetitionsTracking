@@ -14,8 +14,22 @@ const TeamsList = () => {
     const [teams, setTeams] = useState([]);
     const [coaches, setCoaches] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ name: '', coachId: '', type: 'Team' });
+    
+    const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+    const [teamFormData, setTeamFormData] = useState({ name: '', coachId: '', type: 'Team' });
+
+    const [selectedTeam, setSelectedTeam] = useState(null);
+    const [roster, setRoster] = useState([]);
+    const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
+    
+    const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+    const [memberFormData, setMemberFormData] = useState({ 
+        name: '', 
+        surname: '', 
+        country: '', 
+        dateOfBirth: '', 
+        gender: 1
+    });
 
     useEffect(() => {
         loadTeams();
@@ -25,7 +39,7 @@ const TeamsList = () => {
         try {
             setLoading(true);
             const data = await TeamService.getAll();
-            setTeams(unwrapCollection(data)); 
+            setTeams(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити команди');
         } finally {
@@ -42,7 +56,7 @@ const TeamsList = () => {
         }
     };
 
-    const handleDelete = async (id, name) => {
+    const handleDeleteTeam = async (id, name) => {
         if (!window.confirm(`Видалити команду "${name}"?`)) return;
         try {
             await TeamService.delete(id);
@@ -53,25 +67,69 @@ const TeamsList = () => {
         }
     };
 
-    const handleCreate = async (e) => {
+    const handleCreateTeam = async (e) => {
         e.preventDefault();
         try {
             const dataToSubmit = {
-                ...formData,
-                coachId: parseInt(formData.coachId)
+                ...teamFormData,
+                coachId: parseInt(teamFormData.coachId)
             };
             const data = await TeamService.create(dataToSubmit);
             toast.success("Команду створено");
-            setTeams([...teams, data]);
-            setIsModalOpen(false);
-            setFormData({ name: '', coachId: '', type: 'Team' });
+            loadTeams(); // Reload to get names properly
+            setIsTeamModalOpen(false);
+            setTeamFormData({ name: '', coachId: '', type: 'Team' });
         } catch (error) {
             toastError(error, 'Не вдалося створити команду');
         }
     };
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const openRoster = async (team) => {
+        setSelectedTeam(team);
+        try {
+            const data = await TeamService.getRoster(team.id);
+            setRoster(data.members || []);
+            setIsRosterModalOpen(true);
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити склад команди');
+        }
+    };
+
+    const handleRemoveMember = async (personId) => {
+        if (!window.confirm("Видалити учасника зі складу команди?")) return;
+        try {
+            await TeamService.removeMember(selectedTeam.id, personId);
+            toast.success("Учасника видалено");
+            setRoster(roster.filter(m => m.personId !== personId));
+        } catch (error) {
+            toastError(error, 'Не вдалося видалити учасника');
+        }
+    };
+
+    const handleAddMember = async (e) => {
+        e.preventDefault();
+        try {
+            // 1. Create the person
+            const newPerson = await PersonService.create({
+                ...memberFormData,
+                gender: parseInt(memberFormData.gender),
+                dateOfBirth: new Date(memberFormData.dateOfBirth).toISOString()
+            });
+            
+            // 2. Add as member to team
+            await TeamService.addMember(selectedTeam.id, newPerson.id);
+            
+            toast.success("Учасника додано до складу");
+            
+            // 3. Refresh roster
+            const updatedRoster = await TeamService.getRoster(selectedTeam.id);
+            setRoster(updatedRoster.members || []);
+            
+            setIsAddMemberModalOpen(false);
+            setMemberFormData({ name: '', surname: '', country: '', dateOfBirth: '', gender: 0 });
+        } catch (error) {
+            toastError(error, 'Не вдалося додати учасника');
+        }
     };
 
     if (loading) return <div className="page-container">Завантаження...</div>;
@@ -83,7 +141,7 @@ const TeamsList = () => {
                 <div>
                     <button className="btn btn-outline" style={{marginRight: '1rem'}} onClick={loadTeams}>Оновити</button>
                     {canEdit && <button className="btn btn-primary" onClick={() => {
-                        setIsModalOpen(true);
+                        setIsTeamModalOpen(true);
                         loadCoaches();
                     }}>Додати команду</button>}
                 </div>
@@ -93,52 +151,187 @@ const TeamsList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Назва команди</th>
-                            <th>ID тренера</th>
+                            <th>Тренер</th>
                             <th>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
                         {teams.length > 0 ? (
-                            teams.map((team) => (
+                            teams.map((team, index) => (
                                 <tr key={team.id}>
-                                    <td>{team.id}</td>
+                                    <td>{index + 1}</td>
                                     <td><strong>{team.name}</strong></td>
-                                    <td>{team.coachId ? `Особа ID: ${team.coachId}` : 'Без тренера'}</td>
+                                    <td>{team.coachFullName || 'Без тренера'}</td>
                                     <td>
+                                        <button 
+                                            className="btn btn-outline" 
+                                            style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}
+                                            onClick={() => openRoster(team)}
+                                        >
+                                            Склад команди
+                                        </button>
                                         {canEdit && (
-                                            <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(team.id, team.name)}>Видалити</button>
+                                            <button 
+                                                className="btn btn-danger" 
+                                                style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} 
+                                                onClick={() => handleDeleteTeam(team.id, team.name)}
+                                            >
+                                                Видалити
+                                            </button>
                                         )}
-                                        {!canEdit && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" style={{textAlign: 'center', padding: '2rem'}}>Команд не знайдено.</td>
+                                <td colSpan="4" style={{textAlign: 'center', padding: '2rem'}}>Команд не знайдено.</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Створити нову команду">
-                <form onSubmit={handleCreate}>
+            
+            <Modal isOpen={isTeamModalOpen} onClose={() => setIsTeamModalOpen(false)} title="Створити нову команду">
+                <form onSubmit={handleCreateTeam}>
                     <div className="form-group">
                         <label>Назва команди</label>
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                        <input 
+                            type="text" 
+                            name="name" 
+                            value={teamFormData.name} 
+                            onChange={(e) => setTeamFormData({...teamFormData, name: e.target.value})} 
+                            required 
+                        />
                     </div>
                     <div className="form-group">
                         <label>Тренер</label>
-                        <select name="coachId" value={formData.coachId} onChange={handleChange} required>
+                        <select 
+                            name="coachId" 
+                            value={teamFormData.coachId} 
+                            onChange={(e) => setTeamFormData({...teamFormData, coachId: e.target.value})} 
+                            required
+                        >
                             <option value="">-- Оберіть тренера --</option>
                             {coaches.map(c => <option key={c.id} value={c.id}>{c.name} {c.surname}</option>)}
                         </select>
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
+                        <button type="button" className="btn btn-outline" onClick={() => setIsTeamModalOpen(false)}>Скасувати</button>
                         <button type="submit" className="btn btn-primary">Створити команду</button>
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal isOpen={isRosterModalOpen} onClose={() => setIsRosterModalOpen(false)} title={`Склад команди: ${selectedTeam?.name}`}>
+                <div style={{marginBottom: '1.5rem'}}>
+                    {canEdit && (
+                        <button className="btn btn-primary" onClick={() => setIsAddMemberModalOpen(true)}>
+                            Додати учасника
+                        </button>
+                    )}
+                </div>
+                <div className="table-container">
+                    <table style={{width: '100%'}}>
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>ПІБ</th>
+                                <th>Країна</th>
+                                {canEdit && <th>Дії</th>}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {roster.length > 0 ? (
+                                roster.map((member, idx) => (
+                                    <tr key={member.personId}>
+                                        <td>{idx + 1}</td>
+                                        <td>{member.fullName}</td>
+                                        <td>{member.country}</td>
+                                        {canEdit && (
+                                            <td>
+                                                <button 
+                                                    className="btn btn-danger" 
+                                                    style={{padding: '0.2rem 0.5rem', fontSize: '0.75rem'}}
+                                                    onClick={() => handleRemoveMember(member.personId)}
+                                                >
+                                                    Видалити
+                                                </button>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={canEdit ? 4 : 3} style={{textAlign: 'center', padding: '1rem'}}>Склад команди порожній</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="modal-footer">
+                    <button type="button" className="btn btn-outline" onClick={() => setIsRosterModalOpen(false)}>Закрити</button>
+                </div>
+            </Modal>
+
+            <Modal isOpen={isAddMemberModalOpen} onClose={() => setIsAddMemberModalOpen(false)} title="Додати нового учасника до складу">
+                <form onSubmit={handleAddMember}>
+                    <div className="grid grid-2">
+                        <div className="form-group">
+                            <label>Ім'я</label>
+                            <input 
+                                type="text" 
+                                value={memberFormData.name} 
+                                onChange={(e) => setMemberFormData({...memberFormData, name: e.target.value})} 
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Прізвище</label>
+                            <input 
+                                type="text" 
+                                value={memberFormData.surname} 
+                                onChange={(e) => setMemberFormData({...memberFormData, surname: e.target.value})} 
+                                required 
+                            />
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Країна</label>
+                        <input 
+                            type="text" 
+                            value={memberFormData.country} 
+                            onChange={(e) => setMemberFormData({...memberFormData, country: e.target.value})} 
+                            required 
+                        />
+                    </div>
+                    <div className="grid grid-2">
+                        <div className="form-group">
+                            <label>Дата народження</label>
+                            <input 
+                                type="date" 
+                                value={memberFormData.dateOfBirth} 
+                                onChange={(e) => setMemberFormData({...memberFormData, dateOfBirth: e.target.value})} 
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Стать</label>
+                            <select 
+                                value={memberFormData.gender} 
+                                onChange={(e) => setMemberFormData({...memberFormData, gender: e.target.value})}
+                                required
+                            >
+                                <option value={0}>Чоловіча</option>
+                                <option value={1}>Жіноча</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-outline" onClick={() => setIsAddMemberModalOpen(false)}>Скасувати</button>
+                        <button type="submit" className="btn btn-primary">Зберегти та додати</button>
                     </div>
                 </form>
             </Modal>
@@ -147,7 +340,3 @@ const TeamsList = () => {
 };
 
 export default TeamsList;
-
-
-
-

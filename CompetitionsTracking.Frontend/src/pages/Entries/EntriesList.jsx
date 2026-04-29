@@ -79,7 +79,7 @@ const EntriesList = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm(`Видалити заявку з ID ${id}?`)) return;
+        if (!window.confirm(`Видалити заявку?`)) return;
         try {
             await EntryService.delete(id);
             toast.success("Заявку видалено");
@@ -98,9 +98,9 @@ const EntriesList = () => {
                 disciplineId: parseInt(formData.disciplineId),
                 categoryId: parseInt(formData.categoryId)
             };
-            const data = await EntryService.create(payload);
+            await EntryService.create(payload);
             toast.success("Заявку подано");
-            setEntries([...entries, data]);
+            loadEntries();
             setIsModalOpen(false);
             setFormData({ competitionId: '', participantId: '', disciplineId: '', categoryId: '' });
         } catch (error) {
@@ -112,7 +112,7 @@ const EntriesList = () => {
         e.preventDefault();
         try {
             const payload = {
-                entryId: selectedEntry,
+                entryId: selectedEntry.id,
                 judgeId: parseInt(scoreData.judgeId),
                 type: scoreData.scoreType,
                 scoreValue: parseFloat(scoreData.value)
@@ -136,6 +136,10 @@ const EntriesList = () => {
 
     if (loading) return <div className="page-container">Завантаження...</div>;
 
+    const getStatusText = (status) => {
+        return status === 0 ? 'Заплановано' : 'Завершено'; // simplistic mapping for DN/Finished
+    };
+
     return (
         <div className="page-container">
             <div className="page-header flex-between">
@@ -153,22 +157,22 @@ const EntriesList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>ID змагання</th>
-                            <th>ID учасника</th>
-                            <th>Дисципліна</th>
+                            <th>№</th>
+                            <th>Змагання</th>
+                            <th>Учасник</th>
+                            <th>Дисципліна | Категорія</th>
                             <th>Статус</th>
                             <th>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
                         {entries.length > 0 ? (
-                            entries.map((entry) => (
+                            entries.map((entry, index) => (
                                 <tr key={entry.id}>
-                                    <td>{entry.id}</td>
-                                    <td>{entry.competitionId}</td>
-                                    <td>{entry.participantId}</td>
-                                    <td>Кат: {entry.categoryId} | Диcц: {entry.disciplineId}</td>
+                                    <td>{index + 1}</td>
+                                    <td>{entry.competitionName}</td>
+                                    <td><strong>{entry.participantName}</strong></td>
+                                    <td>{entry.disciplineName} | {entry.categoryName}</td>
                                     <td>
                                         <span className={`status-badge ${entry.entryStatus === 0 ? 'status-active' : 'status-cancelled'}`}>
                                             {entry.entryStatus === 0 ? 'Активна' : 'Дискваліфікована'}
@@ -176,7 +180,7 @@ const EntriesList = () => {
                                     </td>
                                     <td>
                                         <button className="btn btn-primary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem' }} onClick={() => {
-                                            setSelectedEntry(entry.id);
+                                            setSelectedEntry(entry);
                                             setIsScoreModalOpen(true);
                                             loadJudgesData();
                                         }}>Оцінити</button>
@@ -233,13 +237,13 @@ const EntriesList = () => {
                 </form>
             </Modal>
 
-            <Modal isOpen={isScoreModalOpen} onClose={() => setIsScoreModalOpen(false)} title={`Оцінити заявку #${selectedEntry}`}>
+            <Modal isOpen={isScoreModalOpen} onClose={() => setIsScoreModalOpen(false)} title={`Оцінити виступ: ${selectedEntry?.participantName}`}>
                 <form onSubmit={handleScoreSubmit}>
                     <div className="form-group">
                         <label>Суддя</label>
                         <select name="judgeId" value={scoreData.judgeId} onChange={handleScoreChange} required>
                             <option value="">-- Оберіть суддю --</option>
-                            {judges.map(j => <option key={j.id} value={j.id}>Суддя ID: {j.id} (Особа: {j.personId})</option>)}
+                            {judges.map(j => <option key={j.id} value={j.id}>{j.fullName} (Квал: {j.qualificationLevel})</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -266,7 +270,3 @@ const EntriesList = () => {
 };
 
 export default EntriesList;
-
-
-
-

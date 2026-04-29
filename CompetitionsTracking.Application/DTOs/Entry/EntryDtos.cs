@@ -18,9 +18,13 @@ namespace CompetitionsTracking.Application.DTOs.Entry
     {
         public int Id { get; init; }
         public int CompetitionId { get; init; }
+        public string CompetitionName { get; init; } = string.Empty;
         public int ParticipantId { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
         public int DisciplineId { get; init; }
+        public string DisciplineName { get; init; } = string.Empty;
         public int CategoryId { get; init; }
+        public string CategoryName { get; init; } = string.Empty;
         public ApplicationStatus ApplicationStatus { get; init; }
         public EntryStatus EntryStatus { get; init; }
         public DateTime SubmittedAt { get; init; }

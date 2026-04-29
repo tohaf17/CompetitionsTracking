@@ -65,6 +65,11 @@ const EntryService = {
   getAnalytics: async (competitionId) => {
     const response = await api.get(`/Entry/competition/${competitionId}/analytics`);
     return response.data;
+  },
+
+  getByCompetition: async (competitionId) => {
+    const response = await api.get(`/Entry/competition/${competitionId}`);
+    return response.data;
   }
 };
 

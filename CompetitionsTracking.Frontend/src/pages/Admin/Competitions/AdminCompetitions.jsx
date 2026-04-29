@@ -52,9 +52,9 @@ const AdminCompetitions = () => {
                 endDate: new Date(formData.endDate).toISOString(),
                 status: parseInt(formData.status)
             };
-            const data = await CompetitionService.create(dataToSubmit);
-            toast.success("Змагання створено");
-            setCompetitions([...competitions, data]);
+            await CompetitionService.create(dataToSubmit);
+            toast.success("Змагання створено успішно");
+            loadCompetitions(); 
             setIsModalOpen(false);
             setFormData({ title: '', city: '', startDate: '', endDate: '', status: 0 });
         } catch (error) {
@@ -68,6 +68,13 @@ const AdminCompetitions = () => {
 
     if (loading) return <div className="page-container">Завантаження...</div>;
 
+    const statusMap = {
+        0: { text: "Заплановано", class: "status-planned" },
+        1: { text: "Реєстрація", class: "status-upcoming" },
+        2: { text: "Триває", class: "status-ongoing" },
+        3: { text: "Завершено", class: "status-completed" }
+    };
+
     return (
         <div className="page-container">
             <div className="page-header flex-between">
@@ -79,35 +86,41 @@ const AdminCompetitions = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Назва</th>
                             <th>Місто</th>
-                            <th>Дати</th>
+                            <th>Дати проведення</th>
                             <th>Статус</th>
                             <th>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
                         {competitions.length > 0 ? (
-                            competitions.map((item) => {
-                                const statusMap = {
-                                    0: { text: "Заплановано", class: "status-planned" },
-                                    1: { text: "Реєстрація відкрита", class: "status-upcoming" },
-                                    2: { text: "Триває", class: "status-ongoing" },
-                                    3: { text: "Завершено", class: "status-completed" }
-                                };
+                            competitions.map((item, index) => {
                                 const compStatus = statusMap[item.status] || { text: "Невідомо", class: "" };
                                 
                                 return (
                                     <tr key={item.id}>
-                                        <td>{item.id}</td>
+                                        <td>{index + 1}</td>
                                         <td><strong>{item.title}</strong></td>
                                         <td>{item.city}</td>
                                         <td>{new Date(item.startDate).toLocaleDateString('uk-UA')} - {new Date(item.endDate).toLocaleDateString('uk-UA')}</td>
                                         <td><span className={`status-badge ${compStatus.class}`}>{compStatus.text}</span></td>
                                         <td>
-                                            <NavLink to={`/competitions/${item.id}`} className="btn btn-outline" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}>Переглянути</NavLink>
-                                            <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(item.id, item.title)}>Видалити</button>
+                                            <NavLink 
+                                                to={`/competitions/${item.id}`} 
+                                                className="btn btn-outline" 
+                                                style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}
+                                            >
+                                                Переглянути
+                                            </NavLink>
+                                            <button 
+                                                className="btn btn-danger" 
+                                                style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} 
+                                                onClick={() => handleDelete(item.id, item.title)}
+                                            >
+                                                Видалити
+                                            </button>
                                         </td>
                                     </tr>
                                 )
@@ -124,23 +137,25 @@ const AdminCompetitions = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Створити нове змагання">
                 <form onSubmit={handleCreate}>
                     <div className="form-group">
-                        <label>Назва</label>
-                        <input type="text" name="title" value={formData.title} onChange={handleChange} required />
+                        <label>Назва змагання</label>
+                        <input type="text" name="title" value={formData.title} onChange={handleChange} required placeholder="напр. Кубок України 2024" />
                     </div>
                     <div className="form-group">
                         <label>Місто</label>
-                        <input type="text" name="city" value={formData.city} onChange={handleChange} required />
+                        <input type="text" name="city" value={formData.city} onChange={handleChange} required placeholder="напр. Київ" />
+                    </div>
+                    <div className="grid grid-2">
+                        <div className="form-group">
+                            <label>Дата початку</label>
+                            <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Дата завершення</label>
+                            <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} required />
+                        </div>
                     </div>
                     <div className="form-group">
-                        <label>Дата початку</label>
-                        <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} required />
-                    </div>
-                    <div className="form-group">
-                        <label>Дата завершення</label>
-                        <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} required />
-                    </div>
-                    <div className="form-group">
-                        <label>Статус</label>
+                        <label>Початковий статус</label>
                         <select name="status" value={formData.status} onChange={handleChange}>
                             <option value={0}>Заплановано</option>
                             <option value={1}>Реєстрація відкрита</option>
@@ -150,7 +165,7 @@ const AdminCompetitions = () => {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
-                        <button type="submit" className="btn btn-primary">Створити</button>
+                        <button type="submit" className="btn btn-primary">Зберегти змагання</button>
                     </div>
                 </form>
             </Modal>
@@ -159,7 +174,3 @@ const AdminCompetitions = () => {
 };
 
 export default AdminCompetitions;
-
-
-
-

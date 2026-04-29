@@ -25,14 +25,28 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<IEnumerable<TeamResponseDto>> GetAllAsync()
         {
-            var entities = await _repository.GetAllAsync();
-            return entities.Adapt<IEnumerable<TeamResponseDto>>();
+            var entities = await _repository.GetAllWithCoachAsync();
+            return entities.Select(e => new TeamResponseDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+                CoachId = e.CoachId,
+                CoachFullName = e.Coach != null ? $"{e.Coach.Name} {e.Coach.Surname}" : "Не призначено"
+            });
         }
 
         public async Task<TeamResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            return entity?.Adapt<TeamResponseDto>();
+            var entity = await _repository.GetTeamWithMembersAsync(id);
+            if (entity == null) return null;
+            
+            return new TeamResponseDto
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                CoachId = entity.CoachId,
+                CoachFullName = entity.Coach != null ? $"{entity.Coach.Name} {entity.Coach.Surname}" : "Не призначено"
+            };
         }
 
         public async Task<TeamResponseDto> CreateAsync(TeamRequestDto request)

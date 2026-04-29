@@ -25,9 +25,24 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null)
         {
             pagination ??= new PaginationParams();
-            var (entities, totalCount) = await _repository.GetPagedAsync(pagination.PageNumber, pagination.PageSize);
+            var (entities, totalCount) = await _repository.GetPagedWithDetailsAsync(pagination.PageNumber, pagination.PageSize);
             
-            var dtos = entities.Adapt<IEnumerable<EntryResponseDto>>();
+            var dtos = entities.Select(e => new EntryResponseDto
+            {
+                Id = e.Id,
+                CompetitionId = e.CompetitionId,
+                CompetitionName = e.Competition?.Title ?? "Unknown",
+                ParticipantId = e.ParticipantId,
+                ParticipantName = GetParticipantName(e.Participant),
+                DisciplineId = e.DisciplineId,
+                DisciplineName = e.Discipline?.Type ?? "Unknown",
+                CategoryId = e.CategoryId,
+                CategoryName = e.Category?.Type ?? "Unknown",
+                ApplicationStatus = e.ApplicationStatus,
+                EntryStatus = e.EntryStatus,
+                SubmittedAt = e.SubmittedAt,
+                UpdatedAt = e.UpdatedAt
+            });
             return new PagedResponse<EntryResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }
 
@@ -35,7 +50,33 @@ namespace CompetitionsTracking.Services.Implementations
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) throw new NotFoundException(nameof(Entry), id);
-            return entity.Adapt<EntryResponseDto>();
+            
+            return new EntryResponseDto
+            {
+                Id = entity.Id,
+                CompetitionId = entity.CompetitionId,
+                CompetitionName = entity.Competition?.Title ?? "Unknown",
+                ParticipantId = entity.ParticipantId,
+                ParticipantName = GetParticipantName(entity.Participant),
+                DisciplineId = entity.DisciplineId,
+                DisciplineName = entity.Discipline?.Type ?? "Unknown",
+                CategoryId = entity.CategoryId,
+                CategoryName = entity.Category?.Type ?? "Unknown",
+                ApplicationStatus = entity.ApplicationStatus,
+                EntryStatus = entity.EntryStatus,
+                SubmittedAt = entity.SubmittedAt,
+                UpdatedAt = entity.UpdatedAt
+            };
+        }
+
+        private string GetParticipantName(Participant? participant)
+        {
+            return participant switch
+            {
+                Person p => $"{p.Name} {p.Surname}",
+                Team t => t.Name,
+                _ => "Unknown"
+            };
         }
 
         public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request)
@@ -132,6 +173,26 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<EntryAnalyticsDto> GetAnalyticsAsync(int competitionId)
         {
             return await _repository.GetEntryAnalyticsAsync(competitionId);
+        }
+        public async Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdAsync(int competitionId)
+        {
+            var entries = await _repository.GetByCompetitionIdAsync(competitionId);
+            return entries.Select(e => new EntryResponseDto
+            {
+                Id = e.Id,
+                CompetitionId = e.CompetitionId,
+                CompetitionName = e.Competition?.Title ?? "Unknown",
+                ParticipantId = e.ParticipantId,
+                ParticipantName = GetParticipantName(e.Participant),
+                DisciplineId = e.DisciplineId,
+                DisciplineName = e.Discipline?.Type ?? "Unknown",
+                CategoryId = e.CategoryId,
+                CategoryName = e.Category?.Type ?? "Unknown",
+                ApplicationStatus = e.ApplicationStatus,
+                EntryStatus = e.EntryStatus,
+                SubmittedAt = e.SubmittedAt,
+                UpdatedAt = e.UpdatedAt
+            });
         }
     }
 }

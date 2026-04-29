@@ -10,6 +10,7 @@ namespace CompetitionsTracking.Application.DTOs.Judge
     {
         public int Id { get; init; }
         public int PersonId { get; init; }
+        public string FullName { get; init; } = string.Empty;
         public string QualificationLevel { get; init; } = string.Empty;
     }
     public record PendingEvaluationDto

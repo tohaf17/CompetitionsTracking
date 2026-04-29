@@ -93,9 +93,9 @@ const AdminDisciplines = () => {
                     </thead>
                     <tbody>
                         {disciplines.length > 0 ? (
-                            disciplines.map((item) => (
+                            disciplines.map((item, index) => (
                                 <tr key={item.id}>
-                                    <td>{item.id}</td>
+                                    <td>{index + 1}</td>
                                     <td><strong>{item.type || item.name}</strong></td>
                                     <td>{item.isGroup ? 'Так (Групова)' : 'Ні (Індивідуальна)'}</td>
                                     <td>

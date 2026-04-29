@@ -46,5 +46,12 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .Include(t => t.Members)
                 .FirstOrDefaultAsync(t => t.Id == teamId);
         }
+
+        public async Task<IEnumerable<Team>> GetAllWithCoachAsync()
+        {
+            return await _context.Teams
+                .Include(t => t.Coach)
+                .ToListAsync();
+        }
     }
 }

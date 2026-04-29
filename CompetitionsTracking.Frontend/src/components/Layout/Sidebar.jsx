@@ -19,9 +19,6 @@ const Sidebar = () => {
                 <NavLink to="/teams" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Команди
                 </NavLink>
-                <NavLink to="/persons" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    Учасники
-                </NavLink>
                 <NavLink to="/judges" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Судді
                 </NavLink>

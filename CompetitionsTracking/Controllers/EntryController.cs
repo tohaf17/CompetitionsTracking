@@ -115,5 +115,11 @@ namespace CompetitionsTracking.Controllers
             var result = await _service.GetAnalyticsAsync(competitionId);
             return Ok(result);
         }
+        [HttpGet("competition/{competitionId}")]
+        public async Task<IActionResult> GetByCompetitionId(int competitionId)
+        {
+            var result = await _service.GetByCompetitionIdAsync(competitionId);
+            return Ok(result);
+        }
     }
 }
