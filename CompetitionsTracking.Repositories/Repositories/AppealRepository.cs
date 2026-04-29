@@ -12,6 +12,18 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
         }
 
+        public override async Task<IEnumerable<Appeal>> GetAllAsync()
+        {
+            return await _context.Appeals
+                .Include(a => a.Result)
+                    .ThenInclude(r => r.Entry)
+                        .ThenInclude(e => e.Participant)
+                .Include(a => a.Result)
+                    .ThenInclude(r => r.Entry)
+                        .ThenInclude(e => e.Competition)
+                .ToListAsync();
+        }
+
         public async Task ApproveAppealWithRecalculationAsync(int appealId, int scoreId, float newScoreValue)
         {
             var parameterAppealId = new SqlParameter("@AppealId", appealId);

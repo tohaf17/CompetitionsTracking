@@ -32,7 +32,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] AppealRequestDto request)
         {
             var result = await _service.CreateAsync(request);

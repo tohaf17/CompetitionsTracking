@@ -21,6 +21,7 @@ namespace CompetitionsTracking.Application.DTOs.Entry
         public string CompetitionName { get; init; } = string.Empty;
         public int ParticipantId { get; init; }
         public string ParticipantName { get; init; } = string.Empty;
+        public string? TeamName { get; init; }
         public int DisciplineId { get; init; }
         public string DisciplineName { get; init; } = string.Empty;
         public int CategoryId { get; init; }

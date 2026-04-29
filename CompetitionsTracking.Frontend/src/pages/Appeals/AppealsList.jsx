@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AppealService from '../../services/appeal.service';
 import ResultService from '../../services/result.service';
+import CompetitionService from '../../services/competition.service';
 import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
@@ -13,19 +14,24 @@ const AppealsList = () => {
 
     const [appeals, setAppeals] = useState([]);
     const [resultsData, setResultsData] = useState([]);
+    const [competitions, setCompetitions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('pending'); // 'pending' або 'all'
-    
+    const [selectedCompetitionId, setSelectedCompetitionId] = useState('');
+
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
+    const [dossier, setDossier] = useState(null);
+    const [approvalData, setApprovalData] = useState({ scoreIdToEdit: '', newScoreValue: '' });
     const [formData, setFormData] = useState({ resultId: '', reason: '' });
 
     const loadAppeals = useCallback(async () => {
         try {
             setLoading(true);
-            const data = viewMode === 'pending' 
-                ? await AppealService.getPending() 
+            const data = viewMode === 'pending'
+                ? await AppealService.getPending()
                 : await AppealService.getAll();
-            setAppeals(unwrapCollection(data)); 
+            setAppeals(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити апеляції');
         } finally {
@@ -35,7 +41,17 @@ const AppealsList = () => {
 
     useEffect(() => {
         void loadAppeals();
+        void loadCompetitions();
     }, [loadAppeals]);
+
+    const loadCompetitions = async () => {
+        try {
+            const data = await CompetitionService.getAll();
+            setCompetitions(unwrapCollection(data));
+        } catch (error) {
+            console.error('Failed to load competitions', error);
+        }
+    };
 
     const loadResults = async () => {
         try {
@@ -60,6 +76,14 @@ const AppealsList = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
+            const selectedResult = resultsData.find(r => r.id === parseInt(formData.resultId));
+            const selectedComp = competitions.find(c => c.title === selectedResult?.competitionName);
+
+            if (selectedComp && selectedComp.status !== 1) { // 1 = Ongoing
+                toast.error("Апеляції можна подавати лише для змагань, що тривають");
+                return;
+            }
+
             const payload = {
                 resultId: parseInt(formData.resultId),
                 reason: formData.reason,
@@ -69,11 +93,50 @@ const AppealsList = () => {
             };
             const data = await AppealService.create(payload);
             toast.success("Апеляцію подано");
-            setAppeals([...appeals, data]);
+            void loadAppeals();
             setIsModalOpen(false);
             setFormData({ resultId: '', reason: '' });
         } catch (error) {
             toastError(error, 'Не вдалося подати апеляцію');
+        }
+    };
+
+    const handleViewDossier = async (id) => {
+        try {
+            const data = await AppealService.getDossier(id);
+            setDossier(data);
+            setIsDossierModalOpen(true);
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити досьє апеляції');
+        }
+    };
+
+    const handleApprove = async () => {
+        if (!approvalData.scoreIdToEdit || !approvalData.newScoreValue) {
+            toast.error("Будь ласка, оберіть оцінку та введіть нове значення");
+            return;
+        }
+        try {
+            await AppealService.approve(dossier.appealId, {
+                scoreIdToEdit: parseInt(approvalData.scoreIdToEdit),
+                newScoreValue: parseFloat(approvalData.newScoreValue)
+            });
+            toast.success("Апеляцію схвалено, результати перераховано");
+            setIsDossierModalOpen(false);
+            void loadAppeals();
+        } catch (error) {
+            toastError(error, 'Не вдалося схвалити апеляцію');
+        }
+    };
+
+    const handleReject = async () => {
+        try {
+            await AppealService.update(dossier.appealId, { status: 2, reason: dossier.reason }); // 2 = Rejected
+            toast.success("Апеляцію відхилено");
+            setIsDossierModalOpen(false);
+            void loadAppeals();
+        } catch (error) {
+            toastError(error, 'Не вдалося відхилити апеляцію');
         }
     };
 
@@ -88,20 +151,31 @@ const AppealsList = () => {
             <div className="page-header flex-between">
                 <div>
                     <h1 className="page-title">Реєстр апеляцій</h1>
-                    <div style={{marginTop: '0.5rem', display: 'flex', gap: '0.5rem'}}>
+                    <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
                         <button className={`btn ${viewMode === 'pending' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setViewMode('pending')}>На розгляді</button>
                         <button className={`btn ${viewMode === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setViewMode('all')}>Усі апеляції</button>
                     </div>
+                    <div style={{ marginTop: '0.5rem' }}>
+                        <select
+                            className="form-control"
+                            style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--surface-color)', color: '#fff', border: '1px solid var(--surface-border)' }}
+                            value={selectedCompetitionId}
+                            onChange={(e) => setSelectedCompetitionId(e.target.value)}
+                        >
+                            <option value="">Усі змагання</option>
+                            {competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <button className="btn btn-outline" style={{marginRight: '1rem'}} onClick={loadAppeals}>Оновити</button>
+                    <button className="btn btn-outline" style={{ marginRight: '1rem' }} onClick={loadAppeals}>Оновити</button>
                     {isAdmin && <button className="btn btn-primary" onClick={() => {
                         setIsModalOpen(true);
                         loadResults();
                     }}>Подати апеляцію</button>}
                 </div>
             </div>
-            
+
             <div className="glass-panel table-container">
                 <table>
                     <thead>
@@ -114,28 +188,35 @@ const AppealsList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {appeals.length > 0 ? (
-                            appeals.map((appeal, index) => (
-                                <tr key={appeal.id}>
-                                    <td>{index + 1}</td>
-                                    <td>{appeal.resultId}</td>
-                                    <td>{appeal.participantName || '-'}</td>
-                                    <td>
-                                         <span className={`status-badge ${appeal.status === 0 ? 'status-upcoming' : (appeal.status === 1 ? 'status-active' : 'status-completed')}`}>
-                                            {appeal.status === 0 ? 'На розгляді' : (appeal.status === 1 ? 'Схвалено' : 'Відхилено')}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {isAdmin && (
-                                            <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={() => handleDelete(appeal.id)}>Видалити</button>
-                                        )}
-                                        {!isAdmin && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
-                                    </td>
-                                </tr>
-                            ))
+                        {appeals
+                            .filter(a => !selectedCompetitionId || a.competitionId === parseInt(selectedCompetitionId))
+                            .length > 0 ? (
+                            appeals
+                                .filter(a => !selectedCompetitionId || a.competitionId === parseInt(selectedCompetitionId))
+                                .map((appeal, index) => (
+                                    <tr key={appeal.id}>
+                                        <td>{index + 1}</td>
+                                        <td>{appeal.resultId}</td>
+                                        <td><strong>{appeal.participantName || '-'}</strong></td>
+                                        <td>
+                                            <span className={`status-badge ${appeal.status === 0 ? 'status-upcoming' : (appeal.status === 1 ? 'status-active' : 'status-completed')}`}>
+                                                {appeal.status === 0 ? 'На розгляді' : (appeal.status === 1 ? 'Схвалено' : 'Відхилено')}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {isAdmin && appeal.status === 0 && (
+                                                <button className="btn btn-primary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem' }} onClick={() => handleViewDossier(appeal.id)}>Розглянути</button>
+                                            )}
+                                            {isAdmin && (
+                                                <button className="btn btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => handleDelete(appeal.id)}>Видалити</button>
+                                            )}
+                                            {!isAdmin && <span style={{ color: 'var(--text-muted)' }}>Немає дій</span>}
+                                        </td>
+                                    </tr>
+                                ))
                         ) : (
                             <tr>
-                                <td colSpan="5" style={{textAlign: 'center', padding: '2rem'}}>Апеляцій не знайдено.</td>
+                                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Апеляцій не знайдено для вибраних критеріїв.</td>
                             </tr>
                         )}
                     </tbody>
@@ -148,18 +229,22 @@ const AppealsList = () => {
                         <label>Оберіть ID результату</label>
                         <select name="resultId" value={formData.resultId} onChange={handleChange} required>
                             <option value="">-- Оберіть результат --</option>
-                            {resultsData.map(r => <option key={r.id} value={r.id}>ID результату: {r.id} | Оцінка: {r.finalScore}</option>)}
+                            {resultsData.map(r => (
+                                <option key={r.id} value={r.id}>
+                                    {r.participantName} ({r.competitionName}) - Оцінка: {r.finalScore}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className="form-group">
                         <label>Підстава для апеляції</label>
-                        <textarea 
-                            name="reason" 
-                            value={formData.reason} 
-                            onChange={handleChange} 
-                            required 
+                        <textarea
+                            name="reason"
+                            value={formData.reason}
+                            onChange={handleChange}
+                            required
                             placeholder="Опишіть причину оскарження оцінки"
-                            style={{width: '100%', padding: '0.5rem', background: 'var(--surface-color)', color: '#fff', border: '1px solid var(--surface-border)'}}
+                            style={{ width: '100%', padding: '0.5rem', background: 'var(--surface-color)', color: '#fff', border: '1px solid var(--surface-border)' }}
                             rows={4}
                         />
                     </div>
@@ -169,12 +254,70 @@ const AppealsList = () => {
                     </div>
                 </form>
             </Modal>
+            <Modal isOpen={isDossierModalOpen} onClose={() => setIsDossierModalOpen(false)} title="Розгляд апеляції">
+                {dossier ? (
+                    <div>
+                        <p><strong>Причина:</strong> {dossier.reason}</p>
+                        <p><strong>Поточний бал:</strong> {dossier.finalScore.toFixed(2)}</p>
+
+                        <div style={{ marginTop: '1rem' }}>
+                            <h4>Оцінки суддів:</h4>
+                            <table style={{ width: '100%', textAlign: 'left', marginTop: '0.5rem' }}>
+                                <thead>
+                                    <tr>
+                                        <th>Тип</th>
+                                        <th>Суддя</th>
+                                        <th>Бал</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {dossier.scores.map(s => (
+                                        <tr key={s.scoreId}>
+                                            <td>{s.scoreType}</td>
+                                            <td>{s.judgeName}</td>
+                                            <td>{s.value.toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {dossier.status === 0 && (
+                            <div className="glass-panel" style={{ marginTop: '1.5rem', padding: '1rem' }}>
+                                <h4>Прийняти рішення:</h4>
+                                <div className="form-group">
+                                    <label>Оцінка для коригування</label>
+                                    <select
+                                        value={approvalData.scoreIdToEdit}
+                                        onChange={e => setApprovalData({ ...approvalData, scoreIdToEdit: e.target.value })}
+                                    >
+                                        <option value="">-- Оберіть оцінку --</option>
+                                        {dossier.scores.map(s => <option key={s.scoreId} value={s.scoreId}>{s.scoreType} - {s.judgeName}</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Нове значення балу</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={approvalData.newScoreValue}
+                                        onChange={e => setApprovalData({ ...approvalData, newScoreValue: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex-between" style={{ marginTop: '1rem' }}>
+                                    <button className="btn btn-danger" onClick={handleReject}>Відхилити апеляцію</button>
+                                    <button className="btn btn-primary" onClick={handleApprove}>Схвалити та оновити бал</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : <p>Завантаження...</p>}
+                <div className="modal-footer">
+                    <button className="btn btn-outline" onClick={() => setIsDossierModalOpen(false)}>Закрити</button>
+                </div>
+            </Modal>
         </div>
     );
+
 };
-
 export default AppealsList;
-
-
-
-

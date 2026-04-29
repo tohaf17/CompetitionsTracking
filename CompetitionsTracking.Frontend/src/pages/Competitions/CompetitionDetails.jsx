@@ -33,6 +33,8 @@ const CompetitionDetails = () => {
     const [activeTab, setActiveTab] = useState('leaderboard'); 
 
     const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
+    const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
+    const [scoreBreakdown, setScoreBreakdown] = useState(null);
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [judges, setJudges] = useState([]);
     const [scoreData, setScoreData] = useState({ judgeId: '', scoreType: 'DA', value: '' });
@@ -153,6 +155,17 @@ const CompetitionDetails = () => {
         }
     };
 
+    const handleViewBreakdown = async (entry) => {
+        try {
+            setSelectedEntry(entry);
+            const data = await ScoreService.getEntryScoreBreakdown(entry.entryId);
+            setScoreBreakdown(data);
+            setIsBreakdownModalOpen(true);
+        } catch (error) {
+            toastError(error, 'Не вдалося завантажити деталізацію оцінок');
+        }
+    };
+
     if (loading || !competition) return <div className="page-container">Завантаження...</div>;
 
     return (
@@ -208,6 +221,13 @@ const CompetitionDetails = () => {
                                     <td><span className="status-badge status-active">{lb.finalScore.toFixed(2)}</span></td>
                                     <td>
                                         {lb.place} {lb.awardedMedal && <span style={{ marginLeft: '0.5rem' }}>🏅 {lb.awardedMedal}</span>}
+                                        <button 
+                                            className="btn btn-outline" 
+                                            style={{ marginLeft: '1rem', padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                                            onClick={() => handleViewBreakdown(lb)}
+                                        >
+                                            Деталі
+                                        </button>
                                     </td>
                                 </tr>
                             )) : <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Немає результатів за вибраними фільтрами.</td></tr>}
@@ -228,6 +248,7 @@ const CompetitionDetails = () => {
                                 <th style={{ color: '#C0C0C0' }}>Срібло</th>
                                 <th style={{ color: '#CD7F32' }}>Бронза</th>
                                 <th>Разом</th>
+                                <th>Хто отримав</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -239,9 +260,10 @@ const CompetitionDetails = () => {
                                     <td>{t.silverMedals}</td>
                                     <td>{t.bronzeMedals}</td>
                                     <td><strong>{t.totalMedals}</strong></td>
+                                    <td><small>{t.medalists}</small></td>
                                 </tr>
                             ))}
-                            {teamTally.length === 0 && <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
+                            {teamTally.length === 0 && <tr><td colSpan="7" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -255,23 +277,27 @@ const CompetitionDetails = () => {
                             <tr>
                                 <th style={{ padding: '0.8rem' }}>№</th>
                                 <th>Учасник</th>
+                                <th>Команда</th>
                                 <th>Дисципліна | Категорія</th>
                                 <th>Статус</th>
-                                <th>Дії</th>
+                                {canEdit && <th>Дії</th>}
                             </tr>
                         </thead>
                         <tbody>
-                            {entries.length > 0 ? entries.map((e, i) => (
+                            {entries.filter(e => e.applicationStatus === 1).length > 0 ? entries.filter(e => e.applicationStatus === 1).map((e, i) => (
                                 <tr key={e.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td><strong>{e.participantName}</strong></td>
+                                    <td>{e.teamName || '-'}</td>
                                     <td>{e.disciplineName} | {e.categoryName}</td>
                                     <td>
                                         <span className={`status-badge ${e.entryStatus === 0 ? 'status-active' : 'status-cancelled'}`}>
                                             {e.entryStatus === 0 ? 'Активна' : 'Дискваліфікована'}
                                         </span>
                                     </td>
+                                    {canEdit && (
                                     <td>
+                                        {e.entryStatus === 0 && (
                                         <button 
                                             className="btn btn-primary" 
                                             style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }} 
@@ -279,18 +305,18 @@ const CompetitionDetails = () => {
                                         >
                                             Оцінити
                                         </button>
-                                        {canEdit && (
-                                            <button 
-                                                className="btn btn-danger" 
-                                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} 
-                                                onClick={() => handleDeleteEntry(e.id)}
-                                            >
-                                                Видалити
-                                            </button>
                                         )}
+                                        <button 
+                                            className="btn btn-danger" 
+                                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} 
+                                            onClick={() => handleDeleteEntry(e.id)}
+                                        >
+                                            Видалити
+                                        </button>
                                     </td>
+                                    )}
                                 </tr>
-                            )) : <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center' }}>Заявок не знайдено.</td></tr>}
+                            )) : <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Заявок не знайдено.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -326,6 +352,37 @@ const CompetitionDetails = () => {
                     </table>
                 </div>
             )}
+
+            <Modal isOpen={isBreakdownModalOpen} onClose={() => setIsBreakdownModalOpen(false)} title={`Деталізація оцінок: ${selectedEntry?.participantName}`}>
+                {scoreBreakdown ? (
+                    <div>
+                        <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                            <p><strong>Фінальна оцінка:</strong> {scoreBreakdown.finalScore.toFixed(2)}</p>
+                        </div>
+                        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                                    <th style={{ padding: '0.5rem' }}>Тип</th>
+                                    <th>Суддя</th>
+                                    <th>Бал</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {scoreBreakdown.scores.map((s, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                                        <td style={{ padding: '0.5rem' }}>{s.scoreType}</td>
+                                        <td>{s.judgeName}</td>
+                                        <td><strong>{s.value.toFixed(2)}</strong></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : <p>Завантаження...</p>}
+                <div className="modal-footer">
+                    <button className="btn btn-primary" onClick={() => setIsBreakdownModalOpen(false)}>Закрити</button>
+                </div>
+            </Modal>
 
             <Modal isOpen={isScoreModalOpen} onClose={() => setIsScoreModalOpen(false)} title={`Оцінити виступ: ${selectedEntry?.participantName}`}>
                 <form onSubmit={handleScoreSubmit}>

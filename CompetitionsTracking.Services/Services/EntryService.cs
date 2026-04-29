@@ -34,6 +34,7 @@ namespace CompetitionsTracking.Services.Implementations
                 CompetitionName = e.Competition?.Title ?? "Unknown",
                 ParticipantId = e.ParticipantId,
                 ParticipantName = GetParticipantName(e.Participant),
+                TeamName = GetTeamName(e.Participant),
                 DisciplineId = e.DisciplineId,
                 DisciplineName = e.Discipline?.Type ?? "Unknown",
                 CategoryId = e.CategoryId,
@@ -58,6 +59,7 @@ namespace CompetitionsTracking.Services.Implementations
                 CompetitionName = entity.Competition?.Title ?? "Unknown",
                 ParticipantId = entity.ParticipantId,
                 ParticipantName = GetParticipantName(entity.Participant),
+                TeamName = GetTeamName(entity.Participant),
                 DisciplineId = entity.DisciplineId,
                 DisciplineName = entity.Discipline?.Type ?? "Unknown",
                 CategoryId = entity.CategoryId,
@@ -77,6 +79,19 @@ namespace CompetitionsTracking.Services.Implementations
                 Team t => t.Name,
                 _ => "Unknown"
             };
+        }
+
+        private string? GetTeamName(Participant? participant)
+        {
+            if (participant is Person p)
+            {
+                return p.TeamsAsMember?.FirstOrDefault()?.Name;
+            }
+            if (participant is Team t)
+            {
+                return t.Name;
+            }
+            return null;
         }
 
         public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request)
@@ -184,6 +199,7 @@ namespace CompetitionsTracking.Services.Implementations
                 CompetitionName = e.Competition?.Title ?? "Unknown",
                 ParticipantId = e.ParticipantId,
                 ParticipantName = GetParticipantName(e.Participant),
+                TeamName = GetTeamName(e.Participant),
                 DisciplineId = e.DisciplineId,
                 DisciplineName = e.Discipline?.Type ?? "Unknown",
                 CategoryId = e.CategoryId,

@@ -29,7 +29,8 @@ namespace CompetitionsTracking.Services.Implementations
                 Id = e.Id,
                 PersonId = e.PersonId,
                 FullName = e.Person != null ? $"{e.Person.Name} {e.Person.Surname}" : "Невідомий суддя",
-                QualificationLevel = e.QualificationLevel
+                QualificationLevel = e.QualificationLevel,
+                Competitions = e.Scores.Select(s => s.Entry.Competition.Title).Distinct().ToList()
             });
         }
 
@@ -42,7 +43,8 @@ namespace CompetitionsTracking.Services.Implementations
                 Id = entity.Id,
                 PersonId = entity.PersonId,
                 FullName = entity.Person != null ? $"{entity.Person.Name} {entity.Person.Surname}" : "Невідомий суддя",
-                QualificationLevel = entity.QualificationLevel
+                QualificationLevel = entity.QualificationLevel,
+                Competitions = entity.Scores.Select(s => s.Entry.Competition.Title).Distinct().ToList()
             } : null;
         }
 

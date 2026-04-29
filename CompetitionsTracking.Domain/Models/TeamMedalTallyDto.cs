@@ -8,5 +8,6 @@ namespace CompetitionsTracking.Domain.Models
         public int SilverMedals { get; init; }
         public int BronzeMedals { get; init; }
         public int TotalMedals { get; init; }
+        public string Medalists { get; init; } = string.Empty;
     }
 }

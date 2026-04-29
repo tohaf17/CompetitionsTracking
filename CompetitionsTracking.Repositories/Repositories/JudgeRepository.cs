@@ -86,6 +86,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
             return await _context.Judges
                 .Include(j => j.Person)
+                .Include(j => j.Scores).ThenInclude(s => s.Entry).ThenInclude(e => e.Competition)
                 .ToListAsync();
         }
     }

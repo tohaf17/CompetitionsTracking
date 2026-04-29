@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import TeamService from '../../services/team.service';
 import PersonService from '../../services/person.service';
 import { unwrapCollection } from '../../utils/unwrapCollection';
@@ -16,7 +17,7 @@ const TeamsList = () => {
     const [loading, setLoading] = useState(true);
     
     const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-    const [teamFormData, setTeamFormData] = useState({ name: '', coachId: '', type: 'Team' });
+    const [teamFormData, setTeamFormData] = useState({ name: '', coachInput: '', type: 'Team' });
 
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [roster, setRoster] = useState([]);
@@ -70,15 +71,28 @@ const TeamsList = () => {
     const handleCreateTeam = async (e) => {
         e.preventDefault();
         try {
-            const dataToSubmit = {
-                ...teamFormData,
-                coachId: parseInt(teamFormData.coachId)
+            const input = teamFormData.coachInput.trim();
+            const existingCoach = coaches.find(c => `${c.name} ${c.surname}` === input);
+            
+            let dataToSubmit = {
+                name: teamFormData.name,
+                type: teamFormData.type
             };
-            const data = await TeamService.create(dataToSubmit);
+
+            if (existingCoach) {
+                dataToSubmit.coachId = existingCoach.id;
+            } else {
+                const parts = input.split(' ');
+                dataToSubmit.newCoachName = parts[0] || 'Unknown';
+                dataToSubmit.newCoachSurname = parts.slice(1).join(' ') || 'Unknown';
+                dataToSubmit.coachId = null;
+            }
+
+            await TeamService.create(dataToSubmit);
             toast.success("Команду створено");
             loadTeams(); // Reload to get names properly
             setIsTeamModalOpen(false);
-            setTeamFormData({ name: '', coachId: '', type: 'Team' });
+            setTeamFormData({ name: '', coachInput: '', type: 'Team' });
         } catch (error) {
             toastError(error, 'Не вдалося створити команду');
         }
@@ -163,7 +177,13 @@ const TeamsList = () => {
                                 <tr key={team.id}>
                                     <td>{index + 1}</td>
                                     <td><strong>{team.name}</strong></td>
-                                    <td>{team.coachFullName || 'Без тренера'}</td>
+                                    <td>
+                                        {team.coachId ? (
+                                            <Link to={`/persons/${team.coachId}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                                                {team.coachFullName}
+                                            </Link>
+                                        ) : 'Без тренера'}
+                                    </td>
                                     <td>
                                         <button 
                                             className="btn btn-outline" 
@@ -207,16 +227,18 @@ const TeamsList = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Тренер</label>
-                        <select 
-                            name="coachId" 
-                            value={teamFormData.coachId} 
-                            onChange={(e) => setTeamFormData({...teamFormData, coachId: e.target.value})} 
+                        <label>Тренер (ПІБ)</label>
+                        <input 
+                            list="coaches-list"
+                            name="coachInput"
+                            value={teamFormData.coachInput}
+                            onChange={(e) => setTeamFormData({...teamFormData, coachInput: e.target.value})}
                             required
-                        >
-                            <option value="">-- Оберіть тренера --</option>
-                            {coaches.map(c => <option key={c.id} value={c.id}>{c.name} {c.surname}</option>)}
-                        </select>
+                            placeholder="Введіть ПІБ або оберіть зі списку"
+                        />
+                        <datalist id="coaches-list">
+                            {coaches.map(c => <option key={c.id} value={`${c.name} ${c.surname}`} />)}
+                        </datalist>
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsTeamModalOpen(false)}>Скасувати</button>
@@ -248,7 +270,11 @@ const TeamsList = () => {
                                 roster.map((member, idx) => (
                                     <tr key={member.personId}>
                                         <td>{idx + 1}</td>
-                                        <td>{member.fullName}</td>
+                                        <td>
+                                            <Link to={`/persons/${member.personId}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                                                {member.fullName}
+                                            </Link>
+                                        </td>
                                         <td>{member.country}</td>
                                         {canEdit && (
                                             <td>

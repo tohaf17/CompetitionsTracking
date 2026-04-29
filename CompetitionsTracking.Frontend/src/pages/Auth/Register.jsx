@@ -12,7 +12,7 @@ const Register = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 2 // Гість за замовчуванням
+        role: 2
     });
     const [loading, setLoading] = useState(false);
 
@@ -92,9 +92,9 @@ const Register = () => {
                     </div>
                     <div className="form-group">
                         <label>Роль у системі</label>
-                        <select 
-                            name="role" 
-                            value={formData.role} 
+                        <select
+                            name="role"
+                            value={formData.role}
                             onChange={handleChange}
                             className="btn-outline"
                             style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--surface-border)' }}

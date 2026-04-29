@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using CompetitionsTracking.Domain.Entities;
@@ -13,5 +13,7 @@ namespace CompetitionsTracking.Application.DTOs.Appeal
         public AppealStatus Status { get; init; }
         public DateTime CreatedAt { get; init; }
         public DateTime ResolvedAt { get; init; }
+        public string ParticipantName { get; init; } = string.Empty;
+        public int CompetitionId { get; init; }
     }
 }

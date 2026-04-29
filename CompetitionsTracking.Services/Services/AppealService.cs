@@ -21,14 +21,38 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<IEnumerable<AppealResponseDto>> GetAllAsync()
         {
             var entities = await _repository.GetAllAsync();
-            return entities.Adapt<IEnumerable<AppealResponseDto>>();
+            return entities.Select(a => new AppealResponseDto
+            {
+                Id = a.Id,
+                ResultId = a.ResultId,
+                Reason = a.Reason,
+                Status = a.Status,
+                CreatedAt = a.CreatedAt,
+                ResolvedAt = a.ResolvedAt,
+                ParticipantName = a.Result?.Entry?.Participant is Person p 
+                    ? $"{p.Name} {p.Surname}" 
+                    : (a.Result?.Entry?.Participant is Team t ? t.Name : "Unknown"),
+                CompetitionId = a.Result?.Entry?.CompetitionId ?? 0
+            });
         }
 
         public async Task<AppealResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) throw new NotFoundException(nameof(Appeal), id);
-            return entity.Adapt<AppealResponseDto>();
+            var a = await _repository.GetByIdAsync(id);
+            if (a == null) throw new NotFoundException(nameof(Appeal), id);
+            return new AppealResponseDto
+            {
+                Id = a.Id,
+                ResultId = a.ResultId,
+                Reason = a.Reason,
+                Status = a.Status,
+                CreatedAt = a.CreatedAt,
+                ResolvedAt = a.ResolvedAt,
+                ParticipantName = a.Result?.Entry?.Participant is Person p 
+                    ? $"{p.Name} {p.Surname}" 
+                    : (a.Result?.Entry?.Participant is Team t ? t.Name : "Unknown"),
+                CompetitionId = a.Result?.Entry?.CompetitionId ?? 0
+            };
         }
 
         public async Task<AppealResponseDto> CreateAsync(AppealRequestDto request)

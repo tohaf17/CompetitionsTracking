@@ -50,7 +50,10 @@ api.interceptors.response.use(
       } else if (error.response.status === 403) {
         errorMessage = "Доступ заборонено. Потрібні права адміністратора.";
       } else if (error.response.data) {
-        if (error.response.data.errors) {
+        if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+          validationErrors = error.response.data.errors;
+          errorMessage = validationErrors[0].message || "Помилка валідації";
+        } else if (error.response.data.errors) {
           validationErrors = error.response.data.errors;
           const firstErrorField = Object.keys(validationErrors)[0];
           errorMessage = validationErrors[firstErrorField][0] || "Помилка валідації";

@@ -24,13 +24,33 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<IEnumerable<ResultResponseDto>> GetAllAsync()
         {
             var entities = await _repository.GetAllAsync();
-            return entities.Adapt<IEnumerable<ResultResponseDto>>();
+            return entities.Select(e => new ResultResponseDto
+            {
+                Id = e.Id,
+                EntryId = e.EntryId,
+                Place = e.Place,
+                FinalScore = e.FinalScore,
+                AwardedMedal = e.AwardedMedal ?? string.Empty,
+                ParticipantName = e.Entry != null ? GetParticipantName(e.Entry.Participant) : "Unknown",
+                CompetitionName = e.Entry?.Competition?.Title ?? "Unknown"
+            });
         }
 
         public async Task<ResultResponseDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity?.Adapt<ResultResponseDto>();
+            if (entity == null) return null;
+
+            return new ResultResponseDto
+            {
+                Id = entity.Id,
+                EntryId = entity.EntryId,
+                Place = entity.Place,
+                FinalScore = entity.FinalScore,
+                AwardedMedal = entity.AwardedMedal ?? string.Empty,
+                ParticipantName = entity.Entry != null ? GetParticipantName(entity.Entry.Participant) : "Unknown",
+                CompetitionName = entity.Entry?.Competition?.Title ?? "Unknown"
+            };
         }
 
         public async Task<ResultResponseDto> CreateAsync(ResultRequestDto request)
@@ -38,7 +58,17 @@ namespace CompetitionsTracking.Services.Implementations
             var entity = request.Adapt<Result>();
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
-            return entity.Adapt<ResultResponseDto>();
+            var created = await _repository.GetByIdAsync(entity.Id);
+            return created != null ? new ResultResponseDto
+            {
+                Id = created.Id,
+                EntryId = created.EntryId,
+                Place = created.Place,
+                FinalScore = created.FinalScore,
+                AwardedMedal = created.AwardedMedal ?? string.Empty,
+                ParticipantName = created.Entry != null ? GetParticipantName(created.Entry.Participant) : "Unknown",
+                CompetitionName = created.Entry?.Competition?.Title ?? "Unknown"
+            } : entity.Adapt<ResultResponseDto>();
         }
 
         public async Task UpdateAsync(int id, ResultRequestDto request)
@@ -70,6 +100,7 @@ namespace CompetitionsTracking.Services.Implementations
 
             return results.Select(r => new LeaderboardEntryDto
             {
+                EntryId = r.EntryId,
                 Place = r.Place,
                 ParticipantName = GetParticipantName(r.Entry.Participant),
                 Country = GetParticipantCountry(r.Entry.Participant),

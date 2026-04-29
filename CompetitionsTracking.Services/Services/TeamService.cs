@@ -51,7 +51,30 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<TeamResponseDto> CreateAsync(TeamRequestDto request)
         {
+            int coachId = request.CoachId ?? 0;
+
+            if (request.CoachId == null && !string.IsNullOrWhiteSpace(request.NewCoachName) && !string.IsNullOrWhiteSpace(request.NewCoachSurname))
+            {
+                var newCoach = new Person
+                {
+                    Name = request.NewCoachName,
+                    Surname = request.NewCoachSurname,
+                    Type = "Person",
+                    Gender = Gender.Male, // Defaulting or could be passed
+                    Country = "Unknown" // Defaulting
+                };
+                await _personRepository.AddAsync(newCoach);
+                await _unitOfWork.CompleteAsync();
+                coachId = newCoach.Id;
+            }
+            else if (coachId == 0)
+            {
+                throw new BadRequestException("Не вказано тренера для команди.");
+            }
+
             var entity = request.Adapt<Team>();
+            entity.CoachId = coachId;
+
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
             return entity.Adapt<TeamResponseDto>();

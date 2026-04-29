@@ -134,6 +134,7 @@ const JudgesList = () => {
                             <th>№</th>
                             <th>ПІБ Судді</th>
                             <th>Кваліфікаційний рівень</th>
+                            <th>Змагання</th>
                             <th>Дії</th>
                         </tr>
                     </thead>
@@ -147,6 +148,15 @@ const JudgesList = () => {
                                         <span className={`status-badge status-active`}>
                                             {judge.qualificationLevel}
                                         </span>
+                                    </td>
+                                    <td>
+                                        {judge.competitions?.length > 0 ? (
+                                            <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+                                                {judge.competitions.map((comp, idx) => <li key={idx}>{comp}</li>)}
+                                            </ul>
+                                        ) : (
+                                            <span style={{ color: 'var(--text-muted)' }}>Не брав участі</span>
+                                        )}
                                     </td>
                                     <td>
                                         {canEdit && (
@@ -173,7 +183,7 @@ const JudgesList = () => {
                                 type="checkbox" 
                                 checked={isCreatePersonMode} 
                                 onChange={(e) => setIsCreatePersonMode(e.target.checked)}
-                                style={{marginRight: '0.5rem'}}
+                                style={{marginRight: '0.5rem', width: 'auto', height: 'auto'}}
                             />
                             Створити нову особу замість вибору з існуючих
                         </label>

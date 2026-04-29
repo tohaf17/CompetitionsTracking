@@ -14,6 +14,23 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
         }
 
+        public override async Task<IEnumerable<Result>> GetAllAsync()
+        {
+            return await _context.Results
+                .Include(r => r.Entry).ThenInclude(e => e.Participant)
+                .Include(r => r.Entry).ThenInclude(e => e.Competition)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public override async Task<Result?> GetByIdAsync(int id)
+        {
+            return await _context.Results
+                .Include(r => r.Entry).ThenInclude(e => e.Participant)
+                .Include(r => r.Entry).ThenInclude(e => e.Competition)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
         public async Task<IEnumerable<TeamMedalTallyDto>> GetTeamMedalTallyAsync(int competitionId)
         {
             string sql = @"
@@ -23,18 +40,20 @@ namespace CompetitionsTracking.Repositories.Repositories
                     CAST(SUM(CASE WHEN m.Place = 1 THEN 1 ELSE 0 END) AS INT) AS GoldMedals,
                     CAST(SUM(CASE WHEN m.Place = 2 THEN 1 ELSE 0 END) AS INT) AS SilverMedals,
                     CAST(SUM(CASE WHEN m.Place = 3 THEN 1 ELSE 0 END) AS INT) AS BronzeMedals,
-                    CAST(SUM(CASE WHEN m.Place <= 3 THEN 1 ELSE 0 END) AS INT) AS TotalMedals
+                    CAST(SUM(CASE WHEN m.Place <= 3 THEN 1 ELSE 0 END) AS INT) AS TotalMedals,
+                    ISNULL(STRING_AGG(m.ParticipantName, ', ') WITHIN GROUP (ORDER BY m.Place), '') AS Medalists
                 FROM teams t
                 CROSS APPLY (
-                    SELECT r.Place
+                    SELECT r.Place, p.Name + ' ' + p.Surname AS ParticipantName
                     FROM team_members tm
                     INNER JOIN Entries e ON tm.person_id = e.ParticipantId
                     INNER JOIN Results r ON e.Id = r.EntryId
+                    INNER JOIN Persons p ON e.ParticipantId = p.Id
                     WHERE tm.team_id = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3
                     
                     UNION ALL
                     
-                    SELECT r.Place
+                    SELECT r.Place, t.Name AS ParticipantName
                     FROM Entries e
                     INNER JOIN Results r ON e.Id = r.EntryId
                     WHERE e.ParticipantId = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3

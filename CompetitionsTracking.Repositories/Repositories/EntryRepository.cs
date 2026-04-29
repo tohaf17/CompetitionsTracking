@@ -113,6 +113,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
             var query = _context.Entries
                 .Include(e => e.Participant)
+                .Include(e => (e.Participant as Person).TeamsAsMember)
                 .Include(e => e.Competition)
                 .Include(e => e.Discipline)
                 .Include(e => e.Category)
@@ -130,10 +131,11 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
             return await _context.Entries
                 .Include(e => e.Participant)
+                .Include(e => (e.Participant as Person).TeamsAsMember)
                 .Include(e => e.Discipline)
                 .Include(e => e.Category)
-                .Where(e => e.CompetitionId == competitionId)
                 .AsNoTracking()
+                .Where(e => e.CompetitionId == competitionId)
                 .ToListAsync();
         }
     }
