@@ -19,6 +19,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetAll([FromQuery] PaginationParams pagination)
         {
             var result = await _service.GetAllAsync(pagination);
@@ -26,6 +27,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -57,6 +59,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/controversial")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetControversialEntries(int competitionId)
         {
             var result = await _service.GetControversialEntriesAsync(competitionId);
@@ -96,6 +99,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/start-list")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetStartList(int competitionId)
         {
             var result = await _service.GetStartListAsync(competitionId);
@@ -103,6 +107,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/missing-scores")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetMissingScores(int competitionId, [FromQuery] int expectedCount = 4)
         {
             var result = await _service.GetMissingScoresAsync(competitionId, expectedCount);
@@ -110,12 +115,14 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/analytics")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetAnalytics(int competitionId)
         {
             var result = await _service.GetAnalyticsAsync(competitionId);
             return Ok(result);
         }
         [HttpGet("competition/{competitionId}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetByCompetitionId(int competitionId)
         {
             var result = await _service.GetByCompetitionIdAsync(competitionId);

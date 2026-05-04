@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import CompetitionService from '../../services/competition.service';
 import ResultService from '../../services/result.service';
 import ScoreService from '../../services/score.service';
@@ -183,7 +183,7 @@ const CompetitionDetails = () => {
             <div className="flex gap-2 mb-2" style={{overflowX: 'auto', paddingBottom: '0.5rem'}}>
                 <button className={`btn ${activeTab === 'leaderboard' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('leaderboard')}>Таблиця результатів</button>
                 <button className={`btn ${activeTab === 'tally' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('tally')}>Медальний залік команд</button>
-                <button className={`btn ${activeTab === 'entries' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('entries')}>Список заявок</button>
+                {canEdit && <button className={`btn ${activeTab === 'entries' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('entries')}>Список заявок</button>}
                 {canEdit && <button className={`btn ${activeTab === 'anomalies' ? 'btn-danger' : 'btn-outline'}`} onClick={() => setActiveTab('anomalies')}>Аномалії оцінок</button>}
             </div>
 
@@ -215,7 +215,18 @@ const CompetitionDetails = () => {
                             {leaderboard.length > 0 ? leaderboard.map((lb, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
-                                    <td><strong>{lb.participantName}</strong></td>
+                                    <td>
+                                        {lb.participantId ? (
+                                            <Link to={`/persons/${lb.participantId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
+                                                onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-color)'}
+                                                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-color)'}
+                                            >
+                                                {lb.participantName}
+                                            </Link>
+                                        ) : (
+                                            <strong>{lb.participantName}</strong>
+                                        )}
+                                    </td>
                                     <td>{lb.disciplineName}</td>
                                     <td>{lb.categoryName}</td>
                                     <td><span className="status-badge status-active">{lb.finalScore.toFixed(2)}</span></td>
@@ -269,7 +280,7 @@ const CompetitionDetails = () => {
                 </div>
             )}
 
-            {activeTab === 'entries' && (
+            {canEdit && activeTab === 'entries' && (
                 <div className="glass-panel">
                     <h3>Список заявок на змагання</h3>
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
@@ -287,7 +298,18 @@ const CompetitionDetails = () => {
                             {entries.filter(e => e.applicationStatus === 1).length > 0 ? entries.filter(e => e.applicationStatus === 1).map((e, i) => (
                                 <tr key={e.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
-                                    <td><strong>{e.participantName}</strong></td>
+                                    <td>
+                                        {e.participantId ? (
+                                            <Link to={`/persons/${e.participantId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
+                                                onMouseEnter={ev => ev.currentTarget.style.color = 'var(--primary-color)'}
+                                                onMouseLeave={ev => ev.currentTarget.style.color = 'var(--text-color)'}
+                                            >
+                                                {e.participantName}
+                                            </Link>
+                                        ) : (
+                                            <strong>{e.participantName}</strong>
+                                        )}
+                                    </td>
                                     <td>{e.teamName || '-'}</td>
                                     <td>{e.disciplineName} | {e.categoryName}</td>
                                     <td>

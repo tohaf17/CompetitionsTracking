@@ -101,6 +101,7 @@ namespace CompetitionsTracking.Services.Implementations
             return results.Select(r => new LeaderboardEntryDto
             {
                 EntryId = r.EntryId,
+                ParticipantId = r.Entry.ParticipantId,
                 Place = r.Place,
                 ParticipantName = GetParticipantName(r.Entry.Participant),
                 Country = GetParticipantCountry(r.Entry.Participant),

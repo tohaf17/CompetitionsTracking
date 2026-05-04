@@ -14,7 +14,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
         }
 
-        public override async Task<IEnumerable<Result>> GetAllAsync()
+        public async Task<IEnumerable<Result>> GetAllAsync()
         {
             return await _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)
@@ -23,7 +23,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .ToListAsync();
         }
 
-        public override async Task<Result?> GetByIdAsync(int id)
+        public async Task<Result?> GetByIdAsync(int id)
         {
             return await _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)

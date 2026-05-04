@@ -10,6 +10,7 @@ import TeamsList from './pages/Teams/TeamsList';
 import JudgesList from './pages/Judges/JudgesList';
 import AppealsList from './pages/Appeals/AppealsList';
 import EntriesList from './pages/Entries/EntriesList';
+import PersonProfile from './pages/Persons/PersonProfile';
 import AdminCategories from './pages/Admin/Categories/AdminCategories';
 import AdminDisciplines from './pages/Admin/Disciplines/AdminDisciplines';
 import AdminApparatus from './pages/Admin/Apparatus/AdminApparatus';
@@ -24,7 +25,7 @@ const ProtectedLayout = () => {
     return <MainLayout />;
 };
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({ children, requireAdmin = false, requireTrainee = false }) => {
     const { user, loading, isAdmin } = useAuth();
 
     if (loading) return <div>Завантаження...</div>;
@@ -34,6 +35,10 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     }
 
     if (requireAdmin && !isAdmin) {
+        return <Navigate to="/competitions" />;
+    }
+
+    if (requireTrainee && user.role !== 'Admin' && user.role !== 'Trainee') {
         return <Navigate to="/competitions" />;
     }
 
@@ -55,8 +60,23 @@ const App = () => {
                     <Route path="/competitions/:id" element={<CompetitionDetails />} />
                     <Route path="/teams" element={<TeamsList />} />
                     <Route path="/judges" element={<JudgesList />} />
-                    <Route path="/appeals" element={<AppealsList />} />
-                    <Route path="/entries" element={<EntriesList />} />
+                    <Route
+                        path="/appeals"
+                        element={
+                            <ProtectedRoute requireTrainee={true}>
+                                <AppealsList />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/entries"
+                        element={
+                            <ProtectedRoute requireTrainee={true}>
+                                <EntriesList />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="/persons/:id" element={<PersonProfile />} />
 
                     <Route
                         path="/admin/users"

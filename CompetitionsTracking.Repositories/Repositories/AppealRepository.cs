@@ -12,7 +12,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
         }
 
-        public override async Task<IEnumerable<Appeal>> GetAllAsync()
+        public async Task<IEnumerable<Appeal>> GetAllAsync()
         {
             return await _context.Appeals
                 .Include(a => a.Result)

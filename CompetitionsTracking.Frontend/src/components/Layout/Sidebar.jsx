@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 const Sidebar = () => {
     const { isAdmin, user } = useAuth();
     const navigate = useNavigate();
+    const canViewRestricted = user?.role === 'Admin' || user?.role === 'Trainee';
 
     return (
         <aside className="sidebar glass-panel">
@@ -22,12 +23,14 @@ const Sidebar = () => {
                 <NavLink to="/judges" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Судді
                 </NavLink>
-                <NavLink to="/appeals" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    Апеляції
-                </NavLink>
+                {canViewRestricted && (
+                    <NavLink to="/appeals" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                        Апеляції
+                    </NavLink>
+                )}
 
 
-                {user && (
+                {canViewRestricted && (
                     <NavLink to="/entries" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                         Заявки
                     </NavLink>

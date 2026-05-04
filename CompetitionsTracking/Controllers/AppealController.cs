@@ -18,6 +18,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();
@@ -25,6 +26,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -40,6 +42,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("pending")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetPending([FromQuery] int? competitionId)
         {
             var result = await _service.GetPendingAppealsAsync(competitionId);
@@ -47,6 +50,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("{id}/dossier")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetDossier(int id)
         {
             var result = await _service.GetAppealDossierAsync(id);
