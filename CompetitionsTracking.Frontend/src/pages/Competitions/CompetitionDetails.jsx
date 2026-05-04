@@ -108,10 +108,10 @@ const CompetitionDetails = () => {
         try {
             await CompetitionService.awardMedals(id);
             toast.success("Медалі успішно нараховано");
-            if (activeTab === 'leaderboard') loadLeaderboard();
-            if (activeTab === 'tally') loadTally();
-        } catch {
-            toast.error("Не вдалося нарахувати медалі");
+            if (activeTab === 'leaderboard') void loadLeaderboard();
+            if (activeTab === 'tally') void loadTally();
+        } catch (error) {
+            toastError(error, 'Не вдалося нарахувати медалі');
         }
     };
 

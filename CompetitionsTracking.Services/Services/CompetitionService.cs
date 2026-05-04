@@ -101,8 +101,8 @@ namespace CompetitionsTracking.Services.Implementations
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) throw new NotFoundException(nameof(Competition), id);
 
-            if (entity.Status != CompetitionStatus.Finished)
-                throw new BadRequestException("Неможливо розподілити медалі, поки змагання не завершено.");
+            if (entity.Status != CompetitionStatus.Finished && entity.Status != CompetitionStatus.Ongoing)
+                throw new BadRequestException("Неможливо розподілити медалі, поки змагання не розпочато або не завершується.");
 
             await _repository.AwardMedalsAsync(id);
         }

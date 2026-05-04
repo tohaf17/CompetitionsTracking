@@ -5,7 +5,6 @@ using CompetitionsTracking.Infrastructure.Data;
 using CompetitionsTracking.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Repositories.Repositories
@@ -26,12 +25,12 @@ namespace CompetitionsTracking.Repositories.Repositories
                     d.Type AS DisciplineName,
                     r.FinalScore AS TotalScore,
                     DENSE_RANK() OVER(PARTITION BY e.CategoryId, e.DisciplineId ORDER BY r.FinalScore DESC) AS CalculatedRank
-                FROM Results r
-                INNER JOIN Entries e ON r.EntryId = e.Id
-                INNER JOIN Participants part ON e.ParticipantId = part.Id
-                INNER JOIN Persons p ON part.Id = p.Id
-                INNER JOIN Categories c ON e.CategoryId = c.Id
-                INNER JOIN Disciplines d ON e.DisciplineId = d.Id
+                FROM results r
+                INNER JOIN entries e ON r.EntryId = e.Id
+                INNER JOIN participants part ON e.ParticipantId = part.Id
+                INNER JOIN persons p ON part.Id = p.Id
+                INNER JOIN categories c ON e.CategoryId = c.Id
+                INNER JOIN disciplines d ON e.DisciplineId = d.Id
                 WHERE e.CompetitionId = {0}
             ";
 
@@ -53,8 +52,8 @@ namespace CompetitionsTracking.Repositories.Repositories
 
         public async Task<CompetitionSummaryDto?> GetSummaryAsync(int competitionId)
         {
-            int pendingStatus = (int)ApplicationStatus.Pending;
-            int acceptedStatus = (int)ApplicationStatus.Accepted;
+            string pendingStatus = ApplicationStatus.Pending.ToString();
+            string acceptedStatus = ApplicationStatus.Accepted.ToString();
 
             var summary = await _context.Database.SqlQuery<CompetitionSummaryDto>($@"
         SELECT 
@@ -63,8 +62,8 @@ namespace CompetitionsTracking.Repositories.Repositories
             CAST(SUM(CASE WHEN e.ApplicationStatus = {pendingStatus} THEN 1 ELSE 0 END) AS INT) AS PendingEntries,
             CAST(SUM(CASE WHEN e.ApplicationStatus = {acceptedStatus} THEN 1 ELSE 0 END) AS INT) AS AcceptedEntries,
             CAST(COUNT(DISTINCT e.DisciplineId) AS INT) AS UniqueDisciplinesCount
-        FROM Competitions c
-        LEFT JOIN Entries e ON c.Id = e.CompetitionId
+        FROM competitions c
+        LEFT JOIN entries e ON c.Id = e.CompetitionId
         WHERE c.Id = {competitionId}
         GROUP BY c.Id"
             ).FirstOrDefaultAsync();
@@ -78,8 +77,8 @@ namespace CompetitionsTracking.Repositories.Repositories
         WITH RankedResults AS (
             SELECT r.Id, 
                    DENSE_RANK() OVER(PARTITION BY e.CategoryId, e.DisciplineId ORDER BY r.FinalScore DESC) as Rnk
-            FROM Results r
-            INNER JOIN Entries e ON r.EntryId = e.Id
+            FROM results r
+            INNER JOIN entries e ON r.EntryId = e.Id
             WHERE e.CompetitionId = {0}
         )
         UPDATE r
@@ -90,7 +89,7 @@ namespace CompetitionsTracking.Repositories.Repositories
             ELSE NULL
         END,
         r.Place = rr.Rnk
-        FROM Results r
+        FROM results r
         INNER JOIN RankedResults rr ON r.Id = rr.Id;
     ";
 
