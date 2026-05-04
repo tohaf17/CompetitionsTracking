@@ -86,7 +86,7 @@ namespace CompetitionsTracking.Repositories.Repositories
             WHEN rr.Rnk = 1 THEN 'gold'
             WHEN rr.Rnk = 2 THEN 'silver'
             WHEN rr.Rnk = 3 THEN 'bronze'
-            ELSE NULL
+            ELSE ''
         END,
         r.Place = rr.Rnk
         FROM results r

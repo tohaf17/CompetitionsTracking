@@ -74,6 +74,14 @@ namespace CompetitionsTracking.Controllers
             return Ok(new { message = $"Успішно оновлено статус для {updatedCount} заявок." });
         }
 
+        [HttpPatch("{id}/application-status")]
+        [Authorize(Roles = "Admin,Trainee")]
+        public async Task<IActionResult> ChangeApplicationStatus(int id, [FromBody] ChangeApplicationStatusDto request)
+        {
+            await _service.ChangeApplicationStatusAsync(id, request);
+            return NoContent();
+        }
+
         [HttpPatch("{id}/status")]
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeEntryStatusDto request)

@@ -6,6 +6,7 @@ import DisciplineService from '../../services/discipline.service';
 import CategoryService from '../../services/category.service';
 import ScoreService from '../../services/score.service';
 import JudgeService from '../../services/judge.service';
+import TeamService from '../../services/team.service';
 import { unwrapCollection } from '../../utils/unwrapCollection';
 import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
@@ -26,9 +27,13 @@ const EntriesList = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
-        competitionId: '', participantId: '', disciplineId: '', categoryId: ''
+        competitionId: '', 
+        participantName: '', 
+        participantSurname: '', 
+        teamName: '',
+        disciplineId: '', 
+        categoryId: ''
     });
-
 
     const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -38,6 +43,7 @@ const EntriesList = () => {
 
     useEffect(() => {
         loadEntries();
+        loadFormData();
     }, []);
 
     const loadEntries = async () => {
@@ -52,20 +58,22 @@ const EntriesList = () => {
         }
     };
 
+    const [teams, setTeams] = useState([]);
+
     const loadFormData = async () => {
         try {
-            const [comp, pers, disc, cat] = await Promise.all([
+            const [comp, disc, cat, teamRes] = await Promise.all([
                 CompetitionService.getAll(),
-                PersonService.getAll(),
                 DisciplineService.getAll(),
-                CategoryService.getAll()
+                CategoryService.getAll(),
+                TeamService.getAll()
             ]);
             setCompetitions(unwrapCollection(comp));
-            setPersons(unwrapCollection(pers));
             setDisciplines(unwrapCollection(disc));
             setCategories(unwrapCollection(cat));
+            setTeams(unwrapCollection(teamRes));
         } catch (error) {
-            toastError(error, 'Не вдалося завантажити довідники для заявки');
+            console.error('Error loading form data:', error);
         }
     };
 
@@ -94,7 +102,9 @@ const EntriesList = () => {
         try {
             const payload = {
                 competitionId: parseInt(formData.competitionId),
-                participantId: parseInt(formData.participantId),
+                participantName: formData.participantName,
+                participantSurname: formData.participantSurname,
+                teamName: formData.teamName,
                 disciplineId: parseInt(formData.disciplineId),
                 categoryId: parseInt(formData.categoryId)
             };
@@ -102,7 +112,14 @@ const EntriesList = () => {
             toast.success("Заявку подано");
             loadEntries();
             setIsModalOpen(false);
-            setFormData({ competitionId: '', participantId: '', disciplineId: '', categoryId: '' });
+            setFormData({ 
+                competitionId: '', 
+                participantName: '', 
+                participantSurname: '', 
+                teamName: '', 
+                disciplineId: '', 
+                categoryId: '' 
+            });
         } catch (error) {
             toastError(error, 'Не вдалося створити заявку');
         }
@@ -134,57 +151,83 @@ const EntriesList = () => {
         setScoreData({ ...scoreData, [e.target.name]: e.target.value });
     };
 
+    const handleUpdateApplicationStatus = async (id, newStatus) => {
+        try {
+            await EntryService.changeApplicationStatus(id, { newStatus });
+            toast.success("Статус заявки оновлено");
+            loadEntries();
+        } catch (error) {
+            toastError(error, 'Не вдалося оновити статус заявки');
+        }
+    };
+
     if (loading) return <div className="page-container">Завантаження...</div>;
 
-    const getStatusText = (status) => {
-        return status === 0 ? 'Заплановано' : 'Завершено'; // simplistic mapping for DN/Finished
+    const getAppStatusBadge = (status) => {
+        switch (status) {
+            case 0: return <span className="status-badge status-pending">Очікує</span>;
+            case 1: return <span className="status-badge status-active">Прийнято</span>;
+            case 2: return <span className="status-badge status-cancelled">Відхилено</span>;
+            default: return <span className="status-badge">{status}</span>;
+        }
     };
 
     return (
         <div className="page-container">
             <div className="page-header flex-between">
-                <h1 className="page-title">Заявки на змагання</h1>
+                <h1 className="page-title">Управління заявками</h1>
                 <div>
                     <button className="btn btn-outline" style={{ marginRight: '1rem' }} onClick={loadEntries}>Оновити</button>
                     {canEdit && <button className="btn btn-primary" onClick={() => {
                         setIsModalOpen(true);
                         loadFormData();
-                    }}>Додати заявку</button>}
+                    }}>Подати нову заявку</button>}
                 </div>
             </div>
 
             <div className="glass-panel table-container">
-                <table>
+                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr>
-                            <th>№</th>
+                        <tr style={{ borderBottom: '2px solid var(--surface-border)' }}>
+                            <th style={{ padding: '1rem' }}>№</th>
                             <th>Змагання</th>
                             <th>Учасник</th>
                             <th>Дисципліна | Категорія</th>
+                            <th>Дата подачі</th>
                             <th>Статус</th>
-                            <th>Дії</th>
+                            <th style={{ textAlign: 'right', paddingRight: '1rem' }}>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
                         {entries.length > 0 ? (
                             entries.map((entry, index) => (
-                                <tr key={entry.id}>
-                                    <td>{index + 1}</td>
+                                <tr key={entry.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                                    <td style={{ padding: '1rem' }}>{index + 1}</td>
                                     <td>{entry.competitionName}</td>
                                     <td><strong>{entry.participantName}</strong></td>
                                     <td>{entry.disciplineName} | {entry.categoryName}</td>
-                                    <td>
-                                        <span className={`status-badge ${entry.entryStatus === 0 ? 'status-active' : 'status-cancelled'}`}>
-                                            {entry.entryStatus === 0 ? 'Активна' : 'Дискваліфікована'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button className="btn btn-primary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem' }} onClick={() => {
-                                            setSelectedEntry(entry);
-                                            setIsScoreModalOpen(true);
-                                            loadJudgesData();
-                                        }}>Оцінити</button>
-
+                                    <td>{new Date(entry.submittedAt).toLocaleDateString('uk-UA')}</td>
+                                    <td>{getAppStatusBadge(entry.applicationStatus)}</td>
+                                    <td style={{ textAlign: 'right', paddingRight: '1rem' }}>
+                                        {canEdit && entry.applicationStatus === 0 && (
+                                            <>
+                                                <button 
+                                                    className="btn btn-primary" 
+                                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem', backgroundColor: '#10b981', borderColor: '#10b981' }} 
+                                                    onClick={() => handleUpdateApplicationStatus(entry.id, 1)}
+                                                >
+                                                    Прийняти
+                                                </button>
+                                                <button 
+                                                    className="btn btn-outline" 
+                                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem', color: '#ef4444', borderColor: '#ef4444' }} 
+                                                    onClick={() => handleUpdateApplicationStatus(entry.id, 2)}
+                                                >
+                                                    Відхилити
+                                                </button>
+                                            </>
+                                        )}
+                                        
                                         {canEdit && (
                                             <button className="btn btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => handleDelete(entry.id)}>Видалити</button>
                                         )}
@@ -193,7 +236,7 @@ const EntriesList = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Заявок не знайдено.</td>
+                                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Заявок не знайдено.</td>
                             </tr>
                         )}
                     </tbody>
@@ -210,11 +253,27 @@ const EntriesList = () => {
                         </select>
                     </div>
                     <div className="form-group">
-                        <label>Учасник</label>
-                        <select name="participantId" value={formData.participantId} onChange={handleChange} required>
-                            <option value="">-- Оберіть учасника --</option>
-                            {persons.map(p => <option key={p.id} value={p.id}>{p.name} {p.surname}</option>)}
-                        </select>
+                        <label>Ім'я учасника</label>
+                        <input type="text" name="participantName" value={formData.participantName} onChange={handleChange} placeholder="Введіть ім'я" required />
+                    </div>
+                    <div className="form-group">
+                        <label>Прізвище учасника</label>
+                        <input type="text" name="participantSurname" value={formData.participantSurname} onChange={handleChange} placeholder="Введіть прізвище" required />
+                    </div>
+                    <div className="form-group">
+                        <label>Команда / Клуб</label>
+                        <input 
+                            type="text" 
+                            name="teamName" 
+                            list="teams-list" 
+                            value={formData.teamName} 
+                            onChange={handleChange} 
+                            placeholder="Оберіть або введіть назву" 
+                            required 
+                        />
+                        <datalist id="teams-list">
+                            {teams.map(t => <option key={t.id} value={t.name} />)}
+                        </datalist>
                     </div>
                     <div className="form-group">
                         <label>Дисципліна</label>
@@ -232,7 +291,7 @@ const EntriesList = () => {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
-                        <button type="submit" className="btn btn-primary">Створити заявку</button>
+                        <button type="submit" className="btn btn-primary">Подати заявку</button>
                     </div>
                 </form>
             </Modal>

@@ -47,6 +47,11 @@ const EntryService = {
     return response.data;
   },
 
+  changeApplicationStatus: async (id, statusData) => {
+    const response = await api.patch(`/Entry/${id}/application-status`, statusData);
+    return response.data;
+  },
+
   transferEntry: async (id, data) => {
     const response = await api.post(`/Entry/${id}/transfer`, data);
     return response.data;

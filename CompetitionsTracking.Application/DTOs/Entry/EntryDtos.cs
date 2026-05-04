@@ -5,12 +5,15 @@ namespace CompetitionsTracking.Application.DTOs.Entry
     public record EntryRequestDto
     {
         public int CompetitionId { get; init; }
-        public int ParticipantId { get; init; }
+        public int? ParticipantId { get; init; }
         public int DisciplineId { get; init; }
         public int CategoryId { get; init; }
-        public ApplicationStatus ApplicationStatus { get; init; }
-        public EntryStatus EntryStatus { get; init; }
-        public DateTime SubmittedAt { get; init; }
+        public string? ParticipantName { get; init; }
+        public string? ParticipantSurname { get; init; }
+        public string? TeamName { get; init; }
+        public ApplicationStatus? ApplicationStatus { get; init; }
+        public EntryStatus? EntryStatus { get; init; }
+        public DateTime? SubmittedAt { get; init; }
         public DateTime? UpdatedAt { get; init; }
     }
 
@@ -41,6 +44,11 @@ namespace CompetitionsTracking.Application.DTOs.Entry
     public record ChangeEntryStatusDto
     {
         public EntryStatus NewStatus { get; init; }
+    }
+
+    public record ChangeApplicationStatusDto
+    {
+        public ApplicationStatus NewStatus { get; init; }
     }
 
     public record TransferEntryDto

@@ -15,6 +15,7 @@ namespace CompetitionsTracking.Services.Interfaces
         Task DeleteAsync(int id);
         Task<IEnumerable<ControversialEntryDto>> GetControversialEntriesAsync(int competitionId);
         Task<int> BulkUpdateAppStatusAsync(BulkUpdateAppStatusDto request);
+        Task ChangeApplicationStatusAsync(int id, ChangeApplicationStatusDto request);
         Task ChangeEntryStatusAsync(int id, ChangeEntryStatusDto request);
         Task DisqualifyAsync(int entryId);
         Task TransferEntryAsync(int entryId, TransferEntryDto request);

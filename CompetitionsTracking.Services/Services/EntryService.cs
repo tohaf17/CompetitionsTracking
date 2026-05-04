@@ -3,10 +3,14 @@ using CompetitionsTracking.Application.DTOs.Entry;
 using CompetitionsTracking.Domain.Entities;
 using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
+using CompetitionsTracking.Infrastructure.Data;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Services.Implementations
@@ -15,11 +19,13 @@ namespace CompetitionsTracking.Services.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEntryRepository _repository;
+        private readonly CompetitionsTrackingDbContext _context;
 
-        public EntryService(IUnitOfWork unitOfWork, IEntryRepository repository)
+        public EntryService(IUnitOfWork unitOfWork, IEntryRepository repository, CompetitionsTrackingDbContext context)
         {
             _unitOfWork = unitOfWork;
             _repository = repository;
+            _context = context;
         }
 
         public async Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null)
@@ -27,23 +33,7 @@ namespace CompetitionsTracking.Services.Implementations
             pagination ??= new PaginationParams();
             var (entities, totalCount) = await _repository.GetPagedWithDetailsAsync(pagination.PageNumber, pagination.PageSize);
             
-            var dtos = entities.Select(e => new EntryResponseDto
-            {
-                Id = e.Id,
-                CompetitionId = e.CompetitionId,
-                CompetitionName = e.Competition?.Title ?? "Unknown",
-                ParticipantId = e.ParticipantId,
-                ParticipantName = GetParticipantName(e.Participant),
-                TeamName = GetTeamName(e.Participant),
-                DisciplineId = e.DisciplineId,
-                DisciplineName = e.Discipline?.Type ?? "Unknown",
-                CategoryId = e.CategoryId,
-                CategoryName = e.Category?.Type ?? "Unknown",
-                ApplicationStatus = e.ApplicationStatus,
-                EntryStatus = e.EntryStatus,
-                SubmittedAt = e.SubmittedAt,
-                UpdatedAt = e.UpdatedAt
-            });
+            var dtos = entities.Select(e => MapToResponseDto(e));
             return new PagedResponse<EntryResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }
 
@@ -51,7 +41,11 @@ namespace CompetitionsTracking.Services.Implementations
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) throw new NotFoundException(nameof(Entry), id);
-            
+            return MapToResponseDto(entity);
+        }
+
+        private EntryResponseDto MapToResponseDto(Entry entity)
+        {
             return new EntryResponseDto
             {
                 Id = entity.Id,
@@ -85,7 +79,7 @@ namespace CompetitionsTracking.Services.Implementations
         {
             if (participant is Person p)
             {
-                return p.TeamsAsMember?.FirstOrDefault()?.Name;
+                return p.TeamsAsMember?.FirstOrDefault()?.Name ?? p.Teams?.FirstOrDefault()?.Name;
             }
             if (participant is Team t)
             {
@@ -96,10 +90,93 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request)
         {
-            var entity = request.Adapt<Entry>();
+            int participantId = request.ParticipantId ?? 0;
+
+            // Handle manual participant entry
+            if (participantId <= 0 && !string.IsNullOrWhiteSpace(request.ParticipantName))
+            {
+                var name = request.ParticipantName.Trim();
+                var surname = request.ParticipantSurname?.Trim() ?? "";
+                
+                var existingPerson = await _context.Persons
+                    .FirstOrDefaultAsync(p => p.Name == name && p.Surname == surname);
+                
+                if (existingPerson != null)
+                {
+                    participantId = existingPerson.Id;
+                }
+                else
+                {
+                    var newPerson = new Person
+                    {
+                        Name = name,
+                        Surname = surname,
+                        Country = "Україна",
+                        DateOfBirth = DateTime.Now.AddYears(-10), 
+                        Gender = Gender.Female, 
+                        Type = "Person"
+                    };
+                    _context.Persons.Add(newPerson);
+                    await _context.SaveChangesAsync();
+                    participantId = newPerson.Id;
+                }
+            }
+            
+            if (!string.IsNullOrWhiteSpace(request.TeamName))
+            {
+                var teamName = request.TeamName.Trim();
+                var existingTeam = await _context.Teams.FirstOrDefaultAsync(t => t.Name == teamName);
+                
+                Team team;
+                if (existingTeam != null)
+                {
+                    team = existingTeam;
+                }
+                else
+                {
+                    var coach = await _context.Persons.FirstOrDefaultAsync() 
+                                ?? await CreatePlaceholderCoach();
+                    
+                    team = new Team
+                    {
+                        Name = teamName,
+                        CoachId = coach.Id,
+                        Type = "Team"
+                    };
+                    _context.Teams.Add(team);
+                    await _context.SaveChangesAsync();
+                }
+                var person = await _context.Persons.Include(p => p.TeamsAsMember).FirstOrDefaultAsync(p => p.Id == participantId);
+                if (person != null && !person.TeamsAsMember.Any(t => t.Id == team.Id))
+                {
+                    person.TeamsAsMember.Add(team);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            var entity = new Entry
+            {
+                CompetitionId = request.CompetitionId,
+                ParticipantId = participantId,
+                DisciplineId = request.DisciplineId,
+                CategoryId = request.CategoryId,
+                ApplicationStatus = ApplicationStatus.Pending,
+                EntryStatus = EntryStatus.Registered,
+                SubmittedAt = DateTime.UtcNow
+            };
+
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
-            return entity.Adapt<EntryResponseDto>();
+            
+            return await GetByIdAsync(entity.Id) ?? entity.Adapt<EntryResponseDto>();
+        }
+
+        private async Task<Person> CreatePlaceholderCoach()
+        {
+            var coach = new Person { Name = "System", Surname = "Coach", Country = "UA", DateOfBirth = new DateTime(1980, 1, 1), Type = "Person" };
+            _context.Persons.Add(coach);
+            await _context.SaveChangesAsync();
+            return coach;
         }
 
         public async Task UpdateAsync(int id, EntryRequestDto request)
@@ -130,6 +207,16 @@ namespace CompetitionsTracking.Services.Implementations
         {
             int updatedCount = await _repository.BulkUpdateAppStatusAsync(request.CompetitionId, request.CategoryId, request.NewStatus);
             return updatedCount;
+        }
+
+        public async Task ChangeApplicationStatusAsync(int id, ChangeApplicationStatusDto request)
+        {
+            var entry = await _repository.GetByIdAsync(id);
+            if (entry == null) throw new NotFoundException(nameof(Entry), id);
+
+            entry.ApplicationStatus = request.NewStatus;
+            _repository.Update(entry);
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task ChangeEntryStatusAsync(int id, ChangeEntryStatusDto request)
@@ -192,23 +279,7 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdAsync(int competitionId)
         {
             var entries = await _repository.GetByCompetitionIdAsync(competitionId);
-            return entries.Select(e => new EntryResponseDto
-            {
-                Id = e.Id,
-                CompetitionId = e.CompetitionId,
-                CompetitionName = e.Competition?.Title ?? "Unknown",
-                ParticipantId = e.ParticipantId,
-                ParticipantName = GetParticipantName(e.Participant),
-                TeamName = GetTeamName(e.Participant),
-                DisciplineId = e.DisciplineId,
-                DisciplineName = e.Discipline?.Type ?? "Unknown",
-                CategoryId = e.CategoryId,
-                CategoryName = e.Category?.Type ?? "Unknown",
-                ApplicationStatus = e.ApplicationStatus,
-                EntryStatus = e.EntryStatus,
-                SubmittedAt = e.SubmittedAt,
-                UpdatedAt = e.UpdatedAt
-            });
+            return entries.Select(e => MapToResponseDto(e));
         }
     }
 }

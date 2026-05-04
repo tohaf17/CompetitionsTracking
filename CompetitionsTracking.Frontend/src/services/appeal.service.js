@@ -15,6 +15,11 @@ const AppealService = {
   create: async (data) => {
     const response = await api.post('/Appeal', data);
     return response.data;
+  },
+  
+  getAll: async () => {
+    const response = await api.get('/Appeal');
+    return response.data;
   }
 };
 
