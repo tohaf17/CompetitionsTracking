@@ -103,6 +103,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                     .ThenInclude(r => r.Entry)
                         .ThenInclude(e => e.Scores)
                             .ThenInclude(s => s.Judge)
+                                .ThenInclude(j => j.Person)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
     }

@@ -36,16 +36,19 @@ namespace CompetitionsTracking.Application.DTOs.Score
         public string JudgeName { get; init; } = string.Empty;
         public string ScoreType { get; init; } = string.Empty;
         public float ScoreValue { get; init; }
+        public float Value => ScoreValue;
     }
 
     public record EntryScoreBreakdownDto
     {
         public int EntryId { get; init; }
+        public float FinalScore { get; init; }
         public float TotalDifficulty { get; init; } 
         public float AverageExecution { get; init; } 
         public float AverageArtistry { get; init; } 
         public float TotalPenalties { get; init; }
         public float CalculatedTotalScore { get; init; }
+        public List<EntryScoreDetailDto> Scores { get; init; } = new();
     }
 
 }

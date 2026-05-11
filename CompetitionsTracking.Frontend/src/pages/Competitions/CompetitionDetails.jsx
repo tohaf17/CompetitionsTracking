@@ -17,7 +17,8 @@ const CompetitionDetails = () => {
     const { id } = useParams();
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
-    const canEdit = user?.role === 'Admin' || user?.role === 'Trainee';
+    const isCoach = user?.role === 'Trainee';
+    const canViewEntries = isAdmin || isCoach;
 
     const [competition, setCompetition] = useState(null);
     const [leaderboard, setLeaderboard] = useState([]);
@@ -166,6 +167,16 @@ const CompetitionDetails = () => {
         }
     };
 
+    const getApplicationStatusText = (status) => {
+        switch (status) {
+            case 0: return 'Очікує';
+            case 1: return 'Прийнято';
+            case 2: return 'Відхилено';
+            case 3: return 'Повторно подано';
+            default: return status;
+        }
+    };
+
     if (loading || !competition) return <div className="page-container">Завантаження...</div>;
 
     return (
@@ -183,8 +194,8 @@ const CompetitionDetails = () => {
             <div className="flex gap-2 mb-2" style={{overflowX: 'auto', paddingBottom: '0.5rem'}}>
                 <button className={`btn ${activeTab === 'leaderboard' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('leaderboard')}>Таблиця результатів</button>
                 <button className={`btn ${activeTab === 'tally' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('tally')}>Медальний залік команд</button>
-                {canEdit && <button className={`btn ${activeTab === 'entries' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('entries')}>Список заявок</button>}
-                {canEdit && <button className={`btn ${activeTab === 'anomalies' ? 'btn-danger' : 'btn-outline'}`} onClick={() => setActiveTab('anomalies')}>Аномалії оцінок</button>}
+                {canViewEntries && <button className={`btn ${activeTab === 'entries' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('entries')}>Список заявок</button>}
+                {isAdmin && <button className={`btn ${activeTab === 'anomalies' ? 'btn-danger' : 'btn-outline'}`} onClick={() => setActiveTab('anomalies')}>Аномалії оцінок</button>}
             </div>
 
             {activeTab === 'leaderboard' && (
@@ -280,7 +291,7 @@ const CompetitionDetails = () => {
                 </div>
             )}
 
-            {canEdit && activeTab === 'entries' && (
+            {canViewEntries && activeTab === 'entries' && (
                 <div className="glass-panel">
                     <h3>Список заявок на змагання</h3>
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
@@ -291,11 +302,11 @@ const CompetitionDetails = () => {
                                 <th>Команда</th>
                                 <th>Дисципліна | Категорія</th>
                                 <th>Статус</th>
-                                {canEdit && <th>Дії</th>}
+                                {isAdmin && <th>Дії</th>}
                             </tr>
                         </thead>
                         <tbody>
-                            {entries.filter(e => e.applicationStatus === 1).length > 0 ? entries.filter(e => e.applicationStatus === 1).map((e, i) => (
+                            {entries.length > 0 ? entries.map((e, i) => (
                                 <tr key={e.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td>
@@ -313,13 +324,13 @@ const CompetitionDetails = () => {
                                     <td>{e.teamName || '-'}</td>
                                     <td>{e.disciplineName} | {e.categoryName}</td>
                                     <td>
-                                        <span className={`status-badge ${e.entryStatus === 0 ? 'status-active' : 'status-cancelled'}`}>
-                                            {e.entryStatus === 0 ? 'Активна' : 'Дискваліфікована'}
+                                        <span className={`status-badge ${e.applicationStatus === 1 ? 'status-active' : 'status-upcoming'}`}>
+                                            {getApplicationStatusText(e.applicationStatus)}
                                         </span>
                                     </td>
-                                    {canEdit && (
+                                    {isAdmin && (
                                     <td>
-                                        {e.entryStatus === 0 && (
+                                        {e.applicationStatus === 1 && e.entryStatus === 0 && (
                                         <button 
                                             className="btn btn-primary" 
                                             style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }} 
@@ -338,13 +349,13 @@ const CompetitionDetails = () => {
                                     </td>
                                     )}
                                 </tr>
-                            )) : <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Заявок не знайдено.</td></tr>}
+                            )) : <tr><td colSpan={isAdmin ? 6 : 5} style={{ padding: '1rem', textAlign: 'center' }}>Заявок не знайдено.</td></tr>}
                         </tbody>
                     </table>
                 </div>
             )}
 
-            {activeTab === 'anomalies' && canEdit && (
+            {activeTab === 'anomalies' && isAdmin && (
                 <div className="glass-panel">
                     <h3 style={{ color: '#ff4d4f' }}>Підозрілі оцінки (відхилення &gt;= 1.5)</h3>
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>

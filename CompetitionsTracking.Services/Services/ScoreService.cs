@@ -99,11 +99,19 @@ namespace CompetitionsTracking.Services.Implementations
             return new EntryScoreBreakdownDto
             {
                 EntryId = entryId,
+                FinalScore = total,
                 TotalDifficulty = difficulty,
                 AverageExecution = avgExecution,
                 AverageArtistry = avgArtistry,
                 TotalPenalties = penalties,
-                CalculatedTotalScore = total
+                CalculatedTotalScore = total,
+                Scores = scores.Select(s => new EntryScoreDetailDto
+                {
+                    ScoreId = s.Id,
+                    JudgeName = s.Judge?.Person != null ? $"{s.Judge.Person.Name} {s.Judge.Person.Surname}" : "Unknown Judge",
+                    ScoreType = s.Type.ToString(),
+                    ScoreValue = s.ScoreValue
+                }).ToList()
             };
         }
 
