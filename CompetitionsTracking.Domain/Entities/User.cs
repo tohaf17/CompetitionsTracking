@@ -23,6 +23,11 @@ namespace CompetitionsTracking.Domain.Entities
         [Required]
         public UserRole Role { get; set; }
 
+        public int? PersonId { get; set; }
+
+        [ForeignKey(nameof(PersonId))]
+        public virtual Person? Person { get; set; }
+
         public bool IsApproved { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

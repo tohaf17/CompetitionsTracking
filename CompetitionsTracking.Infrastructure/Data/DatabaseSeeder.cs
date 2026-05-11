@@ -57,6 +57,8 @@ namespace CompetitionsTracking.Infrastructure.Data
             var coachOdesa = new Person { Name = "Наталія", Surname = "Горбань", Country = "Україна", DateOfBirth = new DateTime(1978, 3, 12).ToUniversalTime(), Gender = Gender.Female, Type = "Person" };
             var coachDnipro = new Person { Name = "Ірина", Surname = "Савченко", Country = "Україна", DateOfBirth = new DateTime(1982, 11, 30).ToUniversalTime(), Gender = Gender.Female, Type = "Person" };
 
+            trainee.Person = coachKyiv;
+
             context.Persons.AddRange(coachKyiv, coachLviv, coachKharkiv, coachOdesa, coachDnipro);
 
             var athleteK1 = new Person { Name = "Марія", Surname = "Коваль", Country = "Україна", DateOfBirth = new DateTime(2008, 3, 15).ToUniversalTime(), Gender = Gender.Female, Type = "Person", Mentor = coachKyiv };
