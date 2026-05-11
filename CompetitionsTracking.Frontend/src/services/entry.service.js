@@ -17,6 +17,11 @@ const EntryService = {
     return response.data;
   },
 
+  getMyParticipants: async () => {
+    const response = await api.get('/Entry/my-participants');
+    return response.data;
+  },
+
   update: async (id, data) => {
     const response = await api.put(`/Entry/${id}`, data);
     return response.data;

@@ -15,7 +15,9 @@ import { toastError } from '../../utils/toastError';
 
 const EntriesList = () => {
     const { user } = useAuth();
-    const canEdit = user?.role === 'Admin' || user?.role === 'Trainee';
+    const isAdmin = user?.role === 'Admin';
+    const isCoach = user?.role === 'Trainee';
+    const canCreate = isAdmin || isCoach;
 
     const [entries, setEntries] = useState([]);
     const [competitions, setCompetitions] = useState([]);
@@ -23,11 +25,13 @@ const EntriesList = () => {
     const [disciplines, setDisciplines] = useState([]);
     const [categories, setCategories] = useState([]);
     const [judges, setJudges] = useState([]);
+    const [participantOptions, setParticipantOptions] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         competitionId: '', 
+        participantId: '',
         participantName: '', 
         participantSurname: '', 
         teamName: '',
@@ -62,16 +66,27 @@ const EntriesList = () => {
 
     const loadFormData = async () => {
         try {
-            const [comp, disc, cat, teamRes] = await Promise.all([
+            const [comp, disc, cat, teamRes, peopleRes, ownParticipantsRes] = await Promise.all([
                 CompetitionService.getAll(),
                 DisciplineService.getAll(),
                 CategoryService.getAll(),
-                TeamService.getAll()
+                TeamService.getAll(),
+                isAdmin ? PersonService.getAll() : Promise.resolve([]),
+                isCoach ? EntryService.getMyParticipants() : Promise.resolve([])
             ]);
-            setCompetitions(unwrapCollection(comp));
+            const allCompetitions = unwrapCollection(comp);
+            setCompetitions(isCoach
+                ? allCompetitions.filter(c => c.status === 0 || c.status === 1)
+                : allCompetitions);
             setDisciplines(unwrapCollection(disc));
             setCategories(unwrapCollection(cat));
-            setTeams(unwrapCollection(teamRes));
+            const loadedTeams = unwrapCollection(teamRes);
+            setTeams(loadedTeams);
+            const adminOptions = [
+                ...unwrapCollection(peopleRes).map(p => ({ id: p.id, name: `${p.name} ${p.surname}`, type: 'Person' })),
+                ...loadedTeams.map(t => ({ id: t.id, name: t.name, type: 'Team' }))
+            ];
+            setParticipantOptions(isCoach ? unwrapCollection(ownParticipantsRes) : adminOptions);
         } catch (error) {
             console.error('Error loading form data:', error);
         }
@@ -102,9 +117,10 @@ const EntriesList = () => {
         try {
             const payload = {
                 competitionId: parseInt(formData.competitionId),
-                participantName: formData.participantName,
-                participantSurname: formData.participantSurname,
-                teamName: formData.teamName,
+                participantId: formData.participantId ? parseInt(formData.participantId) : undefined,
+                participantName: formData.participantId ? undefined : formData.participantName,
+                participantSurname: formData.participantId ? undefined : formData.participantSurname,
+                teamName: formData.participantId ? undefined : formData.teamName,
                 disciplineId: parseInt(formData.disciplineId),
                 categoryId: parseInt(formData.categoryId)
             };
@@ -114,6 +130,7 @@ const EntriesList = () => {
             setIsModalOpen(false);
             setFormData({ 
                 competitionId: '', 
+                participantId: '',
                 participantName: '', 
                 participantSurname: '', 
                 teamName: '', 
@@ -178,7 +195,7 @@ const EntriesList = () => {
                 <h1 className="page-title">Управління заявками</h1>
                 <div>
                     <button className="btn btn-outline" style={{ marginRight: '1rem' }} onClick={loadEntries}>Оновити</button>
-                    {canEdit && <button className="btn btn-primary" onClick={() => {
+                    {canCreate && <button className="btn btn-primary" onClick={() => {
                         setIsModalOpen(true);
                         loadFormData();
                     }}>Подати нову заявку</button>}
@@ -209,7 +226,7 @@ const EntriesList = () => {
                                     <td>{new Date(entry.submittedAt).toLocaleDateString('uk-UA')}</td>
                                     <td>{getAppStatusBadge(entry.applicationStatus)}</td>
                                     <td style={{ textAlign: 'right', paddingRight: '1rem' }}>
-                                        {canEdit && entry.applicationStatus === 0 && (
+                                        {isAdmin && entry.applicationStatus === 0 && (
                                             <>
                                                 <button 
                                                     className="btn btn-primary" 
@@ -228,7 +245,7 @@ const EntriesList = () => {
                                             </>
                                         )}
                                         
-                                        {canEdit && (
+                                        {isAdmin && (
                                             <button className="btn btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => handleDelete(entry.id)}>Видалити</button>
                                         )}
                                     </td>
@@ -253,28 +270,43 @@ const EntriesList = () => {
                         </select>
                     </div>
                     <div className="form-group">
-                        <label>Ім'я учасника</label>
-                        <input type="text" name="participantName" value={formData.participantName} onChange={handleChange} placeholder="Введіть ім'я" required />
+                        <label>{isCoach ? 'Підопічний або команда' : 'Існуючий учасник / команда'}</label>
+                        <select name="participantId" value={formData.participantId} onChange={handleChange} required={isCoach}>
+                            <option value="">-- {isCoach ? 'Оберіть зі своїх підопічних або команд' : 'Можна не обирати і створити вручну'} --</option>
+                            {participantOptions.map(p => (
+                                <option key={`${p.type}-${p.id}`} value={p.id}>
+                                    {p.name} ({p.type === 'Team' ? 'команда' : 'учасник'})
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                    <div className="form-group">
-                        <label>Прізвище учасника</label>
-                        <input type="text" name="participantSurname" value={formData.participantSurname} onChange={handleChange} placeholder="Введіть прізвище" required />
-                    </div>
-                    <div className="form-group">
-                        <label>Команда / Клуб</label>
-                        <input 
-                            type="text" 
-                            name="teamName" 
-                            list="teams-list" 
-                            value={formData.teamName} 
-                            onChange={handleChange} 
-                            placeholder="Оберіть або введіть назву" 
-                            required 
-                        />
-                        <datalist id="teams-list">
-                            {teams.map(t => <option key={t.id} value={t.name} />)}
-                        </datalist>
-                    </div>
+                    {!formData.participantId && isAdmin && (
+                        <>
+                            <div className="form-group">
+                                <label>Ім'я учасника</label>
+                                <input type="text" name="participantName" value={formData.participantName} onChange={handleChange} placeholder="Введіть ім'я" required={!formData.participantId} />
+                            </div>
+                            <div className="form-group">
+                                <label>Прізвище учасника</label>
+                                <input type="text" name="participantSurname" value={formData.participantSurname} onChange={handleChange} placeholder="Введіть прізвище" required={!formData.participantId} />
+                            </div>
+                            <div className="form-group">
+                                <label>Команда / Клуб</label>
+                                <input
+                                    type="text"
+                                    name="teamName"
+                                    list="teams-list"
+                                    value={formData.teamName}
+                                    onChange={handleChange}
+                                    placeholder="Оберіть або введіть назву"
+                                    required={!formData.participantId}
+                                />
+                                <datalist id="teams-list">
+                                    {teams.map(t => <option key={t.id} value={t.name} />)}
+                                </datalist>
+                            </div>
+                        </>
+                    )}
                     <div className="form-group">
                         <label>Дисципліна</label>
                         <select name="disciplineId" value={formData.disciplineId} onChange={handleChange} required>

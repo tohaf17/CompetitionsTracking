@@ -63,4 +63,11 @@ namespace CompetitionsTracking.Application.DTOs.Entry
         public Dictionary<string, int> EntriesByStatus { get; init; } = new();
         public Dictionary<string, int> EntriesByCategory { get; init; } = new();
     }
+
+    public record EntryParticipantOptionDto
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Type { get; init; } = string.Empty;
+    }
 }

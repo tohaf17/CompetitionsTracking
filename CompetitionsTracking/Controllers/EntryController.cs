@@ -3,6 +3,7 @@ using CompetitionsTracking.Application.DTOs.Entry;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -22,7 +23,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetAll([FromQuery] PaginationParams pagination)
         {
-            var result = await _service.GetAllAsync(pagination);
+            var result = await _service.GetAllForUserAsync(pagination, CurrentUserId(), User.IsInRole("Admin"));
             return Ok(result);
         }
 
@@ -38,7 +39,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] EntryRequestDto request)
         {
-            var result = await _service.CreateAsync(request);
+            var result = await _service.CreateAsync(request, CurrentUserId(), User.IsInRole("Admin"));
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
@@ -59,7 +60,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/controversial")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetControversialEntries(int competitionId)
         {
             var result = await _service.GetControversialEntriesAsync(competitionId);
@@ -67,7 +68,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("bulk-status")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> BulkUpdateStatus([FromBody] BulkUpdateAppStatusDto request)
         {
             var updatedCount = await _service.BulkUpdateAppStatusAsync(request);
@@ -75,7 +76,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("{id}/application-status")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeApplicationStatus(int id, [FromBody] ChangeApplicationStatusDto request)
         {
             await _service.ChangeApplicationStatusAsync(id, request);
@@ -83,7 +84,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeEntryStatusDto request)
         {
             await _service.ChangeEntryStatusAsync(id, request);
@@ -91,7 +92,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPatch("{id}/disqualify")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Disqualify(int id)
         {
             await _service.DisqualifyAsync(id);
@@ -99,7 +100,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost("{id}/transfer")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> TransferEntry(int id, [FromBody] TransferEntryDto request)
         {
             await _service.TransferEntryAsync(id, request);
@@ -107,7 +108,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/start-list")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetStartList(int competitionId)
         {
             var result = await _service.GetStartListAsync(competitionId);
@@ -115,7 +116,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/missing-scores")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetMissingScores(int competitionId, [FromQuery] int expectedCount = 4)
         {
             var result = await _service.GetMissingScoresAsync(competitionId, expectedCount);
@@ -123,7 +124,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/analytics")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAnalytics(int competitionId)
         {
             var result = await _service.GetAnalyticsAsync(competitionId);
@@ -133,8 +134,21 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetByCompetitionId(int competitionId)
         {
-            var result = await _service.GetByCompetitionIdAsync(competitionId);
+            var result = await _service.GetByCompetitionIdForUserAsync(competitionId, CurrentUserId(), User.IsInRole("Admin"));
             return Ok(result);
+        }
+
+        [HttpGet("my-participants")]
+        [Authorize(Roles = "Trainee")]
+        public async Task<IActionResult> GetMyParticipantOptions()
+        {
+            var result = await _service.GetParticipantOptionsForUserAsync(CurrentUserId());
+            return Ok(result);
+        }
+
+        private int CurrentUserId()
+        {
+            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
     }
 }

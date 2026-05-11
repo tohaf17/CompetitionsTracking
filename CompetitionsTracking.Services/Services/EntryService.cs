@@ -8,10 +8,6 @@ using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CompetitionsTracking.Services.Implementations
 {
@@ -35,6 +31,31 @@ namespace CompetitionsTracking.Services.Implementations
             
             var dtos = entities.Select(e => MapToResponseDto(e));
             return new PagedResponse<EntryResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
+        }
+
+        public async Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, bool isAdmin)
+        {
+            if (isAdmin)
+            {
+                return await GetAllAsync(pagination);
+            }
+
+            pagination ??= new PaginationParams();
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            var query = RestrictToCoach(EntriesWithDetails(), coachPersonId.Value);
+
+            var totalCount = await query.CountAsync();
+            var entities = await query
+                .OrderByDescending(e => e.SubmittedAt)
+                .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync();
+
+            return new PagedResponse<EntryResponseDto>(
+                entities.Select(MapToResponseDto),
+                totalCount,
+                pagination.PageNumber,
+                pagination.PageSize);
         }
 
         public async Task<EntryResponseDto?> GetByIdAsync(int id)
@@ -92,7 +113,6 @@ namespace CompetitionsTracking.Services.Implementations
         {
             int participantId = request.ParticipantId ?? 0;
 
-            // Handle manual participant entry
             if (participantId <= 0 && !string.IsNullOrWhiteSpace(request.ParticipantName))
             {
                 var name = request.ParticipantName.Trim();
@@ -121,7 +141,7 @@ namespace CompetitionsTracking.Services.Implementations
                     participantId = newPerson.Id;
                 }
             }
-            
+
             if (!string.IsNullOrWhiteSpace(request.TeamName))
             {
                 var teamName = request.TeamName.Trim();
@@ -146,6 +166,7 @@ namespace CompetitionsTracking.Services.Implementations
                     _context.Teams.Add(team);
                     await _context.SaveChangesAsync();
                 }
+
                 var person = await _context.Persons.Include(p => p.TeamsAsMember).FirstOrDefaultAsync(p => p.Id == participantId);
                 if (person != null && !person.TeamsAsMember.Any(t => t.Id == team.Id))
                 {
@@ -168,6 +189,45 @@ namespace CompetitionsTracking.Services.Implementations
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
             
+            return await GetByIdAsync(entity.Id) ?? entity.Adapt<EntryResponseDto>();
+        }
+
+        public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, bool isAdmin)
+        {
+            if (isAdmin)
+            {
+                return await CreateAsync(request);
+            }
+
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            var competition = await _context.Competitions.FindAsync(request.CompetitionId);
+            if (competition == null) throw new NotFoundException(nameof(Competition), request.CompetitionId);
+
+            if (competition.Status != CompetitionStatus.Planned && competition.Status != CompetitionStatus.RegistrationOpen)
+            {
+                throw new BadRequestException("Тренер може подавати заявку лише на змагання, які ще не почалися.");
+            }
+
+            var participantId = await ResolveCoachParticipantIdAsync(request, coachPersonId.Value);
+            if (await _repository.IsDuplicateEntryAsync(request.CompetitionId, participantId, request.DisciplineId))
+            {
+                throw new BadRequestException("Цей учасник або команда вже зареєстровані на цю дисципліну.");
+            }
+
+            var entity = new Entry
+            {
+                CompetitionId = request.CompetitionId,
+                ParticipantId = participantId,
+                DisciplineId = request.DisciplineId,
+                CategoryId = request.CategoryId,
+                ApplicationStatus = ApplicationStatus.Pending,
+                EntryStatus = EntryStatus.Registered,
+                SubmittedAt = DateTime.UtcNow
+            };
+
+            await _repository.AddAsync(entity);
+            await _unitOfWork.CompleteAsync();
+
             return await GetByIdAsync(entity.Id) ?? entity.Adapt<EntryResponseDto>();
         }
 
@@ -280,6 +340,149 @@ namespace CompetitionsTracking.Services.Implementations
         {
             var entries = await _repository.GetByCompetitionIdAsync(competitionId);
             return entries.Select(e => MapToResponseDto(e));
+        }
+
+        public async Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdForUserAsync(int competitionId, int userId, bool isAdmin)
+        {
+            if (isAdmin)
+            {
+                return await GetByCompetitionIdAsync(competitionId);
+            }
+
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            var entries = await RestrictToCoach(
+                    EntriesWithDetails().Where(e => e.CompetitionId == competitionId),
+                    coachPersonId.Value)
+                .OrderByDescending(e => e.SubmittedAt)
+                .ToListAsync();
+
+            return entries.Select(MapToResponseDto);
+        }
+
+        public async Task<IEnumerable<EntryParticipantOptionDto>> GetParticipantOptionsForUserAsync(int userId)
+        {
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+
+            var people = await _context.Persons
+                .Include(p => p.TeamsAsMember)
+                .Where(p => p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId))
+                .AsNoTracking()
+                .Select(p => new EntryParticipantOptionDto
+                {
+                    Id = p.Id,
+                    Name = p.Name + " " + p.Surname,
+                    Type = "Person"
+                })
+                .ToListAsync();
+
+            var teams = await _context.Teams
+                .Where(t => t.CoachId == coachPersonId)
+                .AsNoTracking()
+                .Select(t => new EntryParticipantOptionDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Type = "Team"
+                })
+                .ToListAsync();
+
+            return people.Concat(teams).OrderBy(p => p.Name);
+        }
+
+        private IQueryable<Entry> EntriesWithDetails()
+        {
+            return _context.Entries
+                .Include(e => e.Participant)
+                .Include(e => (e.Participant as Person).TeamsAsMember)
+                .Include(e => e.Competition)
+                .Include(e => e.Discipline)
+                .Include(e => e.Category)
+                .AsNoTracking();
+        }
+
+        private IQueryable<Entry> RestrictToCoach(IQueryable<Entry> query, int coachPersonId)
+        {
+            return query.Where(e =>
+                _context.Persons.Any(p => p.Id == e.ParticipantId
+                    && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)))
+                || _context.Teams.Any(t => t.Id == e.ParticipantId && t.CoachId == coachPersonId));
+        }
+
+        private async Task<int?> GetCoachPersonIdAsync(int userId)
+        {
+            var personId = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.PersonId)
+                .FirstOrDefaultAsync();
+
+            if (!personId.HasValue)
+            {
+                throw new BadRequestException("До акаунта тренера не прив'язано профіль тренера.");
+            }
+
+            return personId;
+        }
+
+        private static bool IsEntryOwnedByCoach(Entry entry, int coachPersonId)
+        {
+            return entry.Participant switch
+            {
+                Person person => person.MentorId == coachPersonId
+                    || (person.TeamsAsMember?.Any(team => team.CoachId == coachPersonId) ?? false),
+                Team team => team.CoachId == coachPersonId,
+                _ => false
+            };
+        }
+
+        private async Task<int> ResolveCoachParticipantIdAsync(EntryRequestDto request, int coachPersonId)
+        {
+            if (request.ParticipantId.HasValue && request.ParticipantId.Value > 0)
+            {
+                var participantId = request.ParticipantId.Value;
+                var isOwnPerson = await _context.Persons
+                    .Include(p => p.TeamsAsMember)
+                    .AnyAsync(p => p.Id == participantId
+                        && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)));
+                var isOwnTeam = await _context.Teams.AnyAsync(t => t.Id == participantId && t.CoachId == coachPersonId);
+
+                if (!isOwnPerson && !isOwnTeam)
+                {
+                    throw new BadRequestException("Тренер може подавати заявки лише для своїх підопічних або команд.");
+                }
+
+                return participantId;
+            }
+
+            var fullName = $"{request.ParticipantName} {request.ParticipantSurname}".Trim();
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var name = parts.FirstOrDefault() ?? string.Empty;
+                var surname = string.Join(' ', parts.Skip(1));
+
+                var person = await _context.Persons
+                    .Include(p => p.TeamsAsMember)
+                    .FirstOrDefaultAsync(p => p.Name == name
+                        && p.Surname == surname
+                        && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)));
+
+                if (person != null)
+                {
+                    return person.Id;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.TeamName))
+            {
+                var teamName = request.TeamName.Trim();
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Name == teamName && t.CoachId == coachPersonId);
+                if (team != null)
+                {
+                    return team.Id;
+                }
+            }
+
+            throw new BadRequestException("Оберіть існуючого підопічного або команду, яку ви тренуєте.");
         }
     }
 }

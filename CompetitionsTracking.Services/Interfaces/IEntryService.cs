@@ -9,8 +9,10 @@ namespace CompetitionsTracking.Services.Interfaces
     public interface IEntryService
     {
         Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null);
+        Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, bool isAdmin);
         Task<EntryResponseDto?> GetByIdAsync(int id);
         Task<EntryResponseDto> CreateAsync(EntryRequestDto request);
+        Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, bool isAdmin);
         Task UpdateAsync(int id, EntryRequestDto request);
         Task DeleteAsync(int id);
         Task<IEnumerable<ControversialEntryDto>> GetControversialEntriesAsync(int competitionId);
@@ -23,5 +25,7 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<IEnumerable<EntryResponseDto>> GetMissingScoresAsync(int competitionId, int expectedCount);
         Task<EntryAnalyticsDto> GetAnalyticsAsync(int competitionId);
         Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdAsync(int competitionId);
+        Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdForUserAsync(int competitionId, int userId, bool isAdmin);
+        Task<IEnumerable<EntryParticipantOptionDto>> GetParticipantOptionsForUserAsync(int userId);
     }
 }
