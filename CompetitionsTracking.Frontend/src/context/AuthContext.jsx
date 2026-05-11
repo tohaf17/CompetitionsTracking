@@ -27,11 +27,14 @@ export const AuthProvider = ({ children }) => {
           } else {
             const roleKey = Object.keys(decoded).find(k => k.endsWith('/claims/role')) || 'role';
             const usernameKey = Object.keys(decoded).find(k => k.endsWith('/claims/name')) || 'unique_name';
+            const userIdKey = Object.keys(decoded).find(k => k.endsWith('/claims/nameidentifier')) || 'nameid';
             
             setUser({
+              id: decoded[userIdKey],
               username: decoded[usernameKey],
               role: decoded[roleKey],
-              token: token
+              token: token,
+              personId: decoded.person_id ? parseInt(decoded.person_id) : null
             });
           }
         } catch (e) {
@@ -54,10 +57,13 @@ export const AuthProvider = ({ children }) => {
         const decoded = jwtDecode(token);
         const roleKey = Object.keys(decoded).find(k => k.endsWith('/claims/role')) || 'role';
         const usernameKey = Object.keys(decoded).find(k => k.endsWith('/claims/name')) || 'unique_name';
+        const userIdKey = Object.keys(decoded).find(k => k.endsWith('/claims/nameidentifier')) || 'nameid';
         setUser({
+          id: decoded[userIdKey],
           username: decoded[usernameKey],
           role: decoded[roleKey],
-          token: token
+          token: token,
+          personId: decoded.person_id ? parseInt(decoded.person_id) : null
         });
         return { success: true };
       }

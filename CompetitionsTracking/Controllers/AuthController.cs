@@ -20,6 +20,10 @@ namespace CompetitionsTracking.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
             var response = await _service.LoginAsync(request);
+            if (string.IsNullOrWhiteSpace(response.Token))
+            {
+                return BadRequest(new { message = response.Message });
+            }
             return Ok(response);
         }
 

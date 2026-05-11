@@ -33,25 +33,26 @@ namespace CompetitionsTracking.Services.Implementations
             
             if (user == null)
             {
-                throw new BadRequestException("Invalid username or password.");
+                return new AuthResponseDto { Message = "Невірний email/нікнейм або пароль." };
             }
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             
             if (result == PasswordVerificationResult.Failed)
             {
-                throw new BadRequestException("Invalid username or password.");
+                return new AuthResponseDto { Message = "Невірний email/нікнейм або пароль." };
             }
 
             if (!user.IsApproved)
             {
-                throw new BadRequestException("Обліковий запис очікує підтвердження адміністратором.");
+                return new AuthResponseDto { Message = "Обліковий запис очікує підтвердження адміністратором." };
             }
 
             return new AuthResponseDto
             {
                 Token = GenerateJwtToken(user),
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                PersonId = user.PersonId
             };
         }
 
@@ -84,7 +85,8 @@ namespace CompetitionsTracking.Services.Implementations
             {
                 Token = GenerateJwtToken(user),
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                PersonId = user.PersonId
             };
         }
 
@@ -96,6 +98,10 @@ namespace CompetitionsTracking.Services.Implementations
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
+            if (user.PersonId.HasValue)
+            {
+                claims.Add(new Claim("person_id", user.PersonId.Value.ToString()));
+            }
 
             var keyBytes = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured."));
             var key = new SymmetricSecurityKey(keyBytes);
@@ -121,6 +127,7 @@ namespace CompetitionsTracking.Services.Implementations
                 Username = u.Username,
                 Email = u.Email,
                 Role = u.Role,
+                PersonId = u.PersonId,
                 IsApproved = u.IsApproved,
                 CreatedAt = u.CreatedAt
             });

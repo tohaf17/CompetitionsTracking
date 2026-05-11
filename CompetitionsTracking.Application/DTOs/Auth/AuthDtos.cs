@@ -21,6 +21,8 @@ namespace CompetitionsTracking.Application.DTOs.Auth
         public string Token { get; init; } = string.Empty;
         public string Username { get; init; } = string.Empty;
         public UserRole Role { get; init; }
+        public int? PersonId { get; init; }
+        public string Message { get; init; } = string.Empty;
     }
 
     public record UserDto
@@ -29,6 +31,7 @@ namespace CompetitionsTracking.Application.DTOs.Auth
         public string Username { get; init; } = string.Empty;
         public string Email { get; init; } = string.Empty;
         public UserRole Role { get; set; }
+        public int? PersonId { get; set; }
         public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; }
     }
