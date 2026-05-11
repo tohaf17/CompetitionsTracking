@@ -32,7 +32,7 @@ api.interceptors.response.use(
     const currentBaseUrl = error.config?.baseURL || api.defaults.baseURL;
     const alternateBaseUrl = apiBaseUrls.find((url) => url !== currentBaseUrl);
 
-    // Only retry with alternate URL if it's a network error (no response)
+    
     if (!error.response && error.request && error.config && !error.config._retryWithAlternateBaseUrl && alternateBaseUrl) {
       return api.request({
         ...error.config,
@@ -46,7 +46,6 @@ api.interceptors.response.use(
 
     if (error.response) {
       if (error.response.status === 401) {
-        // Гість не авторизований — це нормально, мовчазний reject без toast
         return Promise.reject({ message: null, isSilent: true, type: 'unauthorized', originalError: error });
       } else if (error.response.status === 403) {
         errorMessage = "Доступ заборонено. Потрібні права адміністратора.";

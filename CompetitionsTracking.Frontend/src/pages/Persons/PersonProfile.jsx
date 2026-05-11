@@ -76,7 +76,6 @@ const PersonProfile = () => {
         </div>
     );
 
-    // Compute medal stats from performance history
     const medals = performance.filter(p => p.placement >= 1 && p.placement <= 3);
     const gold = medals.filter(p => p.placement === 1).length;
     const silver = medals.filter(p => p.placement === 2).length;
@@ -91,7 +90,6 @@ const PersonProfile = () => {
 
     return (
         <div className="page-container">
-            {/* Header */}
             <div style={{ marginBottom: '2rem' }}>
                 <button
                     className="btn btn-outline"
@@ -102,7 +100,7 @@ const PersonProfile = () => {
                 </button>
 
                 <div className="glass-panel" style={{ padding: '2rem', display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                    {/* Avatar */}
+                 
                     <div style={{
                         width: 80, height: 80, borderRadius: '50%',
                         background: 'linear-gradient(135deg, #3a3a3a, #1a1a1a)',
@@ -113,7 +111,6 @@ const PersonProfile = () => {
                         {person.gender === 1 ? '👩' : '👨'}
                     </div>
 
-                    {/* Info */}
                     <div style={{ flex: 1, minWidth: 200 }}>
                         <h1 className="page-title" style={{ marginBottom: '0.3rem' }}>{fullName}</h1>
                         <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.8rem' }}>
@@ -123,7 +120,6 @@ const PersonProfile = () => {
                             {person.dateOfBirth && <span>📅 {new Date(person.dateOfBirth).toLocaleDateString('uk-UA')}</span>}
                         </div>
 
-                        {/* Team badges */}
                         {teams.length > 0 && (
                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 {teams.map((t, i) => (
@@ -142,7 +138,6 @@ const PersonProfile = () => {
                         )}
                     </div>
 
-                    {/* Medal summary */}
                     <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
                         <StatCard label="Всього змагань" value={totalCompetitions} />
                         <StatCard label="🥇 Золото" value={gold} color="#FFD700" />
@@ -153,7 +148,6 @@ const PersonProfile = () => {
                 </div>
             </div>
 
-            {/* Tabs */}
             <div className="flex gap-2 mb-2" style={{ overflowX: 'auto', paddingBottom: '0.5rem' }}>
                 <button
                     className={`btn ${activeTab === 'history' ? 'btn-primary' : 'btn-outline'}`}
@@ -177,7 +171,6 @@ const PersonProfile = () => {
                 )}
             </div>
 
-            {/* Tab: Performance History */}
             {activeTab === 'history' && (
                 <div className="glass-panel" style={{ padding: '1.5rem' }}>
                     <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -244,7 +237,6 @@ const PersonProfile = () => {
                 </div>
             )}
 
-            {/* Tab: Medals only */}
             {activeTab === 'medals' && (
                 <div className="glass-panel" style={{ padding: '1.5rem' }}>
                     <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -301,7 +293,6 @@ const PersonProfile = () => {
                 </div>
             )}
 
-            {/* Tab: Mentees */}
             {activeTab === 'mentees' && (
                 <div className="glass-panel" style={{ padding: '1.5rem' }}>
                     <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
