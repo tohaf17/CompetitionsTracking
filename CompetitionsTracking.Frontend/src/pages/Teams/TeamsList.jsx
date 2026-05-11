@@ -10,7 +10,7 @@ import { toastError } from '../../utils/toastError';
 
 const TeamsList = () => {
     const { user } = useAuth();
-    const canEdit = user?.role === 'Admin' || user?.role === 'Trainee';
+    const canEdit = user?.role === 'Admin';
 
     const [teams, setTeams] = useState([]);
     const [coaches, setCoaches] = useState([]);

@@ -33,7 +33,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] TeamRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -41,7 +41,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] TeamRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -49,7 +49,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteAsync(id);
@@ -71,7 +71,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost("{teamId}/members/{personId}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddMemberToTeam(int teamId, int personId)
         {
             await _service.AddMemberToTeamAsync(teamId, personId);
@@ -79,7 +79,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpDelete("{teamId}/members/{personId}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveMemberFromTeam(int teamId, int personId)
         {
             await _service.RemoveMemberFromTeamAsync(teamId, personId);

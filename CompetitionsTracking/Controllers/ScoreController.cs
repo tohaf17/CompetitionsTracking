@@ -33,7 +33,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] ScoreRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -41,7 +41,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] ScoreRequestDto request)
         {
             await _service.UpdateAsync(id, request);
