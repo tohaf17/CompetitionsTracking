@@ -85,7 +85,7 @@ const AdminDisciplines = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Назва</th>
                             <th>Групова</th>
                             <th>Дії</th>

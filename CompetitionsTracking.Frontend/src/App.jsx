@@ -59,7 +59,14 @@ const App = () => {
                     <Route path="/competitions" element={<CompetitionsList />} />
                     <Route path="/competitions/:id" element={<CompetitionDetails />} />
                     <Route path="/teams" element={<TeamsList />} />
-                    <Route path="/judges" element={<JudgesList />} />
+                    <Route
+                        path="/judges"
+                        element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <JudgesList />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route
                         path="/appeals"
                         element={

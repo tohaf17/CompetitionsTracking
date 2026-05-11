@@ -90,7 +90,7 @@ const AdminApparatus = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Назва</th>
                             <th>Дії</th>
                         </tr>

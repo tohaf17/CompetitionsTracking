@@ -72,7 +72,7 @@ const AdminCategories = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Назва</th>
                             <th>Вікові межі</th>
                             <th>Дії</th>

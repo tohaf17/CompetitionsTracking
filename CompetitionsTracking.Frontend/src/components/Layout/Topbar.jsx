@@ -11,6 +11,12 @@ const Topbar = () => {
         navigate('/login');
     };
 
+    const roleLabel = {
+        Admin: 'Admin',
+        Trainee: 'Coach',
+        Guest: 'Guest'
+    }[user?.role] || user?.role;
+
     return (
         <header className="topbar glass-panel">
             <div className="topbar-content">
@@ -19,7 +25,7 @@ const Topbar = () => {
                 <div className="topbar-right">
                     {user ? (
                         <div className="user-profile">
-                            <span className="user-role">{user.role}</span>
+                            <span className="user-role">{roleLabel}</span>
                             <span className="user-name">{user.username}</span>
                             <button onClick={handleLogout} className="btn btn-outline ml-2">
                                 Вийти

@@ -84,7 +84,7 @@ const AdminUsersList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Ім&apos;я користувача</th>
                             <th>Email</th>
                             <th>Роль</th>

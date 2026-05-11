@@ -45,7 +45,7 @@ const CompetitionsList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>№</th>
                             <th>Назва</th>
                             <th>Дати</th>
                             <th>Місто</th>
@@ -55,12 +55,12 @@ const CompetitionsList = () => {
                     </thead>
                     <tbody>
                         {competitions.length > 0 ? (
-                            competitions.map((comp) => {
+                            competitions.map((comp, index) => {
                                 const compStatus = statusMap[comp.status] || { text: 'Невідомо', class: '' };
 
                                 return (
                                 <tr key={comp.id}>
-                                    <td>{comp.id}</td>
+                                    <td>{index + 1}</td>
                                     <td><strong>{comp.title}</strong></td>
                                     <td>{new Date(comp.startDate).toLocaleDateString('uk-UA')} - {new Date(comp.endDate).toLocaleDateString('uk-UA')}</td>
                                     <td>{comp.city}</td>

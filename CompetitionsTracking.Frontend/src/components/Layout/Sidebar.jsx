@@ -20,9 +20,11 @@ const Sidebar = () => {
                 <NavLink to="/teams" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Команди
                 </NavLink>
-                <NavLink to="/judges" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    Судді
-                </NavLink>
+                {isAdmin && (
+                    <NavLink to="/judges" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                        Судді
+                    </NavLink>
+                )}
                 {canViewRestricted && (
                     <NavLink to="/appeals" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                         Апеляції
