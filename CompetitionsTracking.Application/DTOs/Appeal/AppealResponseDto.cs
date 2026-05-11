@@ -15,5 +15,6 @@ namespace CompetitionsTracking.Application.DTOs.Appeal
         public DateTime ResolvedAt { get; init; }
         public string ParticipantName { get; init; } = string.Empty;
         public int CompetitionId { get; init; }
+        public string CompetitionName { get; init; } = string.Empty;
     }
 }

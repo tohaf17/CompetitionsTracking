@@ -2,6 +2,7 @@ using CompetitionsTracking.Application.DTOs.Result;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -24,6 +25,14 @@ namespace CompetitionsTracking.Controllers
             return Ok(result);
         }
 
+        [HttpGet("appealable")]
+        [Authorize(Roles = "Admin,Trainee")]
+        public async Task<IActionResult> GetAppealable()
+        {
+            var result = await _service.GetAppealableForUserAsync(CurrentUserId(), User.IsInRole("Admin"));
+            return Ok(result);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -33,7 +42,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] ResultRequestDto request)
         {
             var result = await _service.CreateAsync(request);
@@ -41,7 +50,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] ResultRequestDto request)
         {
             await _service.UpdateAsync(id, request);
@@ -83,6 +92,11 @@ namespace CompetitionsTracking.Controllers
 
             var result = await _service.GetTopRecordsByDisciplineAsync(disciplineId, topN);
             return Ok(result);
+        }
+
+        private int CurrentUserId()
+        {
+            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
     }
 }

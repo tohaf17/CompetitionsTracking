@@ -20,6 +20,21 @@ const AppealService = {
   getAll: async () => {
     const response = await api.get('/Appeal');
     return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/Appeal/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/Appeal/${id}`);
+    return response.data;
+  },
+
+  approve: async (id, data) => {
+    const response = await api.post(`/Appeal/${id}/approve`, data);
+    return response.data;
   }
 };
 

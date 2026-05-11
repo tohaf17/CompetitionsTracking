@@ -2,6 +2,7 @@ using CompetitionsTracking.Application.DTOs.Appeal;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -21,7 +22,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllForUserAsync(CurrentUserId(), User.IsInRole("Admin"));
             return Ok(result);
         }
 
@@ -37,7 +38,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] AppealRequestDto request)
         {
-            var result = await _service.CreateAsync(request);
+            var result = await _service.CreateAsync(request, CurrentUserId(), User.IsInRole("Admin"));
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
@@ -45,7 +46,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetPending([FromQuery] int? competitionId)
         {
-            var result = await _service.GetPendingAppealsAsync(competitionId);
+            var result = await _service.GetPendingAppealsForUserAsync(competitionId, CurrentUserId(), User.IsInRole("Admin"));
             return Ok(result);
         }
 
@@ -53,7 +54,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> GetDossier(int id)
         {
-            var result = await _service.GetAppealDossierAsync(id);
+            var result = await _service.GetAppealDossierAsync(id, CurrentUserId(), User.IsInRole("Admin"));
             return Ok(result);
         }
 
@@ -79,6 +80,11 @@ namespace CompetitionsTracking.Controllers
         {
             await _service.ApproveAppealAsync(id, request);
             return NoContent();
+        }
+
+        private int CurrentUserId()
+        {
+            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
     }
 }

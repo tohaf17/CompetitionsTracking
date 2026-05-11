@@ -11,6 +11,7 @@ import { toastError } from '../../utils/toastError';
 const AppealsList = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
+    const canSubmitAppeal = isAdmin || user?.role === 'Trainee';
 
     const [appeals, setAppeals] = useState([]);
     const [resultsData, setResultsData] = useState([]);
@@ -55,7 +56,7 @@ const AppealsList = () => {
 
     const loadResults = async () => {
         try {
-            const data = await ResultService.getAll();
+            const data = await ResultService.getAppealable();
             setResultsData(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити результати');
@@ -63,7 +64,7 @@ const AppealsList = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm(`Видалити апеляцію з ID ${id}?`)) return;
+        if (!window.confirm(`Видалити апеляцію?`)) return;
         try {
             await AppealService.delete(id);
             toast.success("Апеляцію видалено");
@@ -79,7 +80,7 @@ const AppealsList = () => {
             const selectedResult = resultsData.find(r => r.id === parseInt(formData.resultId));
             const selectedComp = competitions.find(c => c.title === selectedResult?.competitionName);
 
-            if (selectedComp && selectedComp.status !== 1) { // 1 = Ongoing
+            if (selectedComp && selectedComp.status !== 2) {
                 toast.error("Апеляції можна подавати лише для змагань, що тривають");
                 return;
             }
@@ -169,7 +170,7 @@ const AppealsList = () => {
                 </div>
                 <div>
                     <button className="btn btn-outline" style={{ marginRight: '1rem' }} onClick={loadAppeals}>Оновити</button>
-                    {isAdmin && <button className="btn btn-primary" onClick={() => {
+                    {canSubmitAppeal && <button className="btn btn-primary" onClick={() => {
                         setIsModalOpen(true);
                         loadResults();
                     }}>Подати апеляцію</button>}
@@ -180,9 +181,10 @@ const AppealsList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>ID результату</th>
+                            <th>№</th>
+                            <th>Виступ</th>
                             <th>Учасник</th>
+                            <th>Змагання</th>
                             <th>Статус / Рішення</th>
                             <th>Дії</th>
                         </tr>
@@ -196,8 +198,9 @@ const AppealsList = () => {
                                 .map((appeal, index) => (
                                     <tr key={appeal.id}>
                                         <td>{index + 1}</td>
-                                        <td>{appeal.resultId}</td>
+                                        <td>Виступ {index + 1}</td>
                                         <td><strong>{appeal.participantName || '-'}</strong></td>
+                                        <td>{appeal.competitionName || '-'}</td>
                                         <td>
                                             <span className={`status-badge ${appeal.status === 0 ? 'status-upcoming' : (appeal.status === 1 ? 'status-active' : 'status-completed')}`}>
                                                 {appeal.status === 0 ? 'На розгляді' : (appeal.status === 1 ? 'Схвалено' : 'Відхилено')}
@@ -216,7 +219,7 @@ const AppealsList = () => {
                                 ))
                         ) : (
                             <tr>
-                                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Апеляцій не знайдено для вибраних критеріїв.</td>
+                                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Апеляцій не знайдено для вибраних критеріїв.</td>
                             </tr>
                         )}
                     </tbody>
@@ -226,7 +229,7 @@ const AppealsList = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Подати апеляцію">
                 <form onSubmit={handleCreate}>
                     <div className="form-group">
-                        <label>Оберіть ID результату</label>
+                        <label>Оберіть виступ</label>
                         <select name="resultId" value={formData.resultId} onChange={handleChange} required>
                             <option value="">-- Оберіть результат --</option>
                             {resultsData.map(r => (

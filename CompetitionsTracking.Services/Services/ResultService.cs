@@ -4,7 +4,9 @@ using CompetitionsTracking.Domain.Exceptions;
 using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
+using CompetitionsTracking.Infrastructure.Data;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,26 +16,45 @@ namespace CompetitionsTracking.Services.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IResultRepository _repository;
+        private readonly CompetitionsTrackingDbContext _context;
 
-        public ResultService(IUnitOfWork unitOfWork, IResultRepository repository)
+        public ResultService(IUnitOfWork unitOfWork, IResultRepository repository, CompetitionsTrackingDbContext context)
         {
             _unitOfWork = unitOfWork;
             _repository = repository;
+            _context = context;
         }
 
         public async Task<IEnumerable<ResultResponseDto>> GetAllAsync()
         {
             var entities = await _repository.GetAllAsync();
-            return entities.Select(e => new ResultResponseDto
+            return entities.Select(MapToResponseDto);
+        }
+
+        public async Task<IEnumerable<ResultResponseDto>> GetAppealableForUserAsync(int userId, bool isAdmin)
+        {
+            var query = _context.Results
+                .Include(r => r.Entry).ThenInclude(e => e.Participant)
+                .Include(r => r.Entry).ThenInclude(e => e.Competition)
+                .Where(r => r.Entry.Competition.Status == CompetitionStatus.Ongoing)
+                .Where(r => !r.Appeals.Any(a => a.Status == AppealStatus.Pending));
+
+            if (!isAdmin)
             {
-                Id = e.Id,
-                EntryId = e.EntryId,
-                Place = e.Place,
-                FinalScore = e.FinalScore,
-                AwardedMedal = e.AwardedMedal ?? string.Empty,
-                ParticipantName = e.Entry != null ? GetParticipantName(e.Entry.Participant) : "Unknown",
-                CompetitionName = e.Entry?.Competition?.Title ?? "Unknown"
-            });
+                var coachPersonId = await GetCoachPersonIdAsync(userId);
+                query = query.Where(r =>
+                    _context.Persons.Any(p => p.Id == r.Entry.ParticipantId
+                        && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)))
+                    || _context.Teams.Any(t => t.Id == r.Entry.ParticipantId && t.CoachId == coachPersonId));
+            }
+
+            var results = await query
+                .AsNoTracking()
+                .OrderBy(r => r.Entry.Competition.Title)
+                .ThenBy(r => r.Place)
+                .ToListAsync();
+
+            return results.Select(MapToResponseDto);
         }
 
         public async Task<ResultResponseDto?> GetByIdAsync(int id)
@@ -51,6 +72,35 @@ namespace CompetitionsTracking.Services.Implementations
                 ParticipantName = entity.Entry != null ? GetParticipantName(entity.Entry.Participant) : "Unknown",
                 CompetitionName = entity.Entry?.Competition?.Title ?? "Unknown"
             };
+        }
+
+        private ResultResponseDto MapToResponseDto(Result e)
+        {
+            return new ResultResponseDto
+            {
+                Id = e.Id,
+                EntryId = e.EntryId,
+                Place = e.Place,
+                FinalScore = e.FinalScore,
+                AwardedMedal = e.AwardedMedal ?? string.Empty,
+                ParticipantName = e.Entry != null ? GetParticipantName(e.Entry.Participant) : "Unknown",
+                CompetitionName = e.Entry?.Competition?.Title ?? "Unknown"
+            };
+        }
+
+        private async Task<int> GetCoachPersonIdAsync(int userId)
+        {
+            var personId = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.PersonId)
+                .FirstOrDefaultAsync();
+
+            if (!personId.HasValue)
+            {
+                throw new BadRequestException("До акаунта тренера не прив'язано профіль тренера.");
+            }
+
+            return personId.Value;
         }
 
         public async Task<ResultResponseDto> CreateAsync(ResultRequestDto request)

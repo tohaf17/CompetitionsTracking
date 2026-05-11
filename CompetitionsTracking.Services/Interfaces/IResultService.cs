@@ -8,6 +8,7 @@ namespace CompetitionsTracking.Services.Interfaces
     public interface IResultService
     {
         Task<IEnumerable<ResultResponseDto>> GetAllAsync();
+        Task<IEnumerable<ResultResponseDto>> GetAppealableForUserAsync(int userId, bool isAdmin);
         Task<ResultResponseDto?> GetByIdAsync(int id);
         Task<ResultResponseDto> CreateAsync(ResultRequestDto request);
         Task UpdateAsync(int id, ResultRequestDto request);

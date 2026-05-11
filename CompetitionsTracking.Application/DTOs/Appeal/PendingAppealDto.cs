@@ -13,6 +13,7 @@ namespace CompetitionsTracking.Application.DTOs.Appeal
         public AppealStatus Status { get; init; }
         public DateTime CreatedAt { get; init; }
         public int CompetitionId { get; init; }
+        public string CompetitionName { get; init; } = string.Empty;
         public string ParticipantName { get; init; } = string.Empty;
     }
 }
