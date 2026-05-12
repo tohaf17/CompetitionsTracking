@@ -203,6 +203,11 @@ namespace CompetitionsTracking.Services.Implementations
             var competition = await _context.Competitions.FindAsync(request.CompetitionId);
             if (competition == null) throw new NotFoundException(nameof(Competition), request.CompetitionId);
 
+            if (competition.Level == CompetitionLevel.International)
+            {
+                throw new BadRequestException("Тренер не може подавати заявки на міжнародні змагання. Для міжнародних змагань заявки подає адміністратор.");
+            }
+
             if (competition.Status != CompetitionStatus.Planned && competition.Status != CompetitionStatus.RegistrationOpen)
             {
                 throw new BadRequestException("Тренер може подавати заявку лише на змагання, які ще не почалися.");

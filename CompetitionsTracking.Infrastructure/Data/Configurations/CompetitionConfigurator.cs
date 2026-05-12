@@ -19,6 +19,18 @@ namespace CompetitionsTracking.Infrastructure.Data.Configurations
             modelBuilder
                 .Property(c => c.Status)
                 .HasConversion<string>();
+
+            modelBuilder
+                .Property(c => c.Level)
+                .HasConversion<string>();
+
+            modelBuilder
+                .Property(c => c.City)
+                .HasMaxLength(100);
+
+            modelBuilder
+                .Property(c => c.Country)
+                .HasMaxLength(100);
         }
     }
 }

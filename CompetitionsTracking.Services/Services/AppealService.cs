@@ -108,6 +108,24 @@ namespace CompetitionsTracking.Services.Implementations
         {
             if (!isAdmin)
             {
+                var result = await _context.Results
+                    .Where(r => r.Id == request.ResultId)
+                    .Select(r => new
+                    {
+                        CompetitionLevel = r.Entry.Competition.Level
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (result == null)
+                {
+                    throw new NotFoundException(nameof(Result), request.ResultId);
+                }
+
+                if (result.CompetitionLevel == CompetitionLevel.International)
+                {
+                    throw new BadRequestException("Тренер не може подавати апеляції на міжнародні змагання. Для міжнародних змагань апеляції подає адміністратор.");
+                }
+
                 var coachPersonId = await GetCoachPersonIdAsync(userId);
                 var ownsResult = await _context.Results.AnyAsync(r => r.Id == request.ResultId
                     && (_context.Persons.Any(p => p.Id == r.Entry.ParticipantId

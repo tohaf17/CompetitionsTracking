@@ -7,6 +7,8 @@ namespace CompetitionsTracking.Application.DTOs.Competition
     {
         public string Title { get; init; } = string.Empty;
         public string City { get; init; } = string.Empty;
+        public string? Country { get; init; }
+        public CompetitionLevel Level { get; init; } = CompetitionLevel.National;
         public DateTime StartDate { get; init; }
         public DateTime EndDate { get; init; }
         public CompetitionStatus Status { get; init; }
@@ -17,6 +19,8 @@ namespace CompetitionsTracking.Application.DTOs.Competition
         public int Id { get; init; }
         public string Title { get; init; } = string.Empty;
         public string City { get; init; } = string.Empty;
+        public string? Country { get; init; }
+        public CompetitionLevel Level { get; init; }
         public DateTime StartDate { get; init; }
         public DateTime EndDate { get; init; }
         public CompetitionStatus Status { get; init; }
@@ -29,7 +33,9 @@ namespace CompetitionsTracking.Application.DTOs.Competition
     public record CompetitionFilterDto
     {
         public CompetitionStatus? Status { get; init; }
+        public CompetitionLevel? Level { get; init; }
         public string? City { get; init; }
+        public string? Country { get; init; }
     }
 
     public record CompetitionSummaryDto

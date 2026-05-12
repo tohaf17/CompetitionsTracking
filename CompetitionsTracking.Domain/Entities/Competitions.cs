@@ -18,6 +18,12 @@ namespace CompetitionsTracking.Domain.Entities
 
         [Required]
         public string City { get; set; } = string.Empty;
+
+        public string? Country { get; set; }
+
+        [Required]
+        public CompetitionLevel Level { get; set; } = CompetitionLevel.National;
+
         [Required]
         
         public DateTime StartDate { get; set; }
@@ -34,5 +40,12 @@ namespace CompetitionsTracking.Domain.Entities
         RegistrationOpen,
         Ongoing,
         Finished
+    }
+
+    public enum CompetitionLevel
+    {
+        Local,
+        National,
+        International
     }
 }

@@ -68,7 +68,7 @@ namespace CompetitionsTracking.Services.Implementations
             IEnumerable<Competition> entities;
             int totalCount;
 
-            if (filter is { Status: not null } || !string.IsNullOrWhiteSpace(filter?.City))
+            if (filter is { Status: not null } || filter is { Level: not null } || !string.IsNullOrWhiteSpace(filter?.City) || !string.IsNullOrWhiteSpace(filter?.Country))
             {
                 var filtered = (await _repository.GetFilteredAsync(filter!)).ToList();
                 totalCount = filtered.Count;

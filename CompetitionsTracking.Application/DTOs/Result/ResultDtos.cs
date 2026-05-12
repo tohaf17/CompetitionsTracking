@@ -1,3 +1,5 @@
+using CompetitionsTracking.Domain.Entities;
+
 namespace CompetitionsTracking.Application.DTOs.Result
 {
     public record ResultRequestDto
@@ -16,7 +18,10 @@ namespace CompetitionsTracking.Application.DTOs.Result
         public float FinalScore { get; init; }
         public string AwardedMedal { get; init; } = string.Empty;
         public string ParticipantName { get; init; } = string.Empty;
+        public int CompetitionId { get; init; }
         public string CompetitionName { get; init; } = string.Empty;
+        public CompetitionStatus CompetitionStatus { get; init; }
+        public CompetitionLevel CompetitionLevel { get; init; }
     }
     public record LeaderboardEntryDto
     {

@@ -13,6 +13,7 @@ namespace CompetitionsTracking.Infrastructure.Data
         {
             if (context.Users.Any() || context.Competitions.Any() || context.Judges.Any())
             {
+                EnsureCompetitionTypeSamples(context);
                 return;
             }
 
@@ -126,13 +127,17 @@ namespace CompetitionsTracking.Infrastructure.Data
 
             context.Categories.AddRange(catSeniors, catJuniors, catPreJuniors);
 
-            var comp1 = new Competition { Title = "Чемпіонат України 2024", City = "Київ", StartDate = DateTime.UtcNow.AddMonths(-3), EndDate = DateTime.UtcNow.AddMonths(-3).AddDays(5), Status = CompetitionStatus.Finished };
-            var comp2 = new Competition { Title = "Кубок Львова 2026", City = "Львів", StartDate = DateTime.UtcNow.AddDays(-2), EndDate = DateTime.UtcNow.AddDays(3), Status = CompetitionStatus.Ongoing };
-            var comp3 = new Competition { Title = "Одеська Осінь 2026", City = "Одеса", StartDate = DateTime.UtcNow.AddMonths(4), EndDate = DateTime.UtcNow.AddMonths(4).AddDays(4), Status = CompetitionStatus.Planned };
-            var comp4 = new Competition { Title = "Дніпровські Зорі 2026", City = "Дніпро", StartDate = DateTime.UtcNow.AddMonths(6), EndDate = DateTime.UtcNow.AddMonths(6).AddDays(3), Status = CompetitionStatus.Planned };
-            var comp5 = new Competition { Title = "Kharkiv RG Trophy 2026", City = "Харків", StartDate = DateTime.UtcNow.AddMonths(8), EndDate = DateTime.UtcNow.AddMonths(8).AddDays(4), Status = CompetitionStatus.Planned };
+            var comp1 = new Competition { Title = "Чемпіонат України 2024", City = "Київ", Country = "Україна", Level = CompetitionLevel.National, StartDate = DateTime.UtcNow.AddMonths(-3), EndDate = DateTime.UtcNow.AddMonths(-3).AddDays(5), Status = CompetitionStatus.Finished };
+            var comp2 = new Competition { Title = "Кубок Львова 2026", City = "Львів", Country = "Україна", Level = CompetitionLevel.Local, StartDate = DateTime.UtcNow.AddDays(-2), EndDate = DateTime.UtcNow.AddDays(3), Status = CompetitionStatus.Ongoing };
+            var comp3 = new Competition { Title = "Одеська Осінь 2026", City = "Одеса", Country = "Україна", Level = CompetitionLevel.Local, StartDate = DateTime.UtcNow.AddMonths(4), EndDate = DateTime.UtcNow.AddMonths(4).AddDays(4), Status = CompetitionStatus.Planned };
+            var comp4 = new Competition { Title = "Дніпровські Зорі 2026", City = "Дніпро", Country = "Україна", Level = CompetitionLevel.Local, StartDate = DateTime.UtcNow.AddMonths(6), EndDate = DateTime.UtcNow.AddMonths(6).AddDays(3), Status = CompetitionStatus.Planned };
+            var comp5 = new Competition { Title = "Кубок України 2026", City = "Харків", Country = "Україна", Level = CompetitionLevel.National, StartDate = DateTime.UtcNow.AddMonths(8), EndDate = DateTime.UtcNow.AddMonths(8).AddDays(4), Status = CompetitionStatus.Planned };
+            var comp6 = new Competition { Title = "Всеукраїнська першість 2026", City = "Черкаси", Country = "Україна", Level = CompetitionLevel.National, StartDate = DateTime.UtcNow.AddMonths(9), EndDate = DateTime.UtcNow.AddMonths(9).AddDays(3), Status = CompetitionStatus.Planned };
+            var comp7 = new Competition { Title = "Kyiv International RG Cup 2026", City = "Київ", Country = "Україна", Level = CompetitionLevel.International, StartDate = DateTime.UtcNow.AddMonths(10), EndDate = DateTime.UtcNow.AddMonths(10).AddDays(4), Status = CompetitionStatus.Planned };
+            var comp8 = new Competition { Title = "Warsaw Spring Invitational 2026", City = "Варшава", Country = "Польща", Level = CompetitionLevel.International, StartDate = DateTime.UtcNow.AddMonths(11), EndDate = DateTime.UtcNow.AddMonths(11).AddDays(3), Status = CompetitionStatus.Planned };
+            var comp9 = new Competition { Title = "Prague Stars Grand Prix 2026", City = "Прага", Country = "Чехія", Level = CompetitionLevel.International, StartDate = DateTime.UtcNow.AddMonths(12), EndDate = DateTime.UtcNow.AddMonths(12).AddDays(4), Status = CompetitionStatus.Planned };
 
-            context.Competitions.AddRange(comp1, comp2, comp3, comp4, comp5);
+            context.Competitions.AddRange(comp1, comp2, comp3, comp4, comp5, comp6, comp7, comp8, comp9);
 
             var jP1 = new Person { Name = "Наталія", Surname = "Степанова", Country = "Україна", DateOfBirth = new DateTime(1965, 4, 12).ToUniversalTime(), Gender = Gender.Female, Type = "Person" };
             var jP2 = new Person { Name = "Олександра", Surname = "Біла", Country = "Україна", DateOfBirth = new DateTime(1972, 8, 30).ToUniversalTime(), Gender = Gender.Female, Type = "Person" };
@@ -200,6 +205,41 @@ namespace CompetitionsTracking.Infrastructure.Data
                 var resultForAppeal = context.Results.Local.ElementAt(1);
                 var appeal = new Appeal { Result = resultForAppeal, Reason = "Незгода з оцінкою за виконання (E)", Status = AppealStatus.Rejected, CreatedAt = DateTime.UtcNow.AddMonths(-3).AddDays(6), ResolvedAt = DateTime.UtcNow.AddMonths(-3).AddDays(7) };
                 context.Appeals.Add(appeal);
+            }
+
+            context.SaveChanges();
+        }
+
+        private static void EnsureCompetitionTypeSamples(CompetitionsTrackingDbContext context)
+        {
+            var sampleCompetitions = new List<Competition>
+            {
+                new Competition { Title = "Кубок Львова 2026", City = "Львів", Country = "Україна", Level = CompetitionLevel.Local, StartDate = DateTime.UtcNow.AddDays(-2), EndDate = DateTime.UtcNow.AddDays(3), Status = CompetitionStatus.Ongoing },
+                new Competition { Title = "Одеська Осінь 2026", City = "Одеса", Country = "Україна", Level = CompetitionLevel.Local, StartDate = DateTime.UtcNow.AddMonths(4), EndDate = DateTime.UtcNow.AddMonths(4).AddDays(4), Status = CompetitionStatus.Planned },
+                new Competition { Title = "Дніпровські Зорі 2026", City = "Дніпро", Country = "Україна", Level = CompetitionLevel.Local, StartDate = DateTime.UtcNow.AddMonths(6), EndDate = DateTime.UtcNow.AddMonths(6).AddDays(3), Status = CompetitionStatus.Planned },
+                new Competition { Title = "Чемпіонат України 2024", City = "Київ", Country = "Україна", Level = CompetitionLevel.National, StartDate = DateTime.UtcNow.AddMonths(-3), EndDate = DateTime.UtcNow.AddMonths(-3).AddDays(5), Status = CompetitionStatus.Finished },
+                new Competition { Title = "Кубок України 2026", City = "Харків", Country = "Україна", Level = CompetitionLevel.National, StartDate = DateTime.UtcNow.AddMonths(8), EndDate = DateTime.UtcNow.AddMonths(8).AddDays(4), Status = CompetitionStatus.Planned },
+                new Competition { Title = "Всеукраїнська першість 2026", City = "Черкаси", Country = "Україна", Level = CompetitionLevel.National, StartDate = DateTime.UtcNow.AddMonths(9), EndDate = DateTime.UtcNow.AddMonths(9).AddDays(3), Status = CompetitionStatus.Planned },
+                new Competition { Title = "Kyiv International RG Cup 2026", City = "Київ", Country = "Україна", Level = CompetitionLevel.International, StartDate = DateTime.UtcNow.AddMonths(10), EndDate = DateTime.UtcNow.AddMonths(10).AddDays(4), Status = CompetitionStatus.Planned },
+                new Competition { Title = "Warsaw Spring Invitational 2026", City = "Варшава", Country = "Польща", Level = CompetitionLevel.International, StartDate = DateTime.UtcNow.AddMonths(11), EndDate = DateTime.UtcNow.AddMonths(11).AddDays(3), Status = CompetitionStatus.Planned },
+                new Competition { Title = "Prague Stars Grand Prix 2026", City = "Прага", Country = "Чехія", Level = CompetitionLevel.International, StartDate = DateTime.UtcNow.AddMonths(12), EndDate = DateTime.UtcNow.AddMonths(12).AddDays(4), Status = CompetitionStatus.Planned }
+            };
+
+            var sampleTitles = sampleCompetitions.Select(s => s.Title).ToList();
+            var existingByTitle = context.Competitions
+                .Where(c => sampleTitles.Contains(c.Title))
+                .ToDictionary(c => c.Title);
+
+            foreach (var sample in sampleCompetitions)
+            {
+                if (existingByTitle.TryGetValue(sample.Title, out var existing))
+                {
+                    existing.Level = sample.Level;
+                    existing.Country = sample.Country;
+                    continue;
+                }
+
+                context.Competitions.Add(sample);
             }
 
             context.SaveChanges();

@@ -19,6 +19,11 @@ const CompetitionDetails = () => {
     const isAdmin = user?.role === 'Admin';
     const isCoach = user?.role === 'Trainee';
     const canViewEntries = isAdmin || isCoach;
+    const levelMap = {
+        0: 'Локальне',
+        1: 'Національне',
+        2: 'Міжнародне'
+    };
 
     const [competition, setCompetition] = useState(null);
     const [leaderboard, setLeaderboard] = useState([]);
@@ -184,7 +189,9 @@ const CompetitionDetails = () => {
             <div className="page-header flex-between mb-2">
                 <div>
                     <h1 className="page-title">{competition.title}</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>{competition.city} | {new Date(competition.startDate).toLocaleDateString('uk-UA')} - {new Date(competition.endDate).toLocaleDateString('uk-UA')}</p>
+                    <p style={{ color: 'var(--text-muted)' }}>
+                        {levelMap[competition.level] || 'Невідомий тип'} | {competition.country ? `${competition.country}, ` : ''}{competition.city} | {new Date(competition.startDate).toLocaleDateString('uk-UA')} - {new Date(competition.endDate).toLocaleDateString('uk-UA')}
+                    </p>
                 </div>
                 {isAdmin && (
                     <button className="btn btn-primary" onClick={handleAwardMedals}>Нарахувати медалі</button>

@@ -18,6 +18,11 @@ const EntriesList = () => {
     const isAdmin = user?.role === 'Admin';
     const isCoach = user?.role === 'Trainee';
     const canCreate = isAdmin || isCoach;
+    const levelMap = {
+        0: 'Локальне',
+        1: 'Національне',
+        2: 'Міжнародне'
+    };
 
     const [entries, setEntries] = useState([]);
     const [competitions, setCompetitions] = useState([]);
@@ -76,7 +81,7 @@ const EntriesList = () => {
             ]);
             const allCompetitions = unwrapCollection(comp);
             setCompetitions(isCoach
-                ? allCompetitions.filter(c => c.status === 0 || c.status === 1)
+                ? allCompetitions.filter(c => c.level !== 2 && (c.status === 0 || c.status === 1))
                 : allCompetitions);
             setDisciplines(unwrapCollection(disc));
             setCategories(unwrapCollection(cat));
@@ -266,7 +271,7 @@ const EntriesList = () => {
                         <label>Змагання</label>
                         <select name="competitionId" value={formData.competitionId} onChange={handleChange} required>
                             <option value="">-- Оберіть змагання --</option>
-                            {competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            {competitions.map(c => <option key={c.id} value={c.id}>{c.title} ({levelMap[c.level] || 'тип невідомий'})</option>)}
                         </select>
                     </div>
                     <div className="form-group">

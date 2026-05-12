@@ -11,7 +11,7 @@ const AdminCompetitions = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ 
-        title: '', city: '', 
+        title: '', city: '', country: 'Україна', level: 1,
         startDate: '', endDate: '', status: 0 
     });
 
@@ -48,6 +48,8 @@ const AdminCompetitions = () => {
             const dataToSubmit = {
                 title: formData.title,
                 city: formData.city,
+                country: formData.country,
+                level: parseInt(formData.level),
                 startDate: new Date(formData.startDate).toISOString(),
                 endDate: new Date(formData.endDate).toISOString(),
                 status: parseInt(formData.status)
@@ -56,7 +58,7 @@ const AdminCompetitions = () => {
             toast.success("Змагання створено успішно");
             loadCompetitions(); 
             setIsModalOpen(false);
-            setFormData({ title: '', city: '', startDate: '', endDate: '', status: 0 });
+            setFormData({ title: '', city: '', country: 'Україна', level: 1, startDate: '', endDate: '', status: 0 });
         } catch (error) {
             toastError(error, 'Не вдалося створити змагання');
         }
@@ -75,6 +77,12 @@ const AdminCompetitions = () => {
         3: { text: "Завершено", class: "status-completed" }
     };
 
+    const levelMap = {
+        0: "Локальне",
+        1: "Національне",
+        2: "Міжнародне"
+    };
+
     return (
         <div className="page-container">
             <div className="page-header flex-between">
@@ -88,7 +96,9 @@ const AdminCompetitions = () => {
                         <tr>
                             <th>№</th>
                             <th>Назва</th>
+                            <th>Тип</th>
                             <th>Місто</th>
+                            <th>Країна</th>
                             <th>Дати проведення</th>
                             <th>Статус</th>
                             <th>Дії</th>
@@ -103,7 +113,9 @@ const AdminCompetitions = () => {
                                     <tr key={item.id}>
                                         <td>{index + 1}</td>
                                         <td><strong>{item.title}</strong></td>
+                                        <td>{levelMap[item.level] || 'Невідомо'}</td>
                                         <td>{item.city}</td>
+                                        <td>{item.country || '-'}</td>
                                         <td>{new Date(item.startDate).toLocaleDateString('uk-UA')} - {new Date(item.endDate).toLocaleDateString('uk-UA')}</td>
                                         <td><span className={`status-badge ${compStatus.class}`}>{compStatus.text}</span></td>
                                         <td>
@@ -127,7 +139,7 @@ const AdminCompetitions = () => {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>Змагань не знайдено.</td>
+                                <td colSpan="8" style={{textAlign: 'center', padding: '2rem'}}>Змагань не знайдено.</td>
                             </tr>
                         )}
                     </tbody>
@@ -144,6 +156,20 @@ const AdminCompetitions = () => {
                         <label>Місто</label>
                         <input type="text" name="city" value={formData.city} onChange={handleChange} required placeholder="напр. Київ" />
                     </div>
+                    <div className="form-group">
+                        <label>Тип змагання</label>
+                        <select name="level" value={formData.level} onChange={handleChange}>
+                            <option value={0}>Локальне</option>
+                            <option value={1}>Національне</option>
+                            <option value={2}>Міжнародне</option>
+                        </select>
+                    </div>
+                    {parseInt(formData.level) === 2 && (
+                        <div className="form-group">
+                            <label>Країна проведення</label>
+                            <input type="text" name="country" value={formData.country} onChange={handleChange} required placeholder="напр. Польща" />
+                        </div>
+                    )}
                     <div className="grid grid-2">
                         <div className="form-group">
                             <label>Дата початку</label>

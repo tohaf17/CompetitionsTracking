@@ -16,6 +16,12 @@ const CompetitionsList = () => {
         3: { text: 'Завершено', class: 'status-completed' }
     };
 
+    const levelMap = {
+        0: 'Локальне',
+        1: 'Національне',
+        2: 'Міжнародне'
+    };
+
     useEffect(() => {
         loadCompetitions();
     }, []);
@@ -47,8 +53,10 @@ const CompetitionsList = () => {
                         <tr>
                             <th>№</th>
                             <th>Назва</th>
+                            <th>Тип</th>
                             <th>Дати</th>
                             <th>Місто</th>
+                            <th>Країна</th>
                             <th>Статус</th>
                             <th>Дії</th>
                         </tr>
@@ -62,8 +70,10 @@ const CompetitionsList = () => {
                                 <tr key={comp.id}>
                                     <td>{index + 1}</td>
                                     <td><strong>{comp.title}</strong></td>
+                                    <td>{levelMap[comp.level] || 'Невідомо'}</td>
                                     <td>{new Date(comp.startDate).toLocaleDateString('uk-UA')} - {new Date(comp.endDate).toLocaleDateString('uk-UA')}</td>
                                     <td>{comp.city}</td>
+                                    <td>{comp.country || '-'}</td>
                                     <td>
                                         <span className={`status-badge ${compStatus.class}`}>
                                             {compStatus.text}
@@ -79,7 +89,7 @@ const CompetitionsList = () => {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>Змагань не знайдено.</td>
+                                <td colSpan="8" style={{textAlign: 'center', padding: '2rem'}}>Змагань не знайдено.</td>
                             </tr>
                         )}
                     </tbody>

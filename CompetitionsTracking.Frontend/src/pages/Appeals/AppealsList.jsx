@@ -11,6 +11,7 @@ import { toastError } from '../../utils/toastError';
 const AppealsList = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
+    const isCoach = user?.role === 'Trainee';
     const canSubmitAppeal = isAdmin || user?.role === 'Trainee';
 
     const [appeals, setAppeals] = useState([]);
@@ -57,7 +58,8 @@ const AppealsList = () => {
     const loadResults = async () => {
         try {
             const data = await ResultService.getAppealable();
-            setResultsData(unwrapCollection(data));
+            const results = unwrapCollection(data);
+            setResultsData(isCoach ? results.filter(r => r.competitionLevel !== 2) : results);
         } catch (error) {
             toastError(error, 'Не вдалося завантажити результати');
         }
@@ -78,9 +80,13 @@ const AppealsList = () => {
         e.preventDefault();
         try {
             const selectedResult = resultsData.find(r => r.id === parseInt(formData.resultId));
-            const selectedComp = competitions.find(c => c.title === selectedResult?.competitionName);
 
-            if (selectedComp && selectedComp.status !== 2) {
+            if (!isAdmin && selectedResult?.competitionLevel === 2) {
+                toast.error("Тренер не може подавати апеляції на міжнародні змагання");
+                return;
+            }
+
+            if (selectedResult && selectedResult.competitionStatus !== 2) {
                 toast.error("Апеляції можна подавати лише для змагань, що тривають");
                 return;
             }

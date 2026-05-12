@@ -42,8 +42,9 @@ namespace CompetitionsTracking.Services.Implementations
             if (!isAdmin)
             {
                 var coachPersonId = await GetCoachPersonIdAsync(userId);
-                query = query.Where(r =>
-                    _context.Persons.Any(p => p.Id == r.Entry.ParticipantId
+                query = query
+                    .Where(r => r.Entry.Competition.Level != CompetitionLevel.International)
+                    .Where(r => _context.Persons.Any(p => p.Id == r.Entry.ParticipantId
                         && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)))
                     || _context.Teams.Any(t => t.Id == r.Entry.ParticipantId && t.CoachId == coachPersonId));
             }
@@ -70,7 +71,10 @@ namespace CompetitionsTracking.Services.Implementations
                 FinalScore = entity.FinalScore,
                 AwardedMedal = entity.AwardedMedal ?? string.Empty,
                 ParticipantName = entity.Entry != null ? GetParticipantName(entity.Entry.Participant) : "Unknown",
-                CompetitionName = entity.Entry?.Competition?.Title ?? "Unknown"
+                CompetitionId = entity.Entry?.CompetitionId ?? 0,
+                CompetitionName = entity.Entry?.Competition?.Title ?? "Unknown",
+                CompetitionStatus = entity.Entry?.Competition?.Status ?? CompetitionStatus.Planned,
+                CompetitionLevel = entity.Entry?.Competition?.Level ?? CompetitionLevel.National
             };
         }
 
@@ -84,7 +88,10 @@ namespace CompetitionsTracking.Services.Implementations
                 FinalScore = e.FinalScore,
                 AwardedMedal = e.AwardedMedal ?? string.Empty,
                 ParticipantName = e.Entry != null ? GetParticipantName(e.Entry.Participant) : "Unknown",
-                CompetitionName = e.Entry?.Competition?.Title ?? "Unknown"
+                CompetitionId = e.Entry?.CompetitionId ?? 0,
+                CompetitionName = e.Entry?.Competition?.Title ?? "Unknown",
+                CompetitionStatus = e.Entry?.Competition?.Status ?? CompetitionStatus.Planned,
+                CompetitionLevel = e.Entry?.Competition?.Level ?? CompetitionLevel.National
             };
         }
 
@@ -117,7 +124,10 @@ namespace CompetitionsTracking.Services.Implementations
                 FinalScore = created.FinalScore,
                 AwardedMedal = created.AwardedMedal ?? string.Empty,
                 ParticipantName = created.Entry != null ? GetParticipantName(created.Entry.Participant) : "Unknown",
-                CompetitionName = created.Entry?.Competition?.Title ?? "Unknown"
+                CompetitionId = created.Entry?.CompetitionId ?? 0,
+                CompetitionName = created.Entry?.Competition?.Title ?? "Unknown",
+                CompetitionStatus = created.Entry?.Competition?.Status ?? CompetitionStatus.Planned,
+                CompetitionLevel = created.Entry?.Competition?.Level ?? CompetitionLevel.National
             } : entity.Adapt<ResultResponseDto>();
         }
 

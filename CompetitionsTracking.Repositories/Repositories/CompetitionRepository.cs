@@ -44,8 +44,14 @@ namespace CompetitionsTracking.Repositories.Repositories
             if (filter.Status.HasValue)
                 query = query.Where(c => c.Status == filter.Status.Value);
 
+            if (filter.Level.HasValue)
+                query = query.Where(c => c.Level == filter.Level.Value);
+
             if (!string.IsNullOrWhiteSpace(filter.City))
                 query = query.Where(c => c.City.Contains(filter.City));
+
+            if (!string.IsNullOrWhiteSpace(filter.Country))
+                query = query.Where(c => c.Country != null && c.Country.Contains(filter.Country));
 
             return await query.ToListAsync();
         }
