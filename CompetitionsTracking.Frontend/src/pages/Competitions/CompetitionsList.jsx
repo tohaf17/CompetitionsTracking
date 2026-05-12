@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, NavLink } from 'react-router-dom';
 import CompetitionService from '../../services/competition.service';
-import { NavLink } from 'react-router-dom';
 import { unwrapCollection } from '../../utils/unwrapCollection';
 import './CompetitionsList.css';
 import { toastError } from '../../utils/toastError';
 
 const CompetitionsList = () => {
+    const [searchParams] = useSearchParams();
+    const levelFilter = searchParams.get('level');
     const [competitions, setCompetitions] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -38,12 +40,21 @@ const CompetitionsList = () => {
         }
     };
 
+    const filteredCompetitions = levelFilter !== null 
+        ? competitions.filter(c => c.level.toString() === levelFilter)
+        : competitions;
+
+    const pageTitle = levelFilter === '0' ? 'Локальні змагання' 
+        : levelFilter === '1' ? 'Національні змагання' 
+        : levelFilter === '2' ? 'Міжнародні змагання' 
+        : 'Всі змагання';
+
     if (loading) return <div className="page-container">Завантаження...</div>;
 
     return (
         <div className="page-container">
             <div className="page-header flex-between">
-                <h1 className="page-title">Змагання</h1>
+                <h1 className="page-title">{pageTitle}</h1>
                 <button className="btn btn-primary" onClick={loadCompetitions}>Оновити</button>
             </div>
             
@@ -62,8 +73,8 @@ const CompetitionsList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {competitions.length > 0 ? (
-                            competitions.map((comp, index) => {
+                        {filteredCompetitions.length > 0 ? (
+                            filteredCompetitions.map((comp, index) => {
                                 const compStatus = statusMap[comp.status] || { text: 'Невідомо', class: '' };
 
                                 return (

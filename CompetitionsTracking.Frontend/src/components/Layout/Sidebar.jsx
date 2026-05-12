@@ -14,8 +14,23 @@ const Sidebar = () => {
             </div>
             <nav className="sidebar-nav">
 
-                <NavLink to="/competitions" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    Змагання
+                <NavLink 
+                    to="/competitions?level=2" 
+                    className={({ isActive }) => (isActive && new URLSearchParams(window.location.search).get('level') === '2') ? "nav-link active" : "nav-link"}
+                >
+                    Міжнародні змагання
+                </NavLink>
+                <NavLink 
+                    to="/competitions?level=1" 
+                    className={({ isActive }) => (isActive && new URLSearchParams(window.location.search).get('level') === '1') ? "nav-link active" : "nav-link"}
+                >
+                    Національні змагання
+                </NavLink>
+                <NavLink 
+                    to="/competitions?level=0" 
+                    className={({ isActive }) => (isActive && new URLSearchParams(window.location.search).get('level') === '0') ? "nav-link active" : "nav-link"}
+                >
+                    Локальні змагання
                 </NavLink>
                 <NavLink to="/teams" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     Команди
