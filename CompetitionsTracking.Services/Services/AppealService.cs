@@ -41,11 +41,16 @@ namespace CompetitionsTracking.Services.Implementations
             });
         }
 
-        public async Task<IEnumerable<AppealResponseDto>> GetAllForUserAsync(int userId, bool isAdmin)
+        public async Task<IEnumerable<AppealResponseDto>> GetAllForUserAsync(int userId, UserRole role)
         {
-            if (isAdmin)
+            if (role == UserRole.Admin)
             {
                 return await GetAllAsync();
+            }
+
+            if (role == UserRole.Guest)
+            {
+                return Enumerable.Empty<AppealResponseDto>();
             }
 
             var coachPersonId = await GetCoachPersonIdAsync(userId);
@@ -104,10 +109,14 @@ namespace CompetitionsTracking.Services.Implementations
             
         }
 
-        public async Task<AppealResponseDto> CreateAsync(AppealRequestDto request, int userId, bool isAdmin)
+        public async Task<AppealResponseDto> CreateAsync(AppealRequestDto request, int userId, UserRole role)
         {
-            if (!isAdmin)
+            if (role != UserRole.Admin)
             {
+                if (role == UserRole.Guest)
+                {
+                    throw new BadRequestException("Гості не можуть подавати апеляції.");
+                }
                 var result = await _context.Results
                     .Where(r => r.Id == request.ResultId)
                     .Select(r => new
@@ -159,11 +168,16 @@ namespace CompetitionsTracking.Services.Implementations
             });
         }
 
-        public async Task<IEnumerable<PendingAppealDto>> GetPendingAppealsForUserAsync(int? competitionId, int userId, bool isAdmin)
+        public async Task<IEnumerable<PendingAppealDto>> GetPendingAppealsForUserAsync(int? competitionId, int userId, UserRole role)
         {
-            if (isAdmin)
+            if (role == UserRole.Admin)
             {
                 return await GetPendingAppealsAsync(competitionId);
+            }
+
+            if (role == UserRole.Guest)
+            {
+                return Enumerable.Empty<PendingAppealDto>();
             }
 
             var coachPersonId = await GetCoachPersonIdAsync(userId);
@@ -204,10 +218,15 @@ namespace CompetitionsTracking.Services.Implementations
             };
         }
 
-        public async Task<AppealDossierDto?> GetAppealDossierAsync(int id, int userId, bool isAdmin)
+        public async Task<AppealDossierDto?> GetAppealDossierAsync(int id, int userId, UserRole role)
         {
-            if (!isAdmin)
+            if (role != UserRole.Admin)
             {
+                if (role == UserRole.Guest)
+                {
+                    throw new BadRequestException("Гості не мають доступу до деталей апеляцій.");
+                }
+
                 var coachPersonId = await GetCoachPersonIdAsync(userId);
                 var ownsAppeal = await _context.Appeals.AnyAsync(a => a.Id == id
                     && (_context.Persons.Any(p => p.Id == a.Result.Entry.ParticipantId

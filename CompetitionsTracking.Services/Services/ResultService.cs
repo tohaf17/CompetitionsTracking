@@ -31,7 +31,7 @@ namespace CompetitionsTracking.Services.Implementations
             return entities.Select(MapToResponseDto);
         }
 
-        public async Task<IEnumerable<ResultResponseDto>> GetAppealableForUserAsync(int userId, bool isAdmin)
+        public async Task<IEnumerable<ResultResponseDto>> GetAppealableForUserAsync(int userId, UserRole role)
         {
             var query = _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)
@@ -39,7 +39,15 @@ namespace CompetitionsTracking.Services.Implementations
                 .Where(r => r.Entry.Competition.Status == CompetitionStatus.Ongoing)
                 .Where(r => !r.Appeals.Any(a => a.Status == AppealStatus.Pending));
 
-            if (!isAdmin)
+            if (role == UserRole.Admin)
+            {
+                // Admin sees all
+            }
+            else if (role == UserRole.Guest)
+            {
+                return Enumerable.Empty<ResultResponseDto>();
+            }
+            else // Trainee
             {
                 var coachPersonId = await GetCoachPersonIdAsync(userId);
                 query = query

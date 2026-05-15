@@ -8,7 +8,7 @@ namespace CompetitionsTracking.Services.Interfaces
     public interface ITeamService
     {
         Task<IEnumerable<TeamResponseDto>> GetAllAsync();
-        Task<IEnumerable<TeamResponseDto>> GetAllForUserAsync(int userId, bool isAdmin);
+        Task<IEnumerable<TeamResponseDto>> GetAllForUserAsync(int userId, UserRole role);
         Task<TeamResponseDto?> GetByIdAsync(int id);
         Task<TeamResponseDto> CreateAsync(TeamRequestDto request);
         Task UpdateAsync(int id, TeamRequestDto request);

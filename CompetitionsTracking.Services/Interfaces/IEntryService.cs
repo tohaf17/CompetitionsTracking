@@ -1,5 +1,6 @@
 using CompetitionsTracking.Application.DTOs.Common;
 using CompetitionsTracking.Application.DTOs.Entry;
+using CompetitionsTracking.Domain.Entities;
 using CompetitionsTracking.Domain.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,10 +10,10 @@ namespace CompetitionsTracking.Services.Interfaces
     public interface IEntryService
     {
         Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null);
-        Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, bool isAdmin);
+        Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, UserRole role);
         Task<EntryResponseDto?> GetByIdAsync(int id);
         Task<EntryResponseDto> CreateAsync(EntryRequestDto request);
-        Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, bool isAdmin);
+        Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, UserRole role);
         Task UpdateAsync(int id, EntryRequestDto request);
         Task DeleteAsync(int id);
         Task<IEnumerable<ControversialEntryDto>> GetControversialEntriesAsync(int competitionId);
@@ -25,7 +26,7 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<IEnumerable<EntryResponseDto>> GetMissingScoresAsync(int competitionId, int expectedCount);
         Task<EntryAnalyticsDto> GetAnalyticsAsync(int competitionId);
         Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdAsync(int competitionId);
-        Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdForUserAsync(int competitionId, int userId, bool isAdmin);
-        Task<IEnumerable<EntryParticipantOptionDto>> GetParticipantOptionsForUserAsync(int userId);
+        Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdForUserAsync(int competitionId, int userId, UserRole role);
+        Task<IEnumerable<EntryParticipantOptionDto>> GetParticipantOptionsForUserAsync(int userId, UserRole role);
     }
 }

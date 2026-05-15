@@ -3,6 +3,7 @@ using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using CompetitionsTracking.Domain.Entities;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -19,10 +20,10 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllForUserAsync(CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetAllForUserAsync(CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
@@ -38,23 +39,23 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] AppealRequestDto request)
         {
-            var result = await _service.CreateAsync(request, CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.CreateAsync(request, CurrentUserId(), CurrentUserRole());
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpGet("pending")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetPending([FromQuery] int? competitionId)
         {
-            var result = await _service.GetPendingAppealsForUserAsync(competitionId, CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetPendingAppealsForUserAsync(competitionId, CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
         [HttpGet("{id}/dossier")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetDossier(int id)
         {
-            var result = await _service.GetAppealDossierAsync(id, CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetAppealDossierAsync(id, CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
@@ -85,6 +86,12 @@ namespace CompetitionsTracking.Controllers
         private int CurrentUserId()
         {
             return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        }
+
+        private UserRole CurrentUserRole()
+        {
+            var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+            return roleClaim != null ? Enum.Parse<UserRole>(roleClaim) : UserRole.Guest;
         }
     }
 }

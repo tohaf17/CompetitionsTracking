@@ -3,6 +3,7 @@ using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using CompetitionsTracking.Domain.Entities;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -19,6 +20,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();
@@ -26,14 +28,15 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("appealable")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetAppealable()
         {
-            var result = await _service.GetAppealableForUserAsync(CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetAppealableForUserAsync(CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -66,12 +69,15 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/team-tally")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetTeamMedalTally(int competitionId)
         {
             var result = await _service.GetTeamMedalTallyAsync(competitionId);
             return Ok(result);
         }
+
         [HttpGet("competition/{competitionId}/leaderboard")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetLeaderboard(int competitionId, [FromQuery] int? disciplineId, [FromQuery] int? categoryId)
         {
             var result = await _service.GetLeaderboardAsync(competitionId, disciplineId, categoryId);
@@ -79,6 +85,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/country-tally")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetCountryMedalTally(int competitionId)
         {
             var result = await _service.GetCountryMedalTallyAsync(competitionId);
@@ -86,6 +93,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("discipline/{disciplineId}/records")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetDisciplineRecords(int disciplineId, [FromQuery] int topN = 10)
         {
             if (topN > 100) topN = 100;
@@ -97,6 +105,12 @@ namespace CompetitionsTracking.Controllers
         private int CurrentUserId()
         {
             return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        }
+
+        private UserRole CurrentUserRole()
+        {
+            var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+            return roleClaim != null ? Enum.Parse<UserRole>(roleClaim) : UserRole.Guest;
         }
     }
 }

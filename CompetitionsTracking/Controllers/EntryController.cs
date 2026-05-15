@@ -4,6 +4,7 @@ using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using CompetitionsTracking.Domain.Entities;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -20,15 +21,15 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetAll([FromQuery] PaginationParams pagination)
         {
-            var result = await _service.GetAllForUserAsync(pagination, CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetAllForUserAsync(pagination, CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -39,7 +40,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Create([FromBody] EntryRequestDto request)
         {
-            var result = await _service.CreateAsync(request, CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.CreateAsync(request, CurrentUserId(), CurrentUserRole());
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
@@ -131,24 +132,30 @@ namespace CompetitionsTracking.Controllers
             return Ok(result);
         }
         [HttpGet("competition/{competitionId}")]
-        [Authorize(Roles = "Admin,Trainee")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetByCompetitionId(int competitionId)
         {
-            var result = await _service.GetByCompetitionIdForUserAsync(competitionId, CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetByCompetitionIdForUserAsync(competitionId, CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
         [HttpGet("my-participants")]
-        [Authorize(Roles = "Trainee")]
+        [Authorize(Roles = "Trainee,Guest")]
         public async Task<IActionResult> GetMyParticipantOptions()
         {
-            var result = await _service.GetParticipantOptionsForUserAsync(CurrentUserId());
+            var result = await _service.GetParticipantOptionsForUserAsync(CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
         private int CurrentUserId()
         {
             return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        }
+
+        private UserRole CurrentUserRole()
+        {
+            var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+            return roleClaim != null ? Enum.Parse<UserRole>(roleClaim) : UserRole.Guest;
         }
     }
 }

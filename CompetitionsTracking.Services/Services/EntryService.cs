@@ -33,11 +33,16 @@ namespace CompetitionsTracking.Services.Implementations
             return new PagedResponse<EntryResponseDto>(dtos, totalCount, pagination.PageNumber, pagination.PageSize);
         }
 
-        public async Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, bool isAdmin)
+        public async Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, UserRole role)
         {
-            if (isAdmin)
+            if (role == UserRole.Admin)
             {
                 return await GetAllAsync(pagination);
+            }
+
+            if (role == UserRole.Guest)
+            {
+                return new PagedResponse<EntryResponseDto>(Enumerable.Empty<EntryResponseDto>(), 0, 1, 10);
             }
 
             pagination ??= new PaginationParams();
@@ -193,11 +198,16 @@ namespace CompetitionsTracking.Services.Implementations
             return await GetByIdAsync(entity.Id) ?? entity.Adapt<EntryResponseDto>();
         }
 
-        public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, bool isAdmin)
+        public async Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, UserRole role)
         {
-            if (isAdmin)
+            if (role == UserRole.Admin)
             {
                 return await CreateAsync(request);
+            }
+
+            if (role == UserRole.Guest)
+            {
+                throw new BadRequestException("Гості не можуть подавати заявки.");
             }
 
             var coachPersonId = await GetCoachPersonIdAsync(userId);
@@ -348,11 +358,16 @@ namespace CompetitionsTracking.Services.Implementations
             return entries.Select(e => MapToResponseDto(e));
         }
 
-        public async Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdForUserAsync(int competitionId, int userId, bool isAdmin)
+        public async Task<IEnumerable<EntryResponseDto>> GetByCompetitionIdForUserAsync(int competitionId, int userId, UserRole role)
         {
-            if (isAdmin)
+            if (role == UserRole.Admin)
             {
                 return await GetByCompetitionIdAsync(competitionId);
+            }
+
+            if (role == UserRole.Guest)
+            {
+                return Enumerable.Empty<EntryResponseDto>();
             }
 
             var coachPersonId = await GetCoachPersonIdAsync(userId);
@@ -365,8 +380,19 @@ namespace CompetitionsTracking.Services.Implementations
             return entries.Select(MapToResponseDto);
         }
 
-        public async Task<IEnumerable<EntryParticipantOptionDto>> GetParticipantOptionsForUserAsync(int userId)
+        public async Task<IEnumerable<EntryParticipantOptionDto>> GetParticipantOptionsForUserAsync(int userId, UserRole role)
         {
+            if (role == UserRole.Admin)
+            {
+                // Admin can see everyone? Or just return all?
+                // For now, let's keep it consistent or handle as coach
+            }
+
+            if (role == UserRole.Guest)
+            {
+                return Enumerable.Empty<EntryParticipantOptionDto>();
+            }
+
             var coachPersonId = await GetCoachPersonIdAsync(userId);
 
             var people = await _context.Persons

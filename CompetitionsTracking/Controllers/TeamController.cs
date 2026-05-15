@@ -3,6 +3,7 @@ using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using CompetitionsTracking.Domain.Entities;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -21,7 +22,7 @@ namespace CompetitionsTracking.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllForUserAsync(CurrentUserId(), User.IsInRole("Admin"));
+            var result = await _service.GetAllForUserAsync(CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
@@ -91,6 +92,12 @@ namespace CompetitionsTracking.Controllers
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return claim != null ? int.Parse(claim.Value) : 0;
+        }
+
+        private UserRole CurrentUserRole()
+        {
+            var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+            return roleClaim != null ? Enum.Parse<UserRole>(roleClaim) : UserRole.Guest;
         }
     }
 }

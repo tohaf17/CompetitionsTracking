@@ -1,4 +1,5 @@
 using CompetitionsTracking.Application.DTOs.Result;
+using CompetitionsTracking.Domain.Entities;
 using CompetitionsTracking.Domain.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace CompetitionsTracking.Services.Interfaces
     public interface IResultService
     {
         Task<IEnumerable<ResultResponseDto>> GetAllAsync();
-        Task<IEnumerable<ResultResponseDto>> GetAppealableForUserAsync(int userId, bool isAdmin);
+        Task<IEnumerable<ResultResponseDto>> GetAppealableForUserAsync(int userId, UserRole role);
         Task<ResultResponseDto?> GetByIdAsync(int id);
         Task<ResultResponseDto> CreateAsync(ResultRequestDto request);
         Task UpdateAsync(int id, ResultRequestDto request);

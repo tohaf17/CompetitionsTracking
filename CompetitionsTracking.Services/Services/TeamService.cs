@@ -34,9 +34,9 @@ namespace CompetitionsTracking.Services.Implementations
             return entities.Select(MapToResponseDto);
         }
 
-        public async Task<IEnumerable<TeamResponseDto>> GetAllForUserAsync(int userId, bool isAdmin)
+        public async Task<IEnumerable<TeamResponseDto>> GetAllForUserAsync(int userId, UserRole role)
         {
-            if (isAdmin)
+            if (role == UserRole.Admin || role == UserRole.Guest)
             {
                 return await GetAllAsync();
             }
