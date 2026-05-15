@@ -27,15 +27,22 @@ const AppealsList = () => {
     const [approvalData, setApprovalData] = useState({ scoreIdToEdit: '', newScoreValue: '' });
     const [formData, setFormData] = useState({ resultId: '', reason: '' });
 
+    const [profileError, setProfileError] = useState(false);
+
     const loadAppeals = useCallback(async () => {
         try {
             setLoading(true);
+            setProfileError(false);
             const data = viewMode === 'pending'
                 ? await AppealService.getPending()
                 : await AppealService.getAll();
             setAppeals(unwrapCollection(data));
         } catch (error) {
-            toastError(error, 'Не вдалося завантажити апеляції');
+            if (error?.response?.data?.message?.includes('прив\'язано профіль тренера')) {
+                setProfileError(true);
+            } else {
+                toastError(error, 'Не вдалося завантажити апеляції');
+            }
         } finally {
             setLoading(false);
         }
@@ -152,6 +159,21 @@ const AppealsList = () => {
     };
 
     if (loading) return <div className="page-container">Завантаження...</div>;
+
+    if (profileError) {
+        return (
+            <div className="page-container">
+                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', marginTop: '2rem' }}>
+                    <h2 style={{ color: '#f59e0b', marginBottom: '1rem' }}>Профіль тренера не знайдено</h2>
+                    <p style={{ marginBottom: '2rem' }}>
+                        Для перегляду та подачі апеляцій ваш акаунт має бути прив&apos;язаний до профілю тренера.<br/>
+                        Ми вже запустили процес автоматичного відновлення профілів. Будь ласка, спробуйте оновити сторінку або зверніться до адміністратора.
+                    </p>
+                    <button className="btn btn-primary" onClick={loadAppeals}>Оновити</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container">

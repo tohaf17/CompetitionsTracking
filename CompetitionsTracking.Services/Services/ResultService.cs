@@ -162,6 +162,7 @@ namespace CompetitionsTracking.Services.Implementations
             {
                 EntryId = r.EntryId,
                 ParticipantId = r.Entry.ParticipantId,
+                ParticipantType = r.Entry.Participant?.Type ?? string.Empty,
                 Place = r.Place,
                 ParticipantName = GetParticipantName(r.Entry.Participant),
                 Country = GetParticipantCountry(r.Entry.Participant),

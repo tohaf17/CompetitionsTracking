@@ -10,5 +10,6 @@ namespace CompetitionsTracking.Repositories.Interfaces
         Task<IEnumerable<TeamDominanceMetricDto>> GetTeamDominanceMetricsAsync(int teamId);
         Task<Team?> GetTeamWithMembersAsync(int teamId);
         Task<IEnumerable<Team>> GetAllWithCoachAsync();
+        Task<IEnumerable<Team>> GetAllForCoachAsync(int coachPersonId);
     }
 }

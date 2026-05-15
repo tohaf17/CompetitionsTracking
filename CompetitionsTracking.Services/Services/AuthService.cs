@@ -78,6 +78,21 @@ namespace CompetitionsTracking.Services.Implementations
 
             user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
+            if (request.Role == UserRole.Trainee)
+            {
+                var person = new Person
+                {
+                    Name = request.Username,
+                    Surname = "(Coach Profile)",
+                    Country = "Україна",
+                    DateOfBirth = DateTime.UtcNow.AddYears(-20),
+                    Gender = Gender.Female, // Default for RG
+                    Type = "Person"
+                };
+                _context.Persons.Add(person);
+                user.Person = person;
+            }
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 

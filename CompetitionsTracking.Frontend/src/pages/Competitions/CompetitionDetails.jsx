@@ -235,7 +235,7 @@ const CompetitionDetails = () => {
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td>
                                         {lb.participantId ? (
-                                            <Link to={`/persons/${lb.participantId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
+                                            <Link to={lb.participantType === 'Team' ? `/teams/${lb.participantId}` : `/persons/${lb.participantId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
                                                 onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-color)'}
                                                 onMouseLeave={e => e.currentTarget.style.color = 'var(--text-color)'}
                                             >
@@ -318,7 +318,7 @@ const CompetitionDetails = () => {
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td>
                                         {e.participantId ? (
-                                            <Link to={`/persons/${e.participantId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
+                                            <Link to={e.participantType === 'Team' ? `/teams/${e.participantId}` : `/persons/${e.participantId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
                                                 onMouseEnter={ev => ev.currentTarget.style.color = 'var(--primary-color)'}
                                                 onMouseLeave={ev => ev.currentTarget.style.color = 'var(--text-color)'}
                                             >

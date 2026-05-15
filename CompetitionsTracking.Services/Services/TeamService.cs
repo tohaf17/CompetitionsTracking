@@ -5,8 +5,11 @@ using CompetitionsTracking.Domain.Models;
 using CompetitionsTracking.Repositories.Interfaces;
 using CompetitionsTracking.Services.Interfaces;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using CompetitionsTracking.Infrastructure.Data;
 
 namespace CompetitionsTracking.Services.Implementations
 {
@@ -15,24 +18,71 @@ namespace CompetitionsTracking.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITeamRepository _repository;
         private readonly IPersonRepository _personRepository;
+        private readonly CompetitionsTrackingDbContext _context;
 
-        public TeamService(IUnitOfWork unitOfWork, ITeamRepository repository, IPersonRepository personRepository)
+        public TeamService(IUnitOfWork unitOfWork, ITeamRepository repository, IPersonRepository personRepository, CompetitionsTrackingDbContext context)
         {
             _unitOfWork = unitOfWork;
             _repository = repository;
             _personRepository = personRepository;
+            _context = context;
         }
 
         public async Task<IEnumerable<TeamResponseDto>> GetAllAsync()
         {
             var entities = await _repository.GetAllWithCoachAsync();
+            return entities.Select(MapToResponseDto);
+        }
+
+        public async Task<IEnumerable<TeamResponseDto>> GetAllForUserAsync(int userId, bool isAdmin)
+        {
+            if (isAdmin)
+            {
+                return await GetAllAsync();
+            }
+
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            var entities = await _repository.GetAllForCoachAsync(coachPersonId);
+            
             return entities.Select(e => new TeamResponseDto
             {
                 Id = e.Id,
                 Name = e.Name,
                 CoachId = e.CoachId,
-                CoachFullName = e.Coach != null ? $"{e.Coach.Name} {e.Coach.Surname}" : "Не призначено"
+                CoachFullName = e.Coach != null ? $"{e.Coach.Name} {e.Coach.Surname}" : "Не призначено",
+                Members = e.Members.Select(m => new TeamMemberDto
+                {
+                    PersonId = m.Id,
+                    FullName = $"{m.Name} {m.Surname}",
+                    Country = m.Country
+                }).ToList()
             });
+        }
+
+        private TeamResponseDto MapToResponseDto(Team e)
+        {
+            return new TeamResponseDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+                CoachId = e.CoachId,
+                CoachFullName = e.Coach != null ? $"{e.Coach.Name} {e.Coach.Surname}" : "Не призначено"
+            };
+        }
+
+        private async Task<int> GetCoachPersonIdAsync(int userId)
+        {
+            var personId = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.PersonId)
+                .FirstOrDefaultAsync();
+
+            if (!personId.HasValue)
+            {
+                throw new BadRequestException("До акаунта тренера не прив'язано профіль тренера.");
+            }
+
+            return personId.Value;
         }
 
         public async Task<TeamResponseDto?> GetByIdAsync(int id)

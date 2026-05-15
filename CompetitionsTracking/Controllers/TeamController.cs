@@ -2,6 +2,7 @@ using CompetitionsTracking.Application.DTOs.Team;
 using CompetitionsTracking.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompetitionsTracking.Controllers
 {
@@ -20,7 +21,7 @@ namespace CompetitionsTracking.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllForUserAsync(CurrentUserId(), User.IsInRole("Admin"));
             return Ok(result);
         }
 
@@ -84,6 +85,12 @@ namespace CompetitionsTracking.Controllers
         {
             await _service.RemoveMemberFromTeamAsync(teamId, personId);
             return Ok(new { message = "Спортсмена успішно видалено з команди." });
+        }
+
+        private int CurrentUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return claim != null ? int.Parse(claim.Value) : 0;
         }
     }
 }

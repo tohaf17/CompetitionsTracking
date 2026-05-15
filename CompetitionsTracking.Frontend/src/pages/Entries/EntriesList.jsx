@@ -55,13 +55,20 @@ const EntriesList = () => {
         loadFormData();
     }, []);
 
+    const [profileError, setProfileError] = useState(false);
+
     const loadEntries = async () => {
         try {
             setLoading(true);
+            setProfileError(false);
             const data = await EntryService.getAll();
             setEntries(unwrapCollection(data));
         } catch (error) {
-            toastError(error, 'Не вдалося завантажити заявки');
+            if (error?.response?.data?.message?.includes('прив\'язано профіль тренера')) {
+                setProfileError(true);
+            } else {
+                toastError(error, 'Не вдалося завантажити заявки');
+            }
         } finally {
             setLoading(false);
         }
@@ -193,6 +200,21 @@ const EntriesList = () => {
             default: return <span className="status-badge">{status}</span>;
         }
     };
+
+    if (profileError) {
+        return (
+            <div className="page-container">
+                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', marginTop: '2rem' }}>
+                    <h2 style={{ color: '#f59e0b', marginBottom: '1rem' }}>Профіль тренера не знайдено</h2>
+                    <p style={{ marginBottom: '2rem' }}>
+                        Для перегляду та створення заявок ваш акаунт має бути прив&apos;язаний до профілю тренера.<br/>
+                        Ми вже запустили процес автоматичного відновлення профілів. Будь ласка, спробуйте оновити сторінку або зверніться до адміністратора.
+                    </p>
+                    <button className="btn btn-primary" onClick={loadEntries}>Оновити</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container">

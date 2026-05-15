@@ -53,5 +53,13 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .Include(t => t.Coach)
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Team>> GetAllForCoachAsync(int coachPersonId)
+        {
+            return await _context.Teams
+                .Include(t => t.Coach)
+                .Include(t => t.Members)
+                .Where(t => t.CoachId == coachPersonId)
+                .ToListAsync();
+        }
     }
 }

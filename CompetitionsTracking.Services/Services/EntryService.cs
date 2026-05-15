@@ -73,6 +73,7 @@ namespace CompetitionsTracking.Services.Implementations
                 CompetitionId = entity.CompetitionId,
                 CompetitionName = entity.Competition?.Title ?? "Unknown",
                 ParticipantId = entity.ParticipantId,
+                ParticipantType = entity.Participant?.Type ?? string.Empty,
                 ParticipantName = GetParticipantName(entity.Participant),
                 TeamName = GetTeamName(entity.Participant),
                 DisciplineId = entity.DisciplineId,

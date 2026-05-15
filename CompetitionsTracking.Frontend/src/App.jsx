@@ -1,4 +1,5 @@
 import React from 'react';
+import ErrorBoundary from './components/UI/ErrorBoundary';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import MainLayout from './components/Layout/MainLayout';
@@ -47,7 +48,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireTrainee = false
 
 const App = () => {
     return (
-        <>
+        <ErrorBoundary>
             <Toaster position="top-right" />
             <Routes>
                 <Route path="/login" element={<Login />} />
@@ -127,7 +128,7 @@ const App = () => {
                     />
                 </Route>
             </Routes>
-        </>
+        </ErrorBoundary>
     );
 };
 

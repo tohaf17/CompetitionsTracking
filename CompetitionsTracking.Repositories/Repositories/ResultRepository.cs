@@ -53,9 +53,15 @@ namespace CompetitionsTracking.Repositories.Repositories
                     
                     UNION ALL
                     
-                    SELECT r.Place, t.Name AS ParticipantName
+                    SELECT r.Place, members.Names AS ParticipantName
                     FROM Entries e
                     INNER JOIN Results r ON e.Id = r.EntryId
+                    CROSS APPLY (
+                        SELECT STRING_AGG(p.Name + ' ' + p.Surname, ', ') AS Names
+                        FROM team_members tm
+                        INNER JOIN Persons p ON tm.person_id = p.Id
+                        WHERE tm.team_id = t.Id
+                    ) members
                     WHERE e.ParticipantId = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3
                 ) m
                 GROUP BY t.Id, t.Name

@@ -23,6 +23,7 @@ namespace CompetitionsTracking.Application.DTOs.Entry
         public int CompetitionId { get; init; }
         public string CompetitionName { get; init; } = string.Empty;
         public int ParticipantId { get; init; }
+        public string ParticipantType { get; init; } = string.Empty;
         public string ParticipantName { get; init; } = string.Empty;
         public string? TeamName { get; init; }
         public int DisciplineId { get; init; }

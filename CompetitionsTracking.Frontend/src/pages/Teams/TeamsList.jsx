@@ -146,7 +146,71 @@ const TeamsList = () => {
         }
     };
 
+    const isCoach = user?.role === 'Trainee';
+
     if (loading) return <div className="page-container">Завантаження...</div>;
+
+    if (isCoach) {
+        return (
+            <div className="page-container">
+                <div className="page-header flex-between">
+                    <h1 className="page-title">Мої команди</h1>
+                    <button className="btn btn-outline" onClick={loadTeams}>Оновити</button>
+                </div>
+
+                <div className="grid grid-1 gap-2">
+                    {teams.length > 0 ? (
+                        teams.map(team => (
+                            <div key={team.id} className="glass-panel">
+                                <div className="flex-between mb-1" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
+                                    <h2 style={{ margin: 0 }}>{team.name}</h2>
+                                    <span className="status-badge status-active">Активна</span>
+                                </div>
+                                <div className="mt-1">
+                                    <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Склад команди:</h4>
+                                    <div className="table-container">
+                                        <table style={{ width: '100%' }}>
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: '50px' }}>№</th>
+                                                    <th>ПІБ</th>
+                                                    <th>Країна</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {team.members && team.members.length > 0 ? (
+                                                    team.members.map((member, idx) => (
+                                                        <tr key={member.personId}>
+                                                            <td>{idx + 1}</td>
+                                                            <td>
+                                                                <Link to={`/persons/${member.personId}`} style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+                                                                    {member.fullName}
+                                                                </Link>
+                                                            </td>
+                                                            <td>{member.country}</td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" style={{ textAlign: 'center', padding: '1rem' }}>Склад команди порожній</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem' }}>
+                            <h3>У вас ще немає призначених команд.</h3>
+                            <p>Зверніться до адміністратора для створення команди та призначення вас тренером.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container">
