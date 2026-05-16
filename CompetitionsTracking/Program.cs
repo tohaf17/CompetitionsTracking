@@ -146,6 +146,10 @@ using (var scope = app.Services.CreateScope())
         // To refresh seed data: set "Seeding:ForceReseed": true in
         // appsettings.json, restart the app ONCE, then set it back to false.
         // ---------------------------------------------------------------
+//         1. Відредагуй дані в DatabaseSeeder.cs  ← тут змінюй вміст
+// 2. У appsettings.json → "ForceReseed": true
+// 3. Запусти бекенд один раз
+// 4. У appsettings.json → "ForceReseed": false ← обов'язково!
         bool forceReseed = config.GetValue<bool>("Seeding:ForceReseed");
 
         if (forceReseed)

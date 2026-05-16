@@ -131,7 +131,17 @@ namespace CompetitionsTracking.Infrastructure.Data
             var judgeUser1 = new User { Username = "judge1", Email = "j1@gym.ua", Role = UserRole.Guest, IsApproved = true, CreatedAt = DateTime.UtcNow };
             var judgeUser2 = new User { Username = "judge2", Email = "j2@gym.ua", Role = UserRole.Guest, IsApproved = true, CreatedAt = DateTime.UtcNow };
 
-            context.Users.AddRange(admin, coachUser, judgeUser1, judgeUser2);
+            var guestUser = new User
+            {
+                Username   = "guest",
+                Email      = "guest@gym.ua",
+                Role       = UserRole.Guest,
+                IsApproved = true,
+                CreatedAt  = DateTime.UtcNow
+            };
+            guestUser.PasswordHash = hasher.HashPassword(guestUser, "guest123");
+
+            context.Users.AddRange(admin, coachUser, judgeUser1, judgeUser2, guestUser);
 
             // ── 2. Persons (coaches & judges) ─────────────────────────────────
             var personCoach1 = new Person { Name = "Олена", Surname = "Дерюгіна", Country = "Україна", DateOfBirth = new DateTime(1958, 1, 11, 0, 0, 0, DateTimeKind.Utc), Gender = Gender.Female, Type = "Person" };
@@ -156,17 +166,14 @@ namespace CompetitionsTracking.Infrastructure.Data
             // ── 5. Categories ─────────────────────────────────────────────────
             var catSenior  = new Category { Type = "Сеньйорки", MinAge = 16, MaxAge = 99 };
             var catJunior  = new Category { Type = "Юніорки",   MinAge = 13, MaxAge = 15 };
-            var catYouth   = new Category { Type = "Надії",     MinAge = 10, MaxAge = 12 };
+            var catYouth   = new Category { Type = "Молодші",     MinAge = 10, MaxAge = 12 };
             context.Categories.AddRange(catSenior, catJunior, catYouth);
             context.SaveChanges();
 
             // ── 6. Disciplines ────────────────────────────────────────────────
-            var discIndHoop  = new Discipline { Type = "Індивідуальна (Обруч)", Apparatus = apps[1] };
-            var discIndBall  = new Discipline { Type = "Індивідуальна (М'яч)",  Apparatus = apps[2] };
-            var discIndClubs = new Discipline { Type = "Індивідуальна (Булави)",Apparatus = apps[3] };
-            var discGrpBalls = new Discipline { Type = "Групова (5 м'ячів)",    Apparatus = apps[2] };
-            var discGrpMixed = new Discipline { Type = "Групова (3 стрічки + 2 булави)", Apparatus = apps[3] };
-            var disciplines = new List<Discipline> { discIndHoop, discIndBall, discIndClubs, discGrpBalls, discGrpMixed };
+            var discInd = new Discipline { Type = "Індивідуальна", Apparatus = apps[0] };
+            var discGrp = new Discipline { Type = "Групова", Apparatus = apps[0] };
+            var disciplines = new List<Discipline> { discInd, discGrp };
             context.Disciplines.AddRange(disciplines);
             context.SaveChanges();
 
@@ -226,8 +233,8 @@ namespace CompetitionsTracking.Infrastructure.Data
 
             // ── 10. Entries ───────────────────────────────────────────────────
             var entries = new List<Entry>();
-            var indDiscs = new[] { discIndHoop, discIndBall, discIndClubs };
-            var grpDiscs = new[] { discGrpBalls, discGrpMixed };
+            var indDisc = discInd;
+            var grpDisc = discGrp;
 
             foreach (var comp in competitions)
             {
@@ -237,26 +244,30 @@ namespace CompetitionsTracking.Infrastructure.Data
                     // Add 12 individuals (ensures 6 per discipline, since we divide by 2 indDiscs)
                     for (int i = 0; i < 12; i++)
                     {
-                        entries.Add(new Entry { Competition = comp, Participant = athletes[i], Discipline = indDiscs[i % 2], Category = catSenior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Finished, SubmittedAt = comp.StartDate.AddDays(-14) });
+                        entries.Add(new Entry { Competition = comp, Participant = athletes[i], Discipline = indDisc, Category = catSenior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Finished, SubmittedAt = comp.StartDate.AddDays(-14) });
                     }
                     // Add 6 group teams
-                    for (int i = 0; i < 6; i++)
+                    for (int i = 0; i < 3; i++)
                     {
-                        entries.Add(new Entry { Competition = comp, Participant = teams[i], Discipline = grpDiscs[i % 2], Category = catSenior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Finished, SubmittedAt = comp.StartDate.AddDays(-14) });
+                        entries.Add(new Entry { Competition = comp, Participant = teams[i], Discipline = grpDisc, Category = catJunior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Active, SubmittedAt = comp.StartDate.AddDays(-14) });
                     }
                 }
                 else if (comp.Status == CompetitionStatus.Ongoing)
                 {
                     for (int i = 12; i < 18; i++)
                     {
-                        entries.Add(new Entry { Competition = comp, Participant = athletes[i], Discipline = indDiscs[0], Category = catJunior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Active, SubmittedAt = comp.StartDate.AddDays(-14) });
+                        entries.Add(new Entry { Competition = comp, Participant = athletes[i], Discipline = indDisc, Category = catJunior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Active, SubmittedAt = comp.StartDate.AddDays(-14) });
+                    }
+                    for (int i = 0; i < 3; i++)
+                    {
+                        entries.Add(new Entry { Competition = comp, Participant = teams[i], Discipline = grpDisc, Category = catJunior, ApplicationStatus = ApplicationStatus.Accepted, EntryStatus = EntryStatus.Active, SubmittedAt = comp.StartDate.AddDays(-14) });
                     }
                 }
                 else // Planned / Registration
                 {
                     for (int i = 18; i < 24; i++)
                     {
-                        entries.Add(new Entry { Competition = comp, Participant = athletes[i], Discipline = indDiscs[1], Category = catJunior, ApplicationStatus = (i % 2 == 0) ? ApplicationStatus.Pending : ApplicationStatus.Accepted, EntryStatus = EntryStatus.Registered, SubmittedAt = DateTime.UtcNow.AddDays(-2) });
+                        entries.Add(new Entry { Competition = comp, Participant = athletes[i], Discipline = indDisc, Category = catYouth, ApplicationStatus = (i % 2 == 0) ? ApplicationStatus.Pending : ApplicationStatus.Accepted, EntryStatus = EntryStatus.Registered, SubmittedAt = DateTime.UtcNow.AddDays(-2) });
                     }
                 }
             }

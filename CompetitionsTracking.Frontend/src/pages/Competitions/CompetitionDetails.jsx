@@ -7,6 +7,7 @@ import DisciplineService from '../../services/discipline.service';
 import CategoryService from '../../services/category.service';
 import EntryService from '../../services/entry.service';
 import JudgeService from '../../services/judge.service';
+import ApparatusService from '../../services/apparatus.service';
 import { useAuth } from '../../context/AuthContext';
 import { unwrapCollection } from '../../utils/unwrapCollection';
 import { toastError } from '../../utils/toastError';
@@ -33,7 +34,9 @@ const CompetitionDetails = () => {
 
     const [disciplines, setDisciplines] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [filter, setFilter] = useState({ disciplineId: '', categoryId: '' });
+    const [apparatuses, setApparatuses] = useState([]);
+    const [filter, setFilter] = useState({ apparatusId: '', categoryId: '' });
+    const [performanceType, setPerformanceType] = useState('');
 
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('leaderboard'); 
@@ -48,14 +51,16 @@ const CompetitionDetails = () => {
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const [compData, discData, catData] = await Promise.all([
+            const [compData, discData, catData, appData] = await Promise.all([
                 CompetitionService.getById(id),
                 DisciplineService.getAll(),
-                CategoryService.getAll()
+                CategoryService.getAll(),
+                ApparatusService.getAll()
             ]);
             setCompetition(compData);
             setDisciplines(unwrapCollection(discData));
             setCategories(unwrapCollection(catData));
+            setApparatuses(unwrapCollection(appData));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити деталі змагання');
         } finally {
@@ -65,12 +70,23 @@ const CompetitionDetails = () => {
 
     const loadLeaderboard = useCallback(async () => {
         try {
-            const data = await ResultService.getLeaderboard(id, filter.disciplineId, filter.categoryId);
-            setLeaderboard(unwrapCollection(data));
+            let computedDiscId = '';
+            if (performanceType && filter.apparatusId) {
+                const matchedDisc = disciplines.find(d => d.type.startsWith(performanceType) && d.apparatusId === parseInt(filter.apparatusId));
+                computedDiscId = matchedDisc ? matchedDisc.id : -1;
+            }
+            const data = await ResultService.getLeaderboard(id, computedDiscId, filter.categoryId);
+            let results = unwrapCollection(data);
+
+            if (performanceType && !filter.apparatusId) {
+                results = results.filter(r => r.disciplineName && r.disciplineName.startsWith(performanceType));
+            }
+
+            setLeaderboard(results);
         } catch (error) {
             toastError(error, 'Не вдалося завантажити таблицю результатів');
         }
-    }, [filter.categoryId, filter.disciplineId, id]);
+    }, [filter.categoryId, filter.apparatusId, performanceType, disciplines, id]);
 
     const loadTally = useCallback(async () => {
         try {
@@ -208,10 +224,33 @@ const CompetitionDetails = () => {
             {activeTab === 'leaderboard' && (
                 <div className="glass-panel">
                     <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                        <select className="form-group" style={{ padding: '0.4rem' }} onChange={e => setFilter({ ...filter, disciplineId: e.target.value })}>
-                            <option value="">Усі дисципліни</option>
-                            {disciplines.map(d => <option key={d.id} value={d.id}>{d.type}</option>)}
+                        <select 
+                            className="form-group" 
+                            style={{ padding: '0.4rem' }} 
+                            value={performanceType}
+                            onChange={e => {
+                                setPerformanceType(e.target.value);
+                                setFilter({ ...filter, apparatusId: '' });
+                            }}
+                        >
+                            <option value="">Усі типи виступів</option>
+                            <option value="Індивідуальна">Індивідуальна</option>
+                            <option value="Групова">Групова</option>
                         </select>
+
+                        <select 
+                            className="form-group" 
+                            style={{ padding: '0.4rem' }} 
+                            value={filter.apparatusId}
+                            onChange={e => setFilter({ ...filter, apparatusId: e.target.value })}
+                            disabled={!performanceType}
+                        >
+                            <option value="">Усі предмети</option>
+                            {apparatuses.map(a => (
+                                <option key={a.id} value={a.id}>{a.type}</option>
+                            ))}
+                        </select>
+
                         <select className="form-group" style={{ padding: '0.4rem' }} onChange={e => setFilter({ ...filter, categoryId: e.target.value })}>
                             <option value="">Усі категорії</option>
                             {categories.map(c => <option key={c.id} value={c.id}>{c.type}</option>)}

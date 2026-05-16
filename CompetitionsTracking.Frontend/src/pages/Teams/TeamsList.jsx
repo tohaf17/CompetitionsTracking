@@ -10,7 +10,9 @@ import { toastError } from '../../utils/toastError';
 
 const TeamsList = () => {
     const { user } = useAuth();
-    const canEdit = user?.role === 'Admin';
+    const isAdmin = user?.role === 'Admin';
+    const isCoach = user?.role === 'Trainee';
+    const canEdit = isAdmin || isCoach;
 
     const [teams, setTeams] = useState([]);
     const [coaches, setCoaches] = useState([]);
@@ -127,7 +129,8 @@ const TeamsList = () => {
             const newPerson = await PersonService.create({
                 ...memberFormData,
                 gender: parseInt(memberFormData.gender),
-                dateOfBirth: new Date(memberFormData.dateOfBirth).toISOString()
+                dateOfBirth: new Date(memberFormData.dateOfBirth).toISOString(),
+                mentorId: isCoach ? user.personId : undefined // Assign to coach if they create them
             });
             
             // 2. Add as member to team
@@ -140,87 +143,28 @@ const TeamsList = () => {
             setRoster(updatedRoster.members || []);
             
             setIsAddMemberModalOpen(false);
-            setMemberFormData({ name: '', surname: '', country: '', dateOfBirth: '', gender: 0 });
+            setMemberFormData({ name: '', surname: '', country: '', dateOfBirth: '', gender: 1 });
         } catch (error) {
             toastError(error, 'Не вдалося додати учасника');
         }
     };
 
-    const isCoach = user?.role === 'Trainee';
+
 
     if (loading) return <div className="page-container">Завантаження...</div>;
-
-    if (isCoach) {
-        return (
-            <div className="page-container">
-                <div className="page-header flex-between">
-                    <h1 className="page-title">Мої команди</h1>
-                    <button className="btn btn-outline" onClick={loadTeams}>Оновити</button>
-                </div>
-
-                <div className="grid grid-1 gap-2">
-                    {teams.length > 0 ? (
-                        teams.map(team => (
-                            <div key={team.id} className="glass-panel">
-                                <div className="flex-between mb-1" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
-                                    <h2 style={{ margin: 0 }}>{team.name}</h2>
-                                    <span className="status-badge status-active">Активна</span>
-                                </div>
-                                <div className="mt-1">
-                                    <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Склад команди:</h4>
-                                    <div className="table-container">
-                                        <table style={{ width: '100%' }}>
-                                            <thead>
-                                                <tr>
-                                                    <th style={{ width: '50px' }}>№</th>
-                                                    <th>ПІБ</th>
-                                                    <th>Країна</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {team.members && team.members.length > 0 ? (
-                                                    team.members.map((member, idx) => (
-                                                        <tr key={member.personId}>
-                                                            <td>{idx + 1}</td>
-                                                            <td>
-                                                                <Link to={`/persons/${member.personId}`} style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
-                                                                    {member.fullName}
-                                                                </Link>
-                                                            </td>
-                                                            <td>{member.country}</td>
-                                                        </tr>
-                                                    ))
-                                                ) : (
-                                                    <tr>
-                                                        <td colSpan="3" style={{ textAlign: 'center', padding: '1rem' }}>Склад команди порожній</td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem' }}>
-                            <h3>У вас ще немає призначених команд.</h3>
-                            <p>Зверніться до адміністратора для створення команди та призначення вас тренером.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="page-container">
             <div className="page-header flex-between">
-                <h1 className="page-title">Команди</h1>
+                <h1 className="page-title">{isCoach ? 'Мої команди' : 'Команди'}</h1>
                 <div>
                     <button className="btn btn-outline" style={{marginRight: '1rem'}} onClick={loadTeams}>Оновити</button>
                     {canEdit && <button className="btn btn-primary" onClick={() => {
                         setIsTeamModalOpen(true);
                         loadCoaches();
+                        if (isCoach) {
+                            setTeamFormData(prev => ({ ...prev, coachInput: `${user.username}` }));
+                        }
                     }}>Додати команду</button>}
                 </div>
             </div>
@@ -229,17 +173,17 @@ const TeamsList = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>№</th>
+                            <th style={{ padding: '1rem' }}>№</th>
                             <th>Назва команди</th>
                             <th>Тренер</th>
-                            <th>Дії</th>
+                            <th style={{ textAlign: 'right', paddingRight: '1rem' }}>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
                         {teams.length > 0 ? (
                             teams.map((team, index) => (
                                 <tr key={team.id}>
-                                    <td>{index + 1}</td>
+                                    <td style={{ padding: '1rem' }}>{index + 1}</td>
                                     <td><strong>{team.name}</strong></td>
                                     <td>
                                         {team.coachId ? (
@@ -248,7 +192,7 @@ const TeamsList = () => {
                                             </Link>
                                         ) : 'Без тренера'}
                                     </td>
-                                    <td>
+                                    <td style={{ textAlign: 'right', paddingRight: '1rem' }}>
                                         <button 
                                             className="btn btn-outline" 
                                             style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginRight: '0.5rem'}}
