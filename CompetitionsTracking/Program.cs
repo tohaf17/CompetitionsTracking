@@ -73,7 +73,9 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging());
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .EnableSensitiveDataLogging()
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // Data Access
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -131,13 +133,39 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
+        var config  = services.GetRequiredService<IConfiguration>();
 
+        // Apply any pending migrations (never drops data on its own)
+        Console.WriteLine("Застосування міграцій...");
         context.Database.Migrate();
 
-        if (app.Environment.IsDevelopment())
+        // ---------------------------------------------------------------
+        // ForceReseed = true  → wipes ALL seed data and re-seeds fresh.
+        //               false → seeds only when the database is empty.
+        //
+        // To refresh seed data: set "Seeding:ForceReseed": true in
+        // appsettings.json, restart the app ONCE, then set it back to false.
+        // ---------------------------------------------------------------
+        bool forceReseed = config.GetValue<bool>("Seeding:ForceReseed");
+
+        if (forceReseed)
         {
-            DatabaseSeeder.SeedIfEmpty(context);
+            Console.WriteLine("ForceReseed=true → очищення та повторне заповнення бази...");
+            DatabaseSeeder.ClearAndReseed(context);
+            Console.WriteLine("База успішно перезаповнена!");
         }
+        else if (!context.Users.Any())
+        {
+            Console.WriteLine("База порожня — заповнення початковими даними...");
+            DatabaseSeeder.SeedIfEmpty(context);
+            Console.WriteLine("Початкові дані додано успішно!");
+        }
+        else
+        {
+            Console.WriteLine("База вже містить дані — пропуск заповнення.");
+        }
+
+        Console.WriteLine("Проєкт готовий до роботи!");
     }
     catch (Exception ex)
     {

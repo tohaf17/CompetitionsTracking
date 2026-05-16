@@ -276,23 +276,28 @@ const CompetitionDetails = () => {
                                 <th style={{ color: '#FFD700' }}>Золото</th>
                                 <th style={{ color: '#C0C0C0' }}>Срібло</th>
                                 <th style={{ color: '#CD7F32' }}>Бронза</th>
-                                <th>Разом</th>
-                                <th>Хто отримав</th>
+                                <th style={{ textAlign: 'right', paddingRight: '1rem' }}>Усього медалей</th>
                             </tr>
                         </thead>
                         <tbody>
                             {teamTally.map((t, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
-                                    <td style={{ padding: '0.8rem' }}>{t.teamName}</td>
+                                    <td style={{ padding: '0.8rem' }}>
+                                        <Link to={`/teams/${t.teamId}`} style={{ color: 'var(--text-color)', textDecoration: 'none', fontWeight: 600 }}
+                                            onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-color)'}
+                                            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-color)'}
+                                        >
+                                            {t.teamName}
+                                        </Link>
+                                    </td>
                                     <td>{t.goldMedals}</td>
                                     <td>{t.silverMedals}</td>
                                     <td>{t.bronzeMedals}</td>
-                                    <td><strong>{t.totalMedals}</strong></td>
-                                    <td><small>{t.medalists}</small></td>
+                                    <td style={{ textAlign: 'right', paddingRight: '1rem' }}><strong>{t.totalMedals}</strong></td>
                                 </tr>
                             ))}
-                            {teamTally.length === 0 && <tr><td colSpan="7" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
+                            {teamTally.length === 0 && <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Медалей ще не нараховано.</td></tr>}
                         </tbody>
                     </table>
                 </div>

@@ -40,28 +40,20 @@ namespace CompetitionsTracking.Repositories.Repositories
                     CAST(SUM(CASE WHEN m.Place = 1 THEN 1 ELSE 0 END) AS INT) AS GoldMedals,
                     CAST(SUM(CASE WHEN m.Place = 2 THEN 1 ELSE 0 END) AS INT) AS SilverMedals,
                     CAST(SUM(CASE WHEN m.Place = 3 THEN 1 ELSE 0 END) AS INT) AS BronzeMedals,
-                    CAST(SUM(CASE WHEN m.Place <= 3 THEN 1 ELSE 0 END) AS INT) AS TotalMedals,
-                    ISNULL(STRING_AGG(m.ParticipantName, ', ') WITHIN GROUP (ORDER BY m.Place), '') AS Medalists
+                    CAST(SUM(CASE WHEN m.Place <= 3 THEN 1 ELSE 0 END) AS INT) AS TotalMedals
                 FROM teams t
                 CROSS APPLY (
-                    SELECT r.Place, p.Name + ' ' + p.Surname AS ParticipantName
+                    SELECT r.Place
                     FROM team_members tm
                     INNER JOIN Entries e ON tm.person_id = e.ParticipantId
                     INNER JOIN Results r ON e.Id = r.EntryId
-                    INNER JOIN Persons p ON e.ParticipantId = p.Id
                     WHERE tm.team_id = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3
                     
                     UNION ALL
                     
-                    SELECT r.Place, members.Names AS ParticipantName
+                    SELECT r.Place
                     FROM Entries e
                     INNER JOIN Results r ON e.Id = r.EntryId
-                    CROSS APPLY (
-                        SELECT STRING_AGG(p.Name + ' ' + p.Surname, ', ') AS Names
-                        FROM team_members tm
-                        INNER JOIN Persons p ON tm.person_id = p.Id
-                        WHERE tm.team_id = t.Id
-                    ) members
                     WHERE e.ParticipantId = t.Id AND e.CompetitionId = {0} AND r.Place BETWEEN 1 AND 3
                 ) m
                 GROUP BY t.Id, t.Name

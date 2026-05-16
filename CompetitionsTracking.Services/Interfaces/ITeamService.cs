@@ -1,4 +1,5 @@
 using CompetitionsTracking.Application.DTOs.Team;
+using CompetitionsTracking.Domain.Entities;
 using CompetitionsTracking.Domain.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;

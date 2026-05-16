@@ -43,6 +43,7 @@ const EntriesList = () => {
         disciplineId: '', 
         categoryId: ''
     });
+    const [performanceType, setPerformanceType] = useState('');
 
     const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -149,6 +150,7 @@ const EntriesList = () => {
                 disciplineId: '', 
                 categoryId: '' 
             });
+            setPerformanceType('');
         } catch (error) {
             toastError(error, 'Не вдалося створити заявку');
         }
@@ -287,7 +289,7 @@ const EntriesList = () => {
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Створити нову заявку">
+            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setPerformanceType(''); }} title="Створити нову заявку">
                 <form onSubmit={handleCreate}>
                     <div className="form-group">
                         <label>Змагання</label>
@@ -335,10 +337,33 @@ const EntriesList = () => {
                         </>
                     )}
                     <div className="form-group">
-                        <label>Дисципліна</label>
-                        <select name="disciplineId" value={formData.disciplineId} onChange={handleChange} required>
-                            <option value="">-- Оберіть дисципліну --</option>
-                            {disciplines.map(d => <option key={d.id} value={d.id}>{d.type}</option>)}
+                        <label>Тип виступу</label>
+                        <select 
+                            value={performanceType} 
+                            onChange={(e) => {
+                                setPerformanceType(e.target.value);
+                                setFormData({ ...formData, disciplineId: '' });
+                            }} 
+                            required
+                        >
+                            <option value="">-- Оберіть тип виступу --</option>
+                            {[...new Set(disciplines.map(d => d.type.split(' ')[0]))].map(type => (
+                                <option key={type} value={type}>{type}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Предмет / Варіація</label>
+                        <select name="disciplineId" value={formData.disciplineId} onChange={handleChange} required disabled={!performanceType}>
+                            <option value="">-- Оберіть предмет --</option>
+                            {disciplines
+                                .filter(d => performanceType ? d.type.startsWith(performanceType) : true)
+                                .map(d => (
+                                    <option key={d.id} value={d.id}>
+                                        {d.type.replace(performanceType, '').replace(/[()]/g, '').trim() || d.type}
+                                    </option>
+                                ))
+                            }
                         </select>
                     </div>
                     <div className="form-group">
@@ -349,7 +374,7 @@ const EntriesList = () => {
                         </select>
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
+                        <button type="button" className="btn btn-outline" onClick={() => { setIsModalOpen(false); setPerformanceType(''); }}>Скасувати</button>
                         <button type="submit" className="btn btn-primary">Подати заявку</button>
                     </div>
                 </form>

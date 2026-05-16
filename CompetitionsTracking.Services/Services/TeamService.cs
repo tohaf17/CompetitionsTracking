@@ -95,7 +95,13 @@ namespace CompetitionsTracking.Services.Implementations
                 Id = entity.Id,
                 Name = entity.Name,
                 CoachId = entity.CoachId,
-                CoachFullName = entity.Coach != null ? $"{entity.Coach.Name} {entity.Coach.Surname}" : "Не призначено"
+                CoachFullName = entity.Coach != null ? $"{entity.Coach.Name} {entity.Coach.Surname}" : "Не призначено",
+                Members = entity.Members?.Select(m => new TeamMemberDto
+                {
+                    PersonId = m.Id,
+                    FullName = $"{m.Name} {m.Surname}",
+                    Country = m.Country
+                }).ToList() ?? new List<TeamMemberDto>()
             };
         }
 

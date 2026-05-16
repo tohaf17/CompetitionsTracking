@@ -8,6 +8,7 @@ import Register from './pages/Auth/Register';
 import CompetitionsList from './pages/Competitions/CompetitionsList';
 import CompetitionDetails from './pages/Competitions/CompetitionDetails';
 import TeamsList from './pages/Teams/TeamsList';
+import TeamProfile from './pages/Teams/TeamProfile';
 import JudgesList from './pages/Judges/JudgesList';
 import AppealsList from './pages/Appeals/AppealsList';
 import EntriesList from './pages/Entries/EntriesList';
@@ -60,6 +61,7 @@ const App = () => {
                     <Route path="/competitions" element={<CompetitionsList />} />
                     <Route path="/competitions/:id" element={<CompetitionDetails />} />
                     <Route path="/teams" element={<TeamsList />} />
+                    <Route path="/teams/:id" element={<TeamProfile />} />
                     <Route
                         path="/judges"
                         element={

@@ -20,22 +20,22 @@ namespace CompetitionsTracking.Repositories.Repositories
                 SELECT 
                     t.Id AS TeamId,
                     t.Name AS TeamName,
-                    COUNT(DISTINCT p.Id) AS TotalParticipants,
-                    CAST(SUM(r.FinalScore) AS FLOAT) AS CumulativePoints,
-                    CAST(SUM(r.FinalScore) / NULLIF(COUNT(DISTINCT p.Id), 0) AS FLOAT) AS AveragePointsPerParticipant
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.Id) AS TotalParticipants,
+                    CAST(ISNULL(m.Points, 0) AS FLOAT) AS CumulativePoints,
+                    CAST(ISNULL(m.Points, 0) / NULLIF((SELECT COUNT(*) FROM team_members WHERE team_id = t.Id), 0) AS FLOAT) AS AveragePointsPerParticipant
                 FROM teams t
-                INNER JOIN (
-                    -- Individual members
-                    SELECT team_id, person_id AS ParticipantId FROM team_members
-                    UNION ALL
-                    -- The team itself (for group entries)
-                    SELECT Id, Id FROM teams
+                LEFT JOIN (
+                    SELECT m.team_id, SUM(r.FinalScore) AS Points
+                    FROM (
+                        SELECT team_id, person_id AS ParticipantId FROM team_members
+                        UNION ALL
+                        SELECT Id, Id FROM teams
+                    ) m
+                    INNER JOIN entries e ON m.ParticipantId = e.ParticipantId
+                    INNER JOIN results r ON e.Id = r.EntryId
+                    GROUP BY m.team_id
                 ) m ON t.Id = m.team_id
-                INNER JOIN participants p ON m.ParticipantId = p.Id
-                INNER JOIN entries e ON p.Id = e.ParticipantId
-                INNER JOIN results r ON e.Id = r.EntryId
                 WHERE t.Id = {0}
-                GROUP BY t.Id, t.Name
             ";
             return await _context.TeamDominanceMetrics.FromSqlRaw(sql, teamId).ToListAsync();
         }
