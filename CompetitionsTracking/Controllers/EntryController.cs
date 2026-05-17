@@ -32,7 +32,7 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
+            var result = await _service.GetByIdForUserAsync(id, CurrentUserId(), CurrentUserRole());
             return Ok(result);
         }
 
@@ -48,15 +48,15 @@ namespace CompetitionsTracking.Controllers
         [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Update(int id, [FromBody] EntryRequestDto request)
         {
-            await _service.UpdateAsync(id, request);
+            await _service.UpdateForUserAsync(id, request, CurrentUserId(), CurrentUserRole());
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Trainee")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _service.DeleteAsync(id);
+            await _service.DeleteForUserAsync(id, CurrentUserId(), CurrentUserRole());
             return NoContent();
         }
 
@@ -109,7 +109,7 @@ namespace CompetitionsTracking.Controllers
         }
 
         [HttpGet("competition/{competitionId}/start-list")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Trainee,Guest")]
         public async Task<IActionResult> GetStartList(int competitionId)
         {
             var result = await _service.GetStartListAsync(competitionId);

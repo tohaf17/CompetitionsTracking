@@ -14,41 +14,106 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
         }
 
-        public async Task<IEnumerable<ScoreAnomalyDto>> GetScoreAnomaliesAsync(int competitionId)
+        public async Task<IEnumerable<ScoreAnomalyDto>> GetScoreAnomaliesAsync(int competitionId, double zThreshold = 2.0)
         {
             string sql = @"
-                WITH ScoreAverages AS (
-                    SELECT 
+                WITH ScoreStats AS (
+                    SELECT
                         s.Id AS ScoreId,
-                        COALESCE(CONCAT(pp.Name, ' ', pp.Surname), tt.Name, 'Unknown') AS ParticipantName,
+
+                        COALESCE(
+                            CONCAT(pp.Name, ' ', pp.Surname),
+                            tt.Name,
+                            'Unknown'
+                        ) AS ParticipantName,
+
                         CONCAT(p.Name, ' ', p.Surname) AS JudgeName,
+
                         s.EntryId,
+
                         CAST(s.Type AS nvarchar(50)) AS ScoreType,
-                        CAST(s.ScoreValue AS REAL) AS ScoreValue,
-                        CAST(AVG(CAST(s.ScoreValue AS float)) OVER(PARTITION BY s.EntryId) AS REAL) AS AverageEntryScore
+
+                        CAST(s.ScoreValue AS DECIMAL(10,2)) AS ScoreValue,
+
+                        AVG(CAST(s.ScoreValue AS FLOAT))
+                            OVER(PARTITION BY s.EntryId, s.Type)
+                            AS MeanScore,
+
+                        STDEV(CAST(s.ScoreValue AS FLOAT))
+                            OVER(PARTITION BY s.EntryId, s.Type)
+                            AS StdDeviation
+
                     FROM Scores s
-                    INNER JOIN Judges j ON s.JudgeId = j.Id
-                    INNER JOIN Persons p ON j.PersonId = p.Id
-                    INNER JOIN Entries e ON s.EntryId = e.Id
-                    INNER JOIN Participants part ON e.ParticipantId = part.Id
-                    LEFT JOIN Persons pp ON part.Id = pp.Id
-                    LEFT JOIN Teams tt ON part.Id = tt.Id
+
+                    INNER JOIN Judges j
+                        ON s.JudgeId = j.Id
+
+                    INNER JOIN Persons p
+                        ON j.PersonId = p.Id
+
+                    INNER JOIN Entries e
+                        ON s.EntryId = e.Id
+
+                    INNER JOIN Participants part
+                        ON e.ParticipantId = part.Id
+
+                    LEFT JOIN Persons pp
+                        ON part.Id = pp.Id
+
+                    LEFT JOIN Teams tt
+                        ON part.Id = tt.Id
+
                     WHERE e.CompetitionId = {0}
+                ),
+
+                ZScores AS (
+                    SELECT
+                        ScoreId,
+                        ParticipantName,
+                        JudgeName,
+                        EntryId,
+                        ScoreType,
+                        ScoreValue,
+                        MeanScore,
+                        StdDeviation,
+
+                        CASE
+                            WHEN StdDeviation = 0 THEN 0
+                            ELSE
+                                ABS(
+                                    (ScoreValue - MeanScore)
+                                    / StdDeviation
+                                )
+                        END AS ZScore
+
+                    FROM ScoreStats
                 )
-                SELECT 
+
+                SELECT
                     ScoreId,
                     ParticipantName,
                     JudgeName,
                     EntryId,
                     ScoreType,
                     ScoreValue,
-                    AverageEntryScore,
-                    CAST(ABS(ScoreValue - AverageEntryScore) AS REAL) AS Deviation
-                FROM ScoreAverages
-                WHERE ABS(ScoreValue - AverageEntryScore) >= 1.5
-                ORDER BY Deviation DESC
-            ";
-            return await _context.ScoreAnomalies.FromSqlRaw(sql, competitionId).ToListAsync();
+
+                    CAST(MeanScore AS DECIMAL(10,2))
+                        AS AverageEntryScore,
+
+                    CAST(ZScore AS DECIMAL(10,2))
+                        AS Deviation
+
+                FROM ZScores
+
+                WHERE ZScore >= {1}
+
+                ORDER BY ZScore DESC;
+                ";
+
+            return await _context.ScoreAnomalies
+                .FromSqlRaw(sql, competitionId, zThreshold)
+                .AsNoTracking()
+                .ToListAsync();
         }
         public async Task<IEnumerable<Score>> GetScoresByEntryAsync(int entryId)
         {

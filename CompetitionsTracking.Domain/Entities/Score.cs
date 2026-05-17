@@ -16,12 +16,11 @@ namespace CompetitionsTracking.Domain.Entities
         public ScoreType Type { get; set; }
         public float ScoreValue { get; set; }
 
-        // Breakdown fields for DB (Difficulty Body) validation
         public int? JumpCount { get; set; }
         public int? BalanceCount { get; set; }
         public int? RotationCount { get; set; }
-        public int? DynamicRotationCount { get; set; } // "R" elements
-        public int? ElementCount { get; set; } // Total counted elements (max 8)
+        public int? DynamicRotationCount { get; set; } 
+        public int? ElementCount { get; set; } 
 
         [ForeignKey(nameof(EntryId))]
         public virtual Entry Entry { get; set; }

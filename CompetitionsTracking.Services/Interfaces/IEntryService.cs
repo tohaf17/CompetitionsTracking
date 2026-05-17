@@ -12,10 +12,13 @@ namespace CompetitionsTracking.Services.Interfaces
         Task<PagedResponse<EntryResponseDto>> GetAllAsync(PaginationParams? pagination = null);
         Task<PagedResponse<EntryResponseDto>> GetAllForUserAsync(PaginationParams? pagination, int userId, UserRole role);
         Task<EntryResponseDto?> GetByIdAsync(int id);
+        Task<EntryResponseDto?> GetByIdForUserAsync(int id, int userId, UserRole role);
         Task<EntryResponseDto> CreateAsync(EntryRequestDto request);
         Task<EntryResponseDto> CreateAsync(EntryRequestDto request, int userId, UserRole role);
         Task UpdateAsync(int id, EntryRequestDto request);
+        Task UpdateForUserAsync(int id, EntryRequestDto request, int userId, UserRole role);
         Task DeleteAsync(int id);
+        Task DeleteForUserAsync(int id, int userId, UserRole role);
         Task<IEnumerable<ControversialEntryDto>> GetControversialEntriesAsync(int competitionId);
         Task<int> BulkUpdateAppStatusAsync(BulkUpdateAppStatusDto request);
         Task ChangeApplicationStatusAsync(int id, ChangeApplicationStatusDto request);

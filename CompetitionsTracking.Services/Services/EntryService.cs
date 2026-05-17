@@ -47,7 +47,7 @@ namespace CompetitionsTracking.Services.Implementations
 
             pagination ??= new PaginationParams();
             var coachPersonId = await GetCoachPersonIdAsync(userId);
-            var query = RestrictToCoach(EntriesWithDetails(), coachPersonId.Value);
+            var query = RestrictToCoach(EntriesWithDetails(), coachPersonId);
 
             var totalCount = await query.CountAsync();
             var entities = await query
@@ -65,8 +65,31 @@ namespace CompetitionsTracking.Services.Implementations
 
         public async Task<EntryResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await EntriesWithDetails().FirstOrDefaultAsync(e => e.Id == id);
             if (entity == null) throw new NotFoundException(nameof(Entry), id);
+            return MapToResponseDto(entity);
+        }
+
+        public async Task<EntryResponseDto?> GetByIdForUserAsync(int id, int userId, UserRole role)
+        {
+            if (role == UserRole.Admin) return await GetByIdAsync(id);
+
+            var entity = await EntriesWithDetails().FirstOrDefaultAsync(e => e.Id == id);
+            if (entity == null) throw new NotFoundException(nameof(Entry), id);
+
+            if (role == UserRole.Guest)
+            {
+                if (entity.ApplicationStatus != ApplicationStatus.Accepted)
+                    throw new NotFoundException(nameof(Entry), id);
+                return MapToResponseDto(entity);
+            }
+
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            if (!IsEntryOwnedByCoach(entity, coachPersonId))
+            {
+                throw new BadRequestException("Ви не маєте доступу до цієї заявки.");
+            }
+
             return MapToResponseDto(entity);
         }
 
@@ -106,7 +129,7 @@ namespace CompetitionsTracking.Services.Implementations
         {
             if (participant is Person p)
             {
-                return p.TeamsAsMember?.FirstOrDefault()?.Name ?? p.Teams?.FirstOrDefault()?.Name;
+                return p.TeamsAsMember?.FirstOrDefault()?.Name;
             }
             if (participant is Team t)
             {
@@ -224,7 +247,7 @@ namespace CompetitionsTracking.Services.Implementations
                 throw new BadRequestException("Тренер може подавати заявку лише на змагання, які ще не почалися.");
             }
 
-            var participantId = await ResolveCoachParticipantIdAsync(request, coachPersonId.Value);
+            var participantId = await ResolveCoachParticipantIdAsync(request, coachPersonId);
             if (await _repository.IsDuplicateEntryAsync(request.CompetitionId, participantId, request.DisciplineId))
             {
                 throw new BadRequestException("Цей учасник або команда вже зареєстровані на цю дисципліну.");
@@ -265,10 +288,59 @@ namespace CompetitionsTracking.Services.Implementations
             await _unitOfWork.CompleteAsync();
         }
 
+        public async Task UpdateForUserAsync(int id, EntryRequestDto request, int userId, UserRole role)
+        {
+            if (role == UserRole.Admin)
+            {
+                await UpdateAsync(id, request);
+                return;
+            }
+
+            if (role == UserRole.Guest) throw new BadRequestException("Гості не можуть редагувати заявки.");
+
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            var entity = await EntriesWithDetails().FirstOrDefaultAsync(e => e.Id == id);
+            if (entity == null) throw new NotFoundException(nameof(Entry), id);
+
+            if (!IsEntryOwnedByCoach(entity, coachPersonId))
+                throw new BadRequestException("Ви не можете редагувати цю заявку.");
+
+            if (entity.ApplicationStatus != ApplicationStatus.Pending)
+                throw new BadRequestException("Ви можете редагувати заявку лише поки вона перебуває в стані очікування.");
+
+            request.Adapt(entity);
+            _repository.Update(entity);
+            await _unitOfWork.CompleteAsync();
+        }
+
         public async Task DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) throw new NotFoundException(nameof(Entry), id);
+
+            _repository.Remove(entity);
+            await _unitOfWork.CompleteAsync();
+        }
+
+        public async Task DeleteForUserAsync(int id, int userId, UserRole role)
+        {
+            if (role == UserRole.Admin)
+            {
+                await DeleteAsync(id);
+                return;
+            }
+
+            if (role == UserRole.Guest) throw new BadRequestException("Гості не можуть видаляти заявки.");
+
+            var coachPersonId = await GetCoachPersonIdAsync(userId);
+            var entity = await EntriesWithDetails().FirstOrDefaultAsync(e => e.Id == id);
+            if (entity == null) throw new NotFoundException(nameof(Entry), id);
+
+            if (!IsEntryOwnedByCoach(entity, coachPersonId))
+                throw new BadRequestException("Ви не можете видалити цю заявку.");
+
+            if (entity.ApplicationStatus != ApplicationStatus.Pending)
+                throw new BadRequestException("Ви можете видалити заявку лише поки вона перебуває в стані очікування.");
 
             _repository.Remove(entity);
             await _unitOfWork.CompleteAsync();
@@ -339,13 +411,13 @@ namespace CompetitionsTracking.Services.Implementations
         public async Task<IEnumerable<EntryResponseDto>> GetStartListAsync(int competitionId)
         {
             var entries = await _repository.GetStartListAsync(competitionId);
-            return entries.Adapt<IEnumerable<EntryResponseDto>>();
+            return entries.Select(MapToResponseDto);
         }
 
         public async Task<IEnumerable<EntryResponseDto>> GetMissingScoresAsync(int competitionId, int expectedCount)
         {
             var entries = await _repository.GetEntriesWithMissingScoresAsync(competitionId, expectedCount);
-            return entries.Adapt<IEnumerable<EntryResponseDto>>();
+            return entries.Select(MapToResponseDto);
         }
 
         public async Task<EntryAnalyticsDto> GetAnalyticsAsync(int competitionId)
@@ -373,7 +445,7 @@ namespace CompetitionsTracking.Services.Implementations
             var coachPersonId = await GetCoachPersonIdAsync(userId);
             var entries = await RestrictToCoach(
                     EntriesWithDetails().Where(e => e.CompetitionId == competitionId),
-                    coachPersonId.Value)
+                    coachPersonId)
                 .OrderByDescending(e => e.SubmittedAt)
                 .ToListAsync();
 
@@ -436,11 +508,12 @@ namespace CompetitionsTracking.Services.Implementations
         {
             return query.Where(e =>
                 _context.Persons.Any(p => p.Id == e.ParticipantId
-                    && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)))
+                    && (p.MentorId == coachPersonId 
+                        || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)))
                 || _context.Teams.Any(t => t.Id == e.ParticipantId && t.CoachId == coachPersonId));
         }
 
-        private async Task<int?> GetCoachPersonIdAsync(int userId)
+        private async Task<int> GetCoachPersonIdAsync(int userId)
         {
             var personId = await _context.Users
                 .Where(u => u.Id == userId)
@@ -452,7 +525,7 @@ namespace CompetitionsTracking.Services.Implementations
                 throw new BadRequestException("До акаунта тренера не прив'язано профіль тренера.");
             }
 
-            return personId;
+            return personId.Value;
         }
 
         private static bool IsEntryOwnedByCoach(Entry entry, int coachPersonId)
@@ -474,7 +547,8 @@ namespace CompetitionsTracking.Services.Implementations
                 var isOwnPerson = await _context.Persons
                     .Include(p => p.TeamsAsMember)
                     .AnyAsync(p => p.Id == participantId
-                        && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)));
+                        && (p.MentorId == coachPersonId 
+                            || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)));
                 var isOwnTeam = await _context.Teams.AnyAsync(t => t.Id == participantId && t.CoachId == coachPersonId);
 
                 if (!isOwnPerson && !isOwnTeam)
@@ -496,7 +570,8 @@ namespace CompetitionsTracking.Services.Implementations
                     .Include(p => p.TeamsAsMember)
                     .FirstOrDefaultAsync(p => p.Name == name
                         && p.Surname == surname
-                        && (p.MentorId == coachPersonId || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)));
+                        && (p.MentorId == coachPersonId 
+                            || p.TeamsAsMember.Any(t => t.CoachId == coachPersonId)));
 
                 if (person != null)
                 {
