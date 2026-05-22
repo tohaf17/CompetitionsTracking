@@ -16,11 +16,11 @@ namespace CompetitionsTracking.Domain.Entities
         public ScoreType Type { get; set; }
         public float ScoreValue { get; set; }
 
-        public int? JumpCount { get; set; }
-        public int? BalanceCount { get; set; }
-        public int? RotationCount { get; set; }
-        public int? DynamicRotationCount { get; set; } 
-        public int? ElementCount { get; set; } 
+        public int? JumpCount { get; set; } = 0;
+        public int? BalanceCount { get; set; } = 0;
+        public int? RotationCount { get; set; } = 0;
+        public int? DynamicRotationCount { get; set; } = 0;
+        public int? ElementCount { get; set; } = 0; 
 
         [ForeignKey(nameof(EntryId))]
         public virtual Entry Entry { get; set; }

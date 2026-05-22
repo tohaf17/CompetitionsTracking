@@ -86,7 +86,7 @@ namespace CompetitionsTracking.Services.Implementations
                     Surname = "(Coach Profile)",
                     Country = "Україна",
                     DateOfBirth = DateTime.UtcNow.AddYears(-20),
-                    Gender = Gender.Female, // Default for RG
+                    Gender = Gender.Female,
                     Type = "Person"
                 };
                 _context.Persons.Add(person);

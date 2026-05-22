@@ -42,7 +42,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
             return await _context.Entries
                 .Include(e => e.Participant) 
-                .Include(e => e.Discipline)
+                .Include(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Include(e => e.Category)
                 .Where(e => e.CompetitionId == competitionId
                          && e.ApplicationStatus == ApplicationStatus.Accepted
@@ -67,9 +67,9 @@ namespace CompetitionsTracking.Repositories.Repositories
         public async Task<IEnumerable<WorkloadSummaryDto>> GetWorkloadSummaryAsync(int judgeId, int competitionId)
         {
             return await _context.Scores
-                .Include(s => s.Entry).ThenInclude(e => e.Discipline)
+                .Include(s => s.Entry).ThenInclude(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Where(s => s.JudgeId == judgeId && s.Entry.CompetitionId == competitionId)
-                .GroupBy(s => s.Entry.Discipline.Type)
+                .GroupBy(s => s.Entry.Discipline.Type + " — " + s.Entry.Discipline.Apparatus.Type)
                 .Select(g => new WorkloadSummaryDto(g.Key, g.Count()))
                 .ToListAsync();
         }

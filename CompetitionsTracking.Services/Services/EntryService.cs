@@ -105,7 +105,9 @@ namespace CompetitionsTracking.Services.Implementations
                 ParticipantName = GetParticipantName(entity.Participant),
                 TeamName = GetTeamName(entity.Participant),
                 DisciplineId = entity.DisciplineId,
-                DisciplineName = entity.Discipline?.Type ?? "Unknown",
+                DisciplineName = entity.Discipline != null
+                    ? $"{entity.Discipline.Type} — {entity.Discipline.Apparatus?.Type ?? "?"}"
+                    : "Unknown",
                 CategoryId = entity.CategoryId,
                 CategoryName = entity.Category?.Type ?? "Unknown",
                 ApplicationStatus = entity.ApplicationStatus,
@@ -499,7 +501,7 @@ namespace CompetitionsTracking.Services.Implementations
                 .Include(e => e.Participant)
                 .Include(e => (e.Participant as Person).TeamsAsMember)
                 .Include(e => e.Competition)
-                .Include(e => e.Discipline)
+                .Include(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Include(e => e.Category)
                 .AsNoTracking();
         }

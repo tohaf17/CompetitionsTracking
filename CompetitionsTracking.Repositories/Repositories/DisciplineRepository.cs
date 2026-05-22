@@ -17,15 +17,16 @@ namespace CompetitionsTracking.Repositories.Repositories
             var stats = await _context.Database.SqlQuery<DisciplineStatsDto>($@"
                 SELECT 
                     d.Id AS DisciplineId,
-                    d.Type AS DisciplineName,
+                    CONCAT(d.Type, ' — ', a.Type) AS DisciplineName,
                     CAST(COUNT(DISTINCT e.Id) AS INT) AS TotalEntries,
                     CAST(COUNT(DISTINCT e.CompetitionId) AS INT) AS CompetitionsFeaturedIn,
                     CAST(ISNULL(ROUND(AVG(CAST(s.ScoreValue AS FLOAT)), 2), 0) AS REAL) AS AverageScore
                 FROM Disciplines d
+                LEFT JOIN apparatus a ON d.ApparatusId = a.Id
                 LEFT JOIN Entries e ON d.Id = e.DisciplineId
                 LEFT JOIN Scores s ON e.Id = s.EntryId
                 WHERE d.Id = {disciplineId}
-                GROUP BY d.Id, d.Type"
+                GROUP BY d.Id, d.Type, a.Type"
             ).FirstOrDefaultAsync();
 
             return stats;

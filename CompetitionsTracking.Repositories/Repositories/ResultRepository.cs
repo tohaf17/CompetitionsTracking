@@ -65,7 +65,7 @@ namespace CompetitionsTracking.Repositories.Repositories
         {
             var query = _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)
-                .Include(r => r.Entry).ThenInclude(e => e.Discipline)
+                .Include(r => r.Entry).ThenInclude(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Include(r => r.Entry).ThenInclude(e => e.Category)
                 .Where(r => r.Entry.CompetitionId == competitionId);
 

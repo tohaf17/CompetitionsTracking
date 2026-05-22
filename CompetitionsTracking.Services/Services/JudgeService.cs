@@ -87,7 +87,9 @@ namespace CompetitionsTracking.Services.Implementations
             {
                 EntryId = e.Id,
                 ParticipantName = GetParticipantName(e.Participant),
-                DisciplineName = e.Discipline?.Type ?? "Unknown",
+                DisciplineName = e.Discipline != null
+                    ? $"{e.Discipline.Type} — {e.Discipline.Apparatus?.Type ?? "?"}"
+                    : "Unknown",
                 CategoryName = e.Category?.Type ?? "Unknown"
             });
         }

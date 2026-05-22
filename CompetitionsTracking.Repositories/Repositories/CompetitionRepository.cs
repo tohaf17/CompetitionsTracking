@@ -22,7 +22,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                     p.Id AS ParticipantId,
                     CONCAT(p.Name, ' ', p.Surname) AS ParticipantName,
                     c.Type AS CategoryName,
-                    d.Type AS DisciplineName,
+                    CONCAT(d.Type, ' — ', a.Type) AS DisciplineName,
                     r.FinalScore AS TotalScore,
                     DENSE_RANK() OVER(PARTITION BY e.CategoryId, e.DisciplineId ORDER BY r.FinalScore DESC) AS CalculatedRank
                 FROM results r
@@ -31,6 +31,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                 INNER JOIN persons p ON part.Id = p.Id
                 INNER JOIN categories c ON e.CategoryId = c.Id
                 INNER JOIN disciplines d ON e.DisciplineId = d.Id
+                LEFT JOIN apparatus a ON d.ApparatusId = a.Id
                 WHERE e.CompetitionId = {0}
             ";
 

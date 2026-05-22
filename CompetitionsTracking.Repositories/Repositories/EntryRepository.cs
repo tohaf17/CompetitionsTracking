@@ -50,7 +50,7 @@ namespace CompetitionsTracking.Repositories.Repositories
             return await _context.Entries
                 .Include(e => e.Participant)
                 .Include(e => e.Category)
-                .Include(e => e.Discipline)
+                .Include(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Where(e => e.CompetitionId == competitionId && e.ApplicationStatus == ApplicationStatus.Accepted)
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -115,7 +115,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                 .Include(e => e.Participant)
                 .Include(e => (e.Participant as Person).TeamsAsMember)
                 .Include(e => e.Competition)
-                .Include(e => e.Discipline)
+                .Include(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Include(e => e.Category)
                 .AsNoTracking();
 
@@ -132,7 +132,7 @@ namespace CompetitionsTracking.Repositories.Repositories
             return await _context.Entries
                 .Include(e => e.Participant)
                 .Include(e => (e.Participant as Person).TeamsAsMember)
-                .Include(e => e.Discipline)
+                .Include(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Include(e => e.Category)
                 .AsNoTracking()
                 .Where(e => e.CompetitionId == competitionId)

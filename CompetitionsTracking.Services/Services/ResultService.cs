@@ -174,7 +174,9 @@ namespace CompetitionsTracking.Services.Implementations
                 Place = r.Place,
                 ParticipantName = GetParticipantName(r.Entry.Participant),
                 Country = GetParticipantCountry(r.Entry.Participant),
-                DisciplineName = r.Entry.Discipline?.Type ?? "Unknown",
+                DisciplineName = r.Entry.Discipline != null
+                    ? $"{r.Entry.Discipline.Type} — {r.Entry.Discipline.Apparatus?.Type ?? "?"}"
+                    : "Unknown",
                 CategoryName = r.Entry.Category?.Type ?? "Unknown",
                 FinalScore = r.FinalScore,
                 AwardedMedal = r.AwardedMedal ?? string.Empty
