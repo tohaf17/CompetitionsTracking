@@ -31,7 +31,15 @@ namespace CompetitionsTracking.Repositories.Repositories
 
                         s.EntryId,
 
-                        CAST(s.Type AS nvarchar(50)) AS ScoreType,
+                        CASE s.Type
+                            WHEN 0 THEN 'D'
+                            WHEN 1 THEN 'DA'
+                            WHEN 2 THEN 'DB'
+                            WHEN 3 THEN 'E'
+                            WHEN 4 THEN 'A'
+                            WHEN 5 THEN 'Penalty'
+                            ELSE CAST(s.Type AS nvarchar(50))
+                        END AS ScoreType,
 
                         CAST(s.ScoreValue AS DECIMAL(10,2)) AS ScoreValue,
 

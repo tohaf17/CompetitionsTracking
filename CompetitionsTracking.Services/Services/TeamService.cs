@@ -89,6 +89,7 @@ namespace CompetitionsTracking.Services.Implementations
         {
             var entity = await _repository.GetTeamWithMembersAsync(id);
             if (entity == null) return null;
+            var medals = await GetTeamMedalsAsync(entity);
             
             return new TeamResponseDto
             {
@@ -96,6 +97,10 @@ namespace CompetitionsTracking.Services.Implementations
                 Name = entity.Name,
                 CoachId = entity.CoachId,
                 CoachFullName = entity.Coach != null ? $"{entity.Coach.Name} {entity.Coach.Surname}" : "Не призначено",
+                GoldMedals = medals.Gold,
+                SilverMedals = medals.Silver,
+                BronzeMedals = medals.Bronze,
+                TotalMedals = medals.Gold + medals.Silver + medals.Bronze,
                 Members = entity.Members?.Select(m => new TeamMemberDto
                 {
                     PersonId = m.Id,
@@ -103,6 +108,21 @@ namespace CompetitionsTracking.Services.Implementations
                     Country = m.Country
                 }).ToList() ?? new List<TeamMemberDto>()
             };
+        }
+
+        private async Task<(int Gold, int Silver, int Bronze)> GetTeamMedalsAsync(Team team)
+        {
+            var participantIds = (team.Members ?? new List<Person>()).Select(m => m.Id).Append(team.Id).ToList();
+
+            var places = await _context.Results
+                .Where(r => participantIds.Contains(r.Entry.ParticipantId) && r.Place >= 1 && r.Place <= 3)
+                .Select(r => r.Place)
+                .ToListAsync();
+
+            return (
+                places.Count(p => p == 1),
+                places.Count(p => p == 2),
+                places.Count(p => p == 3));
         }
 
         public async Task<TeamResponseDto> CreateAsync(TeamRequestDto request)

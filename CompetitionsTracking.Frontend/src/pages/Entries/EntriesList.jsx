@@ -73,7 +73,10 @@ const EntriesList = () => {
                 isCoach ? EntryService.getMyParticipants() : Promise.resolve([])
             ]);
             
-            setCompetitions(unwrapCollection(comp));
+            const allCompetitions = unwrapCollection(comp);
+            setCompetitions(isCoach
+                ? allCompetitions.filter(c => c.status === 1 && c.level !== 2)
+                : allCompetitions);
             setDisciplines(unwrapCollection(disc));
             setCategories(unwrapCollection(cat));
             setApparatuses(unwrapCollection(app));
@@ -97,6 +100,22 @@ const EntriesList = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
+            const selectedCompetition = competitions.find(c => c.id === parseInt(formData.competitionId));
+            if (isCoach && (!selectedCompetition || selectedCompetition.status !== 1 || selectedCompetition.level === 2)) {
+                toast.error("Тренер може подавати заявки лише на відкриті не міжнародні змагання.");
+                return;
+            }
+
+            const selectedCategory = categories.find(c => c.id === parseInt(formData.categoryId));
+            const selectedParticipant = participantOptions.find(p => p.id === parseInt(formData.participantId));
+            if (selectedCategory && selectedParticipant?.age != null) {
+                if ((selectedCategory.minAge != null && selectedParticipant.age < selectedCategory.minAge) ||
+                    (selectedCategory.maxAge != null && selectedParticipant.age > selectedCategory.maxAge)) {
+                    toast.error(`Вік учасника (${selectedParticipant.age}) не відповідає категорії ${selectedCategory.type}.`);
+                    return;
+                }
+            }
+
             const selectedDisc = disciplines.find(d => 
                 d.type.startsWith(performanceType) && 
                 d.apparatusId === parseInt(formData.apparatusId)

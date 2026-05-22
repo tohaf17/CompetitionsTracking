@@ -47,6 +47,14 @@ const CompetitionDetails = () => {
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [judges, setJudges] = useState([]);
     const [scoreData, setScoreData] = useState({ judgeId: '', scoreType: 'DA', value: '' });
+    const scoreTypeLabels = {
+        D: 'Складність загальна (D)',
+        DA: 'Складність інвентарю (DA)',
+        DB: 'Складність тіла (DB)',
+        A: 'Артистизм (A)',
+        E: 'Виконання (E)',
+        Penalty: 'Штраф (Penalty)'
+    };
 
     const loadData = useCallback(async () => {
         try {
@@ -408,7 +416,7 @@ const CompetitionDetails = () => {
 
             {activeTab === 'anomalies' && isAdmin && (
                 <div className="glass-panel">
-                    <h3 style={{ color: '#ff4d4f' }}>Підозрілі оцінки (відхилення &gt;= 1.5)</h3>
+                    <h3 style={{ color: '#ff4d4f' }}>Підозрілі оцінки за Z-Score (Z &gt;= 2.0)</h3>
                     <table style={{ width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse' }}>
                         <thead style={{ borderBottom: '1px solid var(--surface-border)' }}>
                             <tr>
@@ -417,7 +425,8 @@ const CompetitionDetails = () => {
                                 <th>Суддя</th>
                                 <th>Тип оцінки</th>
                                 <th>Виставлена оцінка</th>
-                                <th>Відхилення</th>
+                                <th>Середня по виступу</th>
+                                <th>Z-Score</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -426,12 +435,13 @@ const CompetitionDetails = () => {
                                     <td style={{ padding: '0.8rem' }}>{i + 1}</td>
                                     <td style={{ padding: '0.8rem' }}>{a.participantName}</td>
                                     <td>{a.judgeName}</td>
-                                    <td>{a.scoreType}</td>
+                                    <td>{scoreTypeLabels[a.scoreType] || a.scoreType}</td>
                                     <td><strong>{a.scoreValue.toFixed(2)}</strong></td>
-                                    <td style={{ color: '#ff4d4f' }}>{a.deviation > 0 ? '+' : ''}{a.deviation.toFixed(2)}</td>
+                                    <td>{a.averageEntryScore.toFixed(2)}</td>
+                                    <td style={{ color: '#ff4d4f' }}>{a.deviation.toFixed(2)}</td>
                                 </tr>
                             ))}
-                            {anomalies.length === 0 && <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center' }}>Аномалій не виявлено.</td></tr>}
+                            {anomalies.length === 0 && <tr><td colSpan="7" style={{ padding: '1rem', textAlign: 'center' }}>Аномалій не виявлено.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -454,7 +464,7 @@ const CompetitionDetails = () => {
                             <tbody>
                                 {scoreBreakdown.scores.map((s, idx) => (
                                     <tr key={idx} style={{ borderBottom: '1px solid var(--surface-border)' }}>
-                                        <td style={{ padding: '0.5rem' }}>{s.scoreType}</td>
+                                        <td style={{ padding: '0.5rem' }}>{scoreTypeLabels[s.scoreType] || s.scoreType}</td>
                                         <td>{s.judgeName}</td>
                                         <td><strong>{s.value.toFixed(2)}</strong></td>
                                     </tr>
@@ -488,10 +498,12 @@ const CompetitionDetails = () => {
                             onChange={(e) => setScoreData({...scoreData, scoreType: e.target.value})} 
                             required
                         >
-                            <option value="DA">Складність тіла (DA)</option>
-                            <option value="DB">Складність інвентарю (DB)</option>
+                            <option value="DA">Складність інвентарю (DA)</option>
+                            <option value="DB">Складність тіла (DB)</option>
+                            <option value="D">Складність загальна (D)</option>
                             <option value="A">Артистизм (A)</option>
                             <option value="E">Виконання (E)</option>
+                            <option value="Penalty">Штраф (Penalty)</option>
                         </select>
                     </div>
                     <div className="form-group">

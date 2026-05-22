@@ -65,8 +65,7 @@ const AppealsList = () => {
     const loadResults = async () => {
         try {
             const data = await ResultService.getAppealable();
-            const results = unwrapCollection(data);
-            setResultsData(isCoach ? results.filter(r => r.competitionLevel !== 2) : results);
+            setResultsData(unwrapCollection(data));
         } catch (error) {
             toastError(error, 'Не вдалося завантажити результати');
         }
@@ -262,7 +261,7 @@ const AppealsList = () => {
                             <option value="">-- Оберіть результат --</option>
                             {resultsData.map(r => (
                                 <option key={r.id} value={r.id}>
-                                    {r.participantName} ({r.competitionName}) - Оцінка: {r.finalScore}
+                                    {r.participantName} - {r.competitionName}, виступ #{r.entryId}, оцінка: {Number(r.finalScore).toFixed(2)}
                                 </option>
                             ))}
                         </select>

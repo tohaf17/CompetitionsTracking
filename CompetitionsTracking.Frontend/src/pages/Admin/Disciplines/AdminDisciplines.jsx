@@ -20,8 +20,12 @@ const AdminDisciplines = () => {
     const loadDisciplines = async () => {
         try {
             setLoading(true);
-            const data = await DisciplineService.getAll();
+            const [data, appData] = await Promise.all([
+                DisciplineService.getAll(),
+                ApparatusService.getAll()
+            ]);
             setDisciplines(unwrapCollection(data));
+            setApparatuses(unwrapCollection(appData));
         } catch {
             toast.error("Не вдалося завантажити дисципліни");
         } finally {
@@ -74,6 +78,21 @@ const AdminDisciplines = () => {
 
     if (loading) return <div className="page-container">Завантаження...</div>;
 
+    const groupedDisciplines = Object.values(disciplines.reduce((acc, item) => {
+        const key = `${item.isGroup ? 'group' : 'individual'}-${item.type || item.name}`;
+        if (!acc[key]) {
+            acc[key] = {
+                ...item,
+                apparatusNames: []
+            };
+        }
+        const apparatus = item.apparatus?.type || item.apparatusType || apparatuses.find(a => a.id === item.apparatusId)?.type;
+        if (apparatus && !acc[key].apparatusNames.includes(apparatus)) {
+            acc[key].apparatusNames.push(apparatus);
+        }
+        return acc;
+    }, {}));
+
     return (
         <div className="page-container">
             <div className="page-header flex-between">
@@ -88,16 +107,18 @@ const AdminDisciplines = () => {
                             <th>№</th>
                             <th>Назва</th>
                             <th>Групова</th>
+                            <th>Предмети</th>
                             <th>Дії</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {disciplines.length > 0 ? (
-                            disciplines.map((item, index) => (
+                        {groupedDisciplines.length > 0 ? (
+                            groupedDisciplines.map((item, index) => (
                                 <tr key={item.id}>
                                     <td>{index + 1}</td>
                                     <td><strong>{item.type || item.name}</strong></td>
                                     <td>{item.isGroup ? 'Так (Групова)' : 'Ні (Індивідуальна)'}</td>
+                                    <td>{item.apparatusNames.length ? item.apparatusNames.join(', ') : 'Предмет обирається в заявці'}</td>
                                     <td>
                                         <button className="btn btn-danger" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem', marginLeft: '0.5rem'}} onClick={() => handleDelete(item.id, item.type || item.name)}>Видалити</button>
                                     </td>
@@ -105,7 +126,7 @@ const AdminDisciplines = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="4" style={{textAlign: 'center', padding: '2rem'}}>Дисциплін не знайдено.</td>
+                                <td colSpan="5" style={{textAlign: 'center', padding: '2rem'}}>Дисциплін не знайдено.</td>
                             </tr>
                         )}
                     </tbody>

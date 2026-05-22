@@ -1,10 +1,12 @@
 using CompetitionsTracking.Domain.Entities;
+using System.Text.Json.Serialization;
 namespace CompetitionsTracking.Application.DTOs.Score
 {
     public record ScoreRequestDto
     {
         public int EntryId { get; init; }
         public int JudgeId { get; init; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ScoreType Type { get; init; }
         public float ScoreValue { get; init; }
 
@@ -20,6 +22,7 @@ namespace CompetitionsTracking.Application.DTOs.Score
         public int Id { get; init; }
         public int EntryId { get; init; }
         public int JudgeId { get; init; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ScoreType Type { get; init; }
         public float ScoreValue { get; init; }
 

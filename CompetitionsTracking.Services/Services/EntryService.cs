@@ -217,6 +217,8 @@ namespace CompetitionsTracking.Services.Implementations
                 SubmittedAt = DateTime.UtcNow
             };
 
+            await ValidateParticipantAgeAsync(participantId, request.CategoryId, request.CompetitionId);
+
             await _repository.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
             
@@ -250,6 +252,7 @@ namespace CompetitionsTracking.Services.Implementations
             }
 
             var participantId = await ResolveCoachParticipantIdAsync(request, coachPersonId);
+            await ValidateParticipantAgeAsync(participantId, request.CategoryId, request.CompetitionId);
             if (await _repository.IsDuplicateEntryAsync(request.CompetitionId, participantId, request.DisciplineId))
             {
                 throw new BadRequestException("Цей учасник або команда вже зареєстровані на цю дисципліну.");
@@ -477,7 +480,8 @@ namespace CompetitionsTracking.Services.Implementations
                 {
                     Id = p.Id,
                     Name = p.Name + " " + p.Surname,
-                    Type = "Person"
+                    Type = "Person",
+                    Age = CalculateAge(p.DateOfBirth, DateTime.UtcNow)
                 })
                 .ToListAsync();
 
@@ -499,7 +503,7 @@ namespace CompetitionsTracking.Services.Implementations
         {
             return _context.Entries
                 .Include(e => e.Participant)
-                .Include(e => (e.Participant as Person).TeamsAsMember)
+                .Include(e => ((Person)e.Participant).TeamsAsMember)
                 .Include(e => e.Competition)
                 .Include(e => e.Discipline).ThenInclude(d => d.Apparatus)
                 .Include(e => e.Category)
@@ -592,6 +596,36 @@ namespace CompetitionsTracking.Services.Implementations
             }
 
             throw new BadRequestException("Оберіть існуючого підопічного або команду, яку ви тренуєте.");
+        }
+
+        private async Task ValidateParticipantAgeAsync(int participantId, int categoryId, int competitionId)
+        {
+            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == categoryId);
+            if (category == null) throw new NotFoundException(nameof(Category), categoryId);
+
+            if (!category.MinAge.HasValue && !category.MaxAge.HasValue) return;
+
+            var competitionDate = await _context.Competitions
+                .Where(c => c.Id == competitionId)
+                .Select(c => c.StartDate)
+                .FirstOrDefaultAsync();
+            if (competitionDate == default) throw new NotFoundException(nameof(Competition), competitionId);
+
+            var person = await _context.Persons.AsNoTracking().FirstOrDefaultAsync(p => p.Id == participantId);
+            if (person == null) return;
+
+            var age = CalculateAge(person.DateOfBirth, competitionDate);
+            if (category.MinAge.HasValue && age < category.MinAge.Value || category.MaxAge.HasValue && age > category.MaxAge.Value)
+            {
+                throw new BadRequestException($"Вік учасника ({age}) не відповідає категорії {category.Type} ({category.MinAge}-{category.MaxAge} р.).");
+            }
+        }
+
+        private static int CalculateAge(DateTime birthDate, DateTime onDate)
+        {
+            var age = onDate.Year - birthDate.Year;
+            if (birthDate.Date > onDate.Date.AddYears(-age)) age--;
+            return age;
         }
     }
 }

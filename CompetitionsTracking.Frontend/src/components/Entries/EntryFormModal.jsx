@@ -40,7 +40,7 @@ const EntryFormModal = ({
                         <option value="">-- Оберіть зі списку {isAdmin ? 'або створіть вручну' : ''} --</option>
                         {participantOptions.map(p => (
                             <option key={`${p.type}-${p.id}`} value={p.id}>
-                                {p.name} ({p.type === 'Team' ? 'команда' : 'учасник'})
+                                {p.name} ({p.type === 'Team' ? 'команда' : `учасник${p.age != null ? `, ${p.age} р.` : ''}`})
                             </option>
                         ))}
                     </select>

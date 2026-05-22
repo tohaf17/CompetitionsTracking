@@ -64,6 +64,17 @@ const AdminCompetitions = () => {
         }
     };
 
+    const handleStatusChange = async (id, value) => {
+        try {
+            const newStatus = parseInt(value);
+            await CompetitionService.changeStatus(id, { newStatus });
+            setCompetitions(competitions.map(c => c.id === id ? { ...c, status: newStatus } : c));
+            toast.success("Статус змагання оновлено");
+        } catch (error) {
+            toastError(error, 'Не вдалося змінити статус змагання');
+        }
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -107,8 +118,6 @@ const AdminCompetitions = () => {
                     <tbody>
                         {competitions.length > 0 ? (
                             competitions.map((item, index) => {
-                                const compStatus = statusMap[item.status] || { text: "Невідомо", class: "" };
-                                
                                 return (
                                     <tr key={item.id}>
                                         <td>{index + 1}</td>
@@ -117,7 +126,17 @@ const AdminCompetitions = () => {
                                         <td>{item.city}</td>
                                         <td>{item.country || '-'}</td>
                                         <td>{new Date(item.startDate).toLocaleDateString('uk-UA')} - {new Date(item.endDate).toLocaleDateString('uk-UA')}</td>
-                                        <td><span className={`status-badge ${compStatus.class}`}>{compStatus.text}</span></td>
+                                        <td>
+                                            <select
+                                                value={item.status}
+                                                onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                                style={{ minWidth: '9rem', padding: '0.35rem 0.6rem', borderRadius: '6px', background: 'var(--surface-color)', color: 'var(--text-color)', border: '1px solid var(--surface-border)' }}
+                                            >
+                                                {Object.entries(statusMap).map(([value, meta]) => (
+                                                    <option key={value} value={value}>{meta.text}</option>
+                                                ))}
+                                            </select>
+                                        </td>
                                         <td>
                                             <NavLink 
                                                 to={`/competitions/${item.id}`} 

@@ -93,6 +93,7 @@ const TeamProfile = () => {
                         {metrics && (
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                 <StatCard label="Учасників" value={metrics.totalParticipants} />
+                                <StatCard label="Медалей" value={team.totalMedals ?? 0} sub={`З ${team.goldMedals ?? 0} | С ${team.silverMedals ?? 0} | Б ${team.bronzeMedals ?? 0}`} color="#f59e0b" />
                                 <StatCard label="Рейтингові бали" value={metrics.cumulativePoints.toFixed(1)} color="var(--primary-color)" />
                                 <StatCard label="Сер. бал / спортсмена" value={metrics.averagePointsPerParticipant.toFixed(2)} />
                             </div>
