@@ -8,6 +8,12 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { toastError } from '../../utils/toastError';
 
+const COMPETITION_LEVEL = {
+    Local: 0,
+    National: 1,
+    International: 2
+};
+
 const AppealsList = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
@@ -25,7 +31,7 @@ const AppealsList = () => {
     const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
     const [dossier, setDossier] = useState(null);
     const [approvalData, setApprovalData] = useState({ scoreIdToEdit: '', newScoreValue: '' });
-    const [formData, setFormData] = useState({ resultId: '', reason: '' });
+    const [formData, setFormData] = useState({ competitionId: '', resultId: '', reason: '' });
 
     const [profileError, setProfileError] = useState(false);
 
@@ -87,13 +93,8 @@ const AppealsList = () => {
         try {
             const selectedResult = resultsData.find(r => r.id === parseInt(formData.resultId));
 
-            if (!isAdmin && selectedResult?.competitionLevel === 2) {
+            if (!isAdmin && selectedResult?.competitionLevel === COMPETITION_LEVEL.International) {
                 toast.error("Тренер не може подавати апеляції на міжнародні змагання");
-                return;
-            }
-
-            if (selectedResult && selectedResult.competitionStatus !== 2) {
-                toast.error("Апеляції можна подавати лише для змагань, що тривають");
                 return;
             }
 
@@ -108,7 +109,7 @@ const AppealsList = () => {
             toast.success("Апеляцію подано");
             void loadAppeals();
             setIsModalOpen(false);
-            setFormData({ resultId: '', reason: '' });
+            setFormData({ competitionId: '', resultId: '', reason: '' });
         } catch (error) {
             toastError(error, 'Не вдалося подати апеляцію');
         }
@@ -154,8 +155,21 @@ const AppealsList = () => {
     };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value,
+            ...(name === 'competitionId' ? { resultId: '' } : {})
+        }));
     };
+
+    const appealableCompetitions = Array.from(
+        new Map(resultsData.map(r => [r.competitionId, { id: r.competitionId, title: r.competitionName }])).values()
+    ).sort((a, b) => a.title.localeCompare(b.title, 'uk'));
+
+    const filteredResults = formData.competitionId
+        ? resultsData.filter(r => r.competitionId === parseInt(formData.competitionId))
+        : [];
 
     if (loading) return <div className="page-container">Завантаження...</div>;
 
@@ -256,10 +270,27 @@ const AppealsList = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Подати апеляцію">
                 <form onSubmit={handleCreate}>
                     <div className="form-group">
+                        <label>Змагання</label>
+                        <select name="competitionId" value={formData.competitionId} onChange={handleChange} required>
+                            <option value="">
+                                {appealableCompetitions.length > 0
+                                    ? '-- Оберіть змагання --'
+                                    : '-- Немає змагань із доступними результатами --'}
+                            </option>
+                            {appealableCompetitions.map(c => (
+                                <option key={c.id} value={c.id}>{c.title}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
                         <label>Оберіть виступ</label>
-                        <select name="resultId" value={formData.resultId} onChange={handleChange} required>
-                            <option value="">-- Оберіть результат --</option>
-                            {resultsData.map(r => (
+                        <select name="resultId" value={formData.resultId} onChange={handleChange} required disabled={!formData.competitionId}>
+                            <option value="">
+                                {formData.competitionId && filteredResults.length > 0
+                                    ? '-- Оберіть результат --'
+                                    : '-- Спочатку оберіть змагання --'}
+                            </option>
+                            {filteredResults.map(r => (
                                 <option key={r.id} value={r.id}>
                                     {r.participantName} - {r.competitionName}, виступ #{r.entryId}, оцінка: {Number(r.finalScore).toFixed(2)}
                                 </option>
@@ -280,7 +311,7 @@ const AppealsList = () => {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Скасувати</button>
-                        <button type="submit" className="btn btn-primary">Подати апеляцію</button>
+                        <button type="submit" className="btn btn-primary" disabled={appealableCompetitions.length === 0}>Подати апеляцію</button>
                     </div>
                 </form>
             </Modal>

@@ -42,14 +42,18 @@ namespace CompetitionsTracking.Repositories.Repositories
                 WHERE EntryId = @EntryId;
 
                 DECLARE @CategoryId INT;
-                DECLARE @DisciplineId INT;
-                SELECT TOP 1 @CategoryId = CategoryId, @DisciplineId = DisciplineId FROM entries WHERE Id = @EntryId;
+                DECLARE @DisciplineType NVARCHAR(MAX);
+                SELECT TOP 1 @CategoryId = e.CategoryId, @DisciplineType = d.Type
+                FROM entries e
+                JOIN disciplines d ON e.DisciplineId = d.Id
+                WHERE e.Id = @EntryId;
 
                 WITH RankedResults AS (
-                    SELECT r.Id as ResultId, ROW_NUMBER() OVER(ORDER BY r.FinalScore DESC) as NewPlace
+                    SELECT r.Id as ResultId, DENSE_RANK() OVER(ORDER BY r.FinalScore DESC) as NewPlace
                     FROM results r
                     JOIN entries e ON r.EntryId = e.Id
-                    WHERE e.CategoryId = @CategoryId AND e.DisciplineId = @DisciplineId
+                    JOIN disciplines d ON e.DisciplineId = d.Id
+                    WHERE e.CategoryId = @CategoryId AND d.Type = @DisciplineType
                 )
                 UPDATE r
                 SET r.Place = rr.NewPlace

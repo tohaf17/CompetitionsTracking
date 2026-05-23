@@ -93,12 +93,6 @@ namespace CompetitionsTracking.Services.Implementations
                 throw new ConflictException("An appeal already exists for this result.");
             }
 
-            bool isOngoing = await _repository.IsCompetitionOngoingForResultAsync(request.ResultId);
-            if (!isOngoing)
-            {
-                throw new BadRequestException("Appeals can only be submitted while the competition is ongoing.");
-            }
-
             var entity = request.Adapt<Appeal>();
             entity.Status = AppealStatus.Pending; 
             entity.CreatedAt = DateTime.UtcNow;

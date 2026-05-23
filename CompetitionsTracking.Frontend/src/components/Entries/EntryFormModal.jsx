@@ -19,6 +19,8 @@ const EntryFormModal = ({
     levelMap,
     teams
 }) => {
+    const hasParticipants = participantOptions.length > 0;
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Створити нову заявку">
             <form onSubmit={onSubmit}>
@@ -37,7 +39,11 @@ const EntryFormModal = ({
                 <div className="form-group">
                     <label>Учасник або команда</label>
                     <select name="participantId" value={formData.participantId} onChange={handleChange} required={isCoach}>
-                        <option value="">-- Оберіть зі списку {isAdmin ? 'або створіть вручну' : ''} --</option>
+                        <option value="">
+                            {hasParticipants
+                                ? `-- Оберіть зі списку ${isAdmin ? 'або створіть вручну' : ''} --`
+                                : '-- Немає доступних учасників або команд --'}
+                        </option>
                         {participantOptions.map(p => (
                             <option key={`${p.type}-${p.id}`} value={p.id}>
                                 {p.name} ({p.type === 'Team' ? 'команда' : `учасник${p.age != null ? `, ${p.age} р.` : ''}`})
@@ -112,7 +118,7 @@ const EntryFormModal = ({
 
                 <div className="modal-footer">
                     <button type="button" className="btn btn-outline" onClick={onClose}>Скасувати</button>
-                    <button type="submit" className="btn btn-primary">Подати заявку</button>
+                    <button type="submit" className="btn btn-primary" disabled={isCoach && !hasParticipants}>Подати заявку</button>
                 </div>
             </form>
         </Modal>

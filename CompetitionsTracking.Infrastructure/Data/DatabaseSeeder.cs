@@ -348,7 +348,7 @@ namespace CompetitionsTracking.Infrastructure.Data
 
             foreach (var compGroup in allResults.GroupBy(r => r.Entry.CompetitionId))
             {
-                foreach (var group in compGroup.GroupBy(r => new { r.Entry.DisciplineId, r.Entry.CategoryId }))
+                foreach (var group in compGroup.GroupBy(r => new { r.Entry.Discipline.Type, r.Entry.CategoryId }))
                 {
                     var sorted = group.OrderByDescending(r => r.FinalScore).ToList();
                     for (int i = 0; i < sorted.Count; i++)

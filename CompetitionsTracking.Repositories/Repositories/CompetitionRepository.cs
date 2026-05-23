@@ -24,7 +24,7 @@ namespace CompetitionsTracking.Repositories.Repositories
                     c.Type AS CategoryName,
                     CONCAT(d.Type, ' — ', a.Type) AS DisciplineName,
                     r.FinalScore AS TotalScore,
-                    DENSE_RANK() OVER(PARTITION BY e.CategoryId, e.DisciplineId ORDER BY r.FinalScore DESC) AS CalculatedRank
+                    DENSE_RANK() OVER(PARTITION BY e.CategoryId, d.Type ORDER BY r.FinalScore DESC) AS CalculatedRank
                 FROM results r
                 INNER JOIN entries e ON r.EntryId = e.Id
                 INNER JOIN participants part ON e.ParticipantId = part.Id
@@ -83,9 +83,10 @@ namespace CompetitionsTracking.Repositories.Repositories
             string sql = @"
         WITH RankedResults AS (
             SELECT r.Id, 
-                   DENSE_RANK() OVER(PARTITION BY e.CategoryId, e.DisciplineId ORDER BY r.FinalScore DESC) as Rnk
+                   DENSE_RANK() OVER(PARTITION BY e.CategoryId, d.Type ORDER BY r.FinalScore DESC) as Rnk
             FROM results r
             INNER JOIN entries e ON r.EntryId = e.Id
+            INNER JOIN disciplines d ON e.DisciplineId = d.Id
             WHERE e.CompetitionId = {0}
         )
         UPDATE r

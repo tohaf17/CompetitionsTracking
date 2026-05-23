@@ -12,6 +12,19 @@ import toast from 'react-hot-toast';
 import { toastError } from '../../utils/toastError';
 import EntryFormModal from '../../components/Entries/EntryFormModal';
 
+const COMPETITION_STATUS = {
+    Planned: 0,
+    RegistrationOpen: 1,
+    Ongoing: 2,
+    Finished: 3
+};
+
+const COMPETITION_LEVEL = {
+    Local: 0,
+    National: 1,
+    International: 2
+};
+
 const EntriesList = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
@@ -75,7 +88,9 @@ const EntriesList = () => {
             
             const allCompetitions = unwrapCollection(comp);
             setCompetitions(isCoach
-                ? allCompetitions.filter(c => c.status === 1 && c.level !== 2)
+                ? allCompetitions.filter(c =>
+                    c.level !== COMPETITION_LEVEL.International &&
+                    (c.status === COMPETITION_STATUS.Planned || c.status === COMPETITION_STATUS.RegistrationOpen))
                 : allCompetitions);
             setDisciplines(unwrapCollection(disc));
             setCategories(unwrapCollection(cat));
@@ -101,8 +116,13 @@ const EntriesList = () => {
         e.preventDefault();
         try {
             const selectedCompetition = competitions.find(c => c.id === parseInt(formData.competitionId));
-            if (isCoach && (!selectedCompetition || selectedCompetition.status !== 1 || selectedCompetition.level === 2)) {
-                toast.error("Тренер може подавати заявки лише на відкриті не міжнародні змагання.");
+            const canCoachSubmitToCompetition = selectedCompetition &&
+                selectedCompetition.level !== COMPETITION_LEVEL.International &&
+                (selectedCompetition.status === COMPETITION_STATUS.Planned ||
+                    selectedCompetition.status === COMPETITION_STATUS.RegistrationOpen);
+
+            if (isCoach && !canCoachSubmitToCompetition) {
+                toast.error("Тренер може подавати заявки лише на заплановані або відкриті не міжнародні змагання.");
                 return;
             }
 

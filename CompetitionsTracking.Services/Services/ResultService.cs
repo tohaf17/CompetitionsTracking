@@ -36,8 +36,7 @@ namespace CompetitionsTracking.Services.Implementations
             var query = _context.Results
                 .Include(r => r.Entry).ThenInclude(e => e.Participant)
                 .Include(r => r.Entry).ThenInclude(e => e.Competition)
-                .Where(r => r.Entry.Competition.Status == CompetitionStatus.Ongoing)
-                .Where(r => !r.Appeals.Any(a => a.Status == AppealStatus.Pending));
+                .Where(r => !r.Appeals.Any());
 
             if (role == UserRole.Admin)
             {
