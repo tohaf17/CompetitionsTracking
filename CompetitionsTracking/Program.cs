@@ -70,6 +70,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+//Contolllers
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
@@ -77,11 +78,11 @@ builder.Services.AddDbContext<CompetitionsTrackingDbContext>(options =>
            .EnableSensitiveDataLogging()
            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
-// Data Access
+// Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-//Repositories
+
 var repoTypes = typeof(Repository<>).Assembly.GetTypes()
     .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Repository") && t.Name != "Repository`1");
 foreach (var type in repoTypes)
@@ -114,7 +115,7 @@ builder.Services.AddCors(options =>
     });
 });
 var app = builder.Build();
-
+//Swagger
 
 if (app.Environment.IsDevelopment())
 {
@@ -135,21 +136,8 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<CompetitionsTrackingDbContext>();
         var config  = services.GetRequiredService<IConfiguration>();
 
-        // Apply any pending migrations (never drops data on its own)
         Console.WriteLine("Застосування міграцій...");
         context.Database.Migrate();
-
-        // ---------------------------------------------------------------
-        // ForceReseed = true  → wipes ALL seed data and re-seeds fresh.
-        //               false → seeds only when the database is empty.
-        //
-        // To refresh seed data: set "Seeding:ForceReseed": true in
-        // appsettings.json, restart the app ONCE, then set it back to false.
-        // ---------------------------------------------------------------
-//         1. Відредагуй дані в DatabaseSeeder.cs  ← тут змінюй вміст
-// 2. У appsettings.json → "ForceReseed": true
-// 3. Запусти бекенд один раз
-// 4. У appsettings.json → "ForceReseed": false ← обов'язково!
         bool forceReseed = config.GetValue<bool>("Seeding:ForceReseed");
 
         if (forceReseed)
